@@ -9,111 +9,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head />
-      <body style={{ margin: 0, padding: 0, fontFamily: 'system-ui, -apple-system, sans-serif', backgroundColor: '#f5f7fa' }}>
+      <body style={{ margin: 0, padding: 0, fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif', backgroundColor: '#f5f7fa' }}>
         <div style={{ display: 'flex', minHeight: '100vh' }}>
-          {/* Sidebar */}
-          <nav style={{
-            width: '250px',
-            background: '#1e3a5f',
-            color: 'white',
-            padding: '24px 0',
-            position: 'fixed',
-            height: '100vh',
-            overflowY: 'auto',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-          }}>
+          <nav style={{ width: '250px', background: '#1e3a5f', color: 'white', padding: '24px 0', position: 'fixed', height: '100vh', overflowY: 'auto', zIndex: 1000 }}>
             <div style={{ paddingLeft: '20px', marginBottom: '40px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0, color: '#fff' }}>📊 Airanix</h2>
               <p style={{ fontSize: '12px', color: '#9db4d1', margin: '4px 0 0 0' }}>Professional CRM</p>
             </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <a href="/" style={{
-                display: 'block',
-                padding: '12px 20px',
-                color: '#9db4d1',
-                textDecoration: 'none',
-                fontSize: '14px',
-                borderLeft: '4px solid transparent',
-                transition: 'all 0.2s'
-              }}>📈 Dashboard</a>
-
-              <a href="/contacts" style={{
-                display: 'block',
-                padding: '12px 20px',
-                color: '#9db4d1',
-                textDecoration: 'none',
-                fontSize: '14px',
-                borderLeft: '4px solid transparent',
-                transition: 'all 0.2s'
-              }}>👥 Contacts</a>
-
-              <a href="/deals" style={{
-                display: 'block',
-                padding: '12px 20px',
-                color: '#9db4d1',
-                textDecoration: 'none',
-                fontSize: '14px',
-                borderLeft: '4px solid transparent',
-                transition: 'all 0.2s'
-              }}>💼 Deals</a>
-
-              <a href="/activities" style={{
-                display: 'block',
-                padding: '12px 20px',
-                color: '#9db4d1',
-                textDecoration: 'none',
-                fontSize: '14px',
-                borderLeft: '4px solid transparent',
-                transition: 'all 0.2s'
-              }}>📞 Activities</a>
-
-              <a href="/followups" style={{
-                display: 'block',
-                padding: '12px 20px',
-                color: '#9db4d1',
-                textDecoration: 'none',
-                fontSize: '14px',
-                borderLeft: '4px solid transparent',
-                transition: 'all 0.2s'
-              }}>📋 Follow-ups</a>
-
-              <a href="/emails" style={{
-                display: 'block',
-                padding: '12px 20px',
-                color: '#9db4d1',
-                textDecoration: 'none',
-                fontSize: '14px',
-                borderLeft: '4px solid transparent',
-                transition: 'all 0.2s'
-              }}>📧 Email Templates</a>
-
-              <a href="/analytics" style={{
-                display: 'block',
-                padding: '12px 20px',
-                color: '#9db4d1',
-                textDecoration: 'none',
-                fontSize: '14px',
-                borderLeft: '4px solid transparent',
-                transition: 'all 0.2s'
-              }}>📊 Analytics</a>
-
-              <a href="/settings" style={{
-                display: 'block',
-                padding: '12px 20px',
-                color: '#9db4d1',
-                textDecoration: 'none',
-                fontSize: '14px',
-                borderLeft: '4px solid transparent',
-                transition: 'all 0.2s'
-              }}>⚙️ Settings</a>
-            </div>
+            <a href="/" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>📈 Dashboard</a>
+            <a href="/contacts" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>👥 Contacts</a>
+            <a href="/deals" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>💼 Deals</a>
+            <a href="/activities" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>📞 Activities</a>
+            <a href="/followups" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>📋 Follow-ups</a>
+            <a href="/emails" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>📧 Email Templates</a>
+            <a href="/analytics" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>📊 Analytics</a>
+            <a href="/settings" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>⚙️ Settings</a>
           </nav>
-
-          {/* Main Content */}
-          <main style={{ marginLeft: '250px', flex: 1, padding: '24px' }}>
-            {children}
-          </main>
+          <main style={{ marginLeft: '250px', flex: 1, padding: '24px' }}>{children}</main>
         </div>
       </body>
     </html>
