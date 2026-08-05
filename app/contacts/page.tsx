@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 export default function ContactsPage() {
+  const searchParams = useSearchParams()
   const [contacts, setContacts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [filters, setFilters] = useState({ status: '', company: '' })
+  const [filters, setFilters] = useState({ status: searchParams.get('status') || '', company: '' })
 
   useEffect(() => {
     async function fetchContacts() {

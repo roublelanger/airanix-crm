@@ -23,24 +23,24 @@ export default function Home() {
       <h1>Dashboard</h1>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginTop: '30px' }}>
-        <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div onClick={() => window.location.href = '/contacts'} style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
           <h3 style={{ color: '#666', fontSize: '14px' }}>Total Contacts</h3>
-          <p style={{ fontSize: '32px', fontWeight: 'bold' }}>{metrics.totalContacts}</p>
+          <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#2563eb' }}>{metrics.totalContacts}</p>
         </div>
 
-        <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div onClick={() => window.location.href = '/contacts?status=lead'} style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
           <h3 style={{ color: '#666', fontSize: '14px' }}>New Leads</h3>
-          <p style={{ fontSize: '32px', fontWeight: 'bold' }}>{metrics.newLeads}</p>
+          <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#2563eb' }}>{metrics.newLeads}</p>
         </div>
 
-        <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div onClick={() => window.location.href = '/deals'} style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
           <h3 style={{ color: '#666', fontSize: '14px' }}>Active Deals</h3>
-          <p style={{ fontSize: '32px', fontWeight: 'bold' }}>{metrics.activeDeal}</p>
+          <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#2563eb' }}>{metrics.activeDeal}</p>
         </div>
 
-        <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div onClick={() => window.location.href = '/deals?stage=won'} style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
           <h3 style={{ color: '#666', fontSize: '14px' }}>Conversions</h3>
-          <p style={{ fontSize: '32px', fontWeight: 'bold' }}>{metrics.conversions}</p>
+          <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#2563eb' }}>{metrics.conversions}</p>
         </div>
       </div>
 

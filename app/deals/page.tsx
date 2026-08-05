@@ -1,11 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 export default function DealsPage() {
+  const searchParams = useSearchParams()
   const [deals, setDeals] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const stageFilter = searchParams.get('stage') || ''
 
   useEffect(() => {
     async function fetchDeals() {
@@ -29,11 +32,12 @@ export default function DealsPage() {
     fetchDeals()
   }, [])
 
-  const totalValue = deals.reduce((sum, deal) => sum + (deal.value || 0), 0)
+  const filteredDeals = stageFilter ? deals.filter(d => d.stage === stageFilter) : deals
+  const totalValue = filteredDeals.reduce((sum, deal) => sum + (deal.value || 0), 0)
 
   return (
     <div style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 20px' }}>
-      <h1>Deals ({deals.length})</h1>
+      <h1>Deals ({filteredDeals.length}) {stageFilter && `- ${stageFilter}`}</h1>
 
       <div style={{ background: 'white', padding: '20px', borderRadius: '8px', marginTop: '30px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         <div>
@@ -66,14 +70,14 @@ export default function DealsPage() {
                   Error: {error}
                 </td>
               </tr>
-            ) : deals.length === 0 ? (
+            ) : filteredDeals.length === 0 ? (
               <tr>
                 <td colSpan={3} style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                  No deals yet
+                  {stageFilter ? `No deals in ${stageFilter} stage` : 'No deals yet'}
                 </td>
               </tr>
             ) : (
-              deals.map((deal: any) => (
+              filteredDeals.map((deal: any) => (
                 <tr key={deal.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                   <td style={{ padding: '16px', fontSize: '14px', fontWeight: '500' }}>{deal.name}</td>
                   <td style={{ padding: '16px', fontSize: '14px' }}>${(deal.value || 0).toLocaleString()}</td>
