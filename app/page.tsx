@@ -1,32 +1,22 @@
-import { createClient } from '@supabase/supabase-js'
+'use client'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-)
+import { useEffect, useState } from 'react'
 
-async function getMetrics() {
-  try {
-    const [contactsRes, dealsRes, leadsRes] = await Promise.all([
-      supabase.from('contacts').select('id', { count: 'exact', head: true }),
-      supabase.from('deals').select('id', { count: 'exact', head: true }),
-      supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('status', 'lead')
-    ])
+export default function Home() {
+  const [metrics, setMetrics] = useState({ totalContacts: 0, activeDeal: 0, newLeads: 0, conversions: 0 })
 
-    return {
-      totalContacts: contactsRes.count || 0,
-      activeDeal: dealsRes.count || 0,
-      newLeads: leadsRes.count || 0,
-      conversions: 0
+  useEffect(() => {
+    async function fetchMetrics() {
+      try {
+        const res = await fetch('/api/metrics')
+        const data = await res.json()
+        setMetrics(data)
+      } catch (error) {
+        console.error('Error fetching metrics:', error)
+      }
     }
-  } catch (error) {
-    console.error('Error fetching metrics:', error)
-    return { totalContacts: 0, activeDeal: 0, newLeads: 0, conversions: 0 }
-  }
-}
-
-export default async function Home() {
-  const metrics = await getMetrics()
+    fetchMetrics()
+  }, [])
 
   return (
     <div style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 20px' }}>
