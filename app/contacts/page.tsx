@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-export default function ContactsPage() {
+function ContactsContent() {
   const searchParams = useSearchParams()
   const [contacts, setContacts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -119,5 +119,13 @@ export default function ContactsPage() {
         </table>
       </div>
     </div>
+  )
+}
+
+export default function ContactsPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Loading contacts...</div>}>
+      <ContactsContent />
+    </Suspense>
   )
 }

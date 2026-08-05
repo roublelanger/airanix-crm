@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-export default function DealsPage() {
+function DealsContent() {
   const searchParams = useSearchParams()
   const [deals, setDeals] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -93,5 +93,13 @@ export default function DealsPage() {
         </table>
       </div>
     </div>
+  )
+}
+
+export default function DealsPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Loading deals...</div>}>
+      <DealsContent />
+    </Suspense>
   )
 }
