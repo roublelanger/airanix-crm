@@ -68,8 +68,8 @@ export default function ContactsPage() {
               </tr>
             ) : (
               contacts.map((contact: any) => (
-                <tr key={contact.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '16px', fontSize: '14px', fontWeight: '500' }}>{contact.name}</td>
+                <tr key={contact.id} style={{ borderBottom: '1px solid #e5e7eb', cursor: 'pointer' }} onClick={() => window.location.href = `/contacts/${contact.id}`}>
+                  <td style={{ padding: '16px', fontSize: '14px', fontWeight: '500', color: '#2563eb' }}>{contact.name}</td>
                   <td style={{ padding: '16px', fontSize: '14px', color: '#2563eb' }}>{contact.email || '-'}</td>
                   <td style={{ padding: '16px', fontSize: '14px' }}>{contact.phone || '-'}</td>
                   <td style={{ padding: '16px', fontSize: '14px' }}>{contact.company || '-'}</td>

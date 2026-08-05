@@ -36,7 +36,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 fontSize: '14px',
                 borderLeft: '4px solid transparent',
                 transition: 'all 0.2s'
-              }}>📈 Dashboard</a>
+              }} onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderLeft = '4px solid #2563eb';
+                e.currentTarget.style.color = '#fff';
+              }} onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderLeft = '4px solid transparent';
+                e.currentTarget.style.color = '#9db4d1';
+              }}>
+                📈 Dashboard
+              </a>
 
               <a href="/contacts" style={{
                 display: 'block',
@@ -46,7 +56,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 fontSize: '14px',
                 borderLeft: '4px solid transparent',
                 transition: 'all 0.2s'
-              }}>👥 Contacts</a>
+              }} onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderLeft = '4px solid #2563eb';
+                e.currentTarget.style.color = '#fff';
+              }} onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderLeft = '4px solid transparent';
+                e.currentTarget.style.color = '#9db4d1';
+              }}>
+                👥 Contacts
+              </a>
 
               <a href="/deals" style={{
                 display: 'block',
@@ -56,7 +76,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 fontSize: '14px',
                 borderLeft: '4px solid transparent',
                 transition: 'all 0.2s'
-              }}>💼 Deals</a>
+              }} onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderLeft = '4px solid #2563eb';
+                e.currentTarget.style.color = '#fff';
+              }} onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderLeft = '4px solid transparent';
+                e.currentTarget.style.color = '#9db4d1';
+              }}>
+                💼 Deals
+              </a>
 
               <a href="/activities" style={{
                 display: 'block',
@@ -66,17 +96,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 fontSize: '14px',
                 borderLeft: '4px solid transparent',
                 transition: 'all 0.2s'
-              }}>📞 Activities</a>
-
-              <a href="/followups" style={{
-                display: 'block',
-                padding: '12px 20px',
-                color: '#9db4d1',
-                textDecoration: 'none',
-                fontSize: '14px',
-                borderLeft: '4px solid transparent',
-                transition: 'all 0.2s'
-              }}>📋 Follow-ups</a>
+              }} onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderLeft = '4px solid #2563eb';
+                e.currentTarget.style.color = '#fff';
+              }} onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderLeft = '4px solid transparent';
+                e.currentTarget.style.color = '#9db4d1';
+              }}>
+                📞 Activities
+              </a>
 
               <a href="/settings" style={{
                 display: 'block',
@@ -86,7 +116,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 fontSize: '14px',
                 borderLeft: '4px solid transparent',
                 transition: 'all 0.2s'
-              }}>⚙️ Settings</a>
+              }} onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderLeft = '4px solid #2563eb';
+                e.currentTarget.style.color = '#fff';
+              }} onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderLeft = '4px solid transparent';
+                e.currentTarget.style.color = '#9db4d1';
+              }}>
+                ⚙️ Settings
+              </a>
             </div>
           </nav>
 

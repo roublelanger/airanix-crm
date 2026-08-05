@@ -10,15 +10,21 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from('deals')
-      .select('*')
+      .select('id, contact_id, value, stage')
 
     if (error) {
       console.error('Supabase error:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    console.log('Deals sample:', data?.[0])
-    return NextResponse.json(data || [])
+    const dealsWithNames = data?.map((deal: any) => ({
+      id: deal.id,
+      name: `Deal #${deal.id.slice(0, 8)}`,
+      value: deal.value || 0,
+      stage: deal.stage || 'prospect'
+    })) || []
+
+    return NextResponse.json(dealsWithNames)
   } catch (error) {
     console.error('API error:', error)
     return NextResponse.json({ error: 'Failed to fetch deals' }, { status: 500 })
