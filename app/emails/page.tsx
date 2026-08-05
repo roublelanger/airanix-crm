@@ -80,7 +80,7 @@ export default function EmailTemplatesPage() {
             </div>
 
             <div style={{ background: '#dbeafe', padding: '12px', borderRadius: '6px', marginBottom: '20px', fontSize: '13px', color: '#1e40af' }}>
-              💡 Use {'{firstName}'} {'{company}'} {'{date}'} for merge fields
+              💡 Use {{'{firstName}'}} {{'{company}'}} {{'{date}'}} for merge fields
             </div>
 
             <div style={{ display: 'flex', gap: '12px' }}>
