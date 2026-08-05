@@ -42,7 +42,7 @@ export default function ActivitiesPage() {
         body: JSON.stringify(formData)
       })
       if (res.ok) {
-        setFormData({ type: 'call', title: '', description: '', outcome: 'pending', contactId: '' })
+        setFormData({ type: 'call', title: '', description: '', outcome: 'pending', contactId: '', callDuration: '', emailOpens: 0, meetingOutcome: '' })
         setShowForm(false)
         fetchActivities()
       }
