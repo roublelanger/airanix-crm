@@ -78,6 +78,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 transition: 'all 0.2s'
               }}>📋 Follow-ups</a>
 
+              <a href="/emails" style={{
+                display: 'block',
+                padding: '12px 20px',
+                color: '#9db4d1',
+                textDecoration: 'none',
+                fontSize: '14px',
+                borderLeft: '4px solid transparent',
+                transition: 'all 0.2s'
+              }}>📧 Email Templates</a>
+
+              <a href="/analytics" style={{
+                display: 'block',
+                padding: '12px 20px',
+                color: '#9db4d1',
+                textDecoration: 'none',
+                fontSize: '14px',
+                borderLeft: '4px solid transparent',
+                transition: 'all 0.2s'
+              }}>📊 Analytics</a>
+
               <a href="/settings" style={{
                 display: 'block',
                 padding: '12px 20px',

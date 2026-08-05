@@ -6,6 +6,7 @@ export default function ContactsPage() {
   const [contacts, setContacts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [filters, setFilters] = useState({ status: '', company: '' })
 
   useEffect(() => {
     async function fetchContacts() {
@@ -32,8 +33,33 @@ export default function ContactsPage() {
   return (
     <div style={{ maxWidth: '1400px', margin: '40px auto', padding: '0 20px' }}>
       <div style={{ marginBottom: '30px' }}>
-        <h1>Contacts ({contacts.length})</h1>
+        <h1>Contacts ({contacts.filter(c => (!filters.status || c.status === filters.status) && (!filters.company || c.company === filters.company)).length})</h1>
         <p style={{ color: '#666' }}>Manage your leads and customers</p>
+
+        {/* Quick Filters */}
+        <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+          <select
+            value={filters.status}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+            style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }}
+          >
+            <option value="">All Status</option>
+            <option value="lead">Lead</option>
+            <option value="prospect">Prospect</option>
+            <option value="customer">Customer</option>
+          </select>
+
+          <select
+            value={filters.company}
+            onChange={(e) => setFilters({ ...filters, company: e.target.value })}
+            style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }}
+          >
+            <option value="">All Companies</option>
+            {[...new Set(contacts.map(c => c.company).filter(Boolean))].map(company => (
+              <option key={company} value={company}>{company}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div style={{ background: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflowX: 'auto' }}>
@@ -60,14 +86,14 @@ export default function ContactsPage() {
                   Error: {error}
                 </td>
               </tr>
-            ) : contacts.length === 0 ? (
+            ) : contacts.filter(c => (!filters.status || c.status === filters.status) && (!filters.company || c.company === filters.company)).length === 0 ? (
               <tr>
                 <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                  No contacts yet
+                  No contacts match your filters
                 </td>
               </tr>
             ) : (
-              contacts.map((contact: any) => (
+              contacts.filter(c => (!filters.status || c.status === filters.status) && (!filters.company || c.company === filters.company)).map((contact: any) => (
                 <tr key={contact.id} style={{ borderBottom: '1px solid #e5e7eb', cursor: 'pointer' }} onClick={() => window.location.href = `/contacts/${contact.id}`}>
                   <td style={{ padding: '16px', fontSize: '14px', fontWeight: '500', color: '#2563eb' }}>{contact.name}</td>
                   <td style={{ padding: '16px', fontSize: '14px', color: '#2563eb' }}>{contact.email || '-'}</td>

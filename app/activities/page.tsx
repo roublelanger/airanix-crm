@@ -11,7 +11,10 @@ export default function ActivitiesPage() {
     title: '',
     description: '',
     outcome: 'pending',
-    contactId: ''
+    contactId: '',
+    callDuration: '',
+    emailOpens: 0,
+    meetingOutcome: ''
   })
 
   useEffect(() => {
@@ -157,6 +160,49 @@ export default function ActivitiesPage() {
                 />
               </div>
             </div>
+
+            {formData.type === 'call' && (
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '6px' }}>Call Duration (minutes)</label>
+                <input
+                  type="number"
+                  value={formData.callDuration}
+                  onChange={(e) => setFormData({ ...formData, callDuration: e.target.value })}
+                  placeholder="e.g., 15"
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
+                />
+              </div>
+            )}
+
+            {formData.type === 'email' && (
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '6px' }}>Email Opens</label>
+                <input
+                  type="number"
+                  value={formData.emailOpens}
+                  onChange={(e) => setFormData({ ...formData, emailOpens: parseInt(e.target.value) || 0 })}
+                  placeholder="0"
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
+                />
+              </div>
+            )}
+
+            {formData.type === 'meeting' && (
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '6px' }}>Meeting Outcome</label>
+                <select
+                  value={formData.meetingOutcome}
+                  onChange={(e) => setFormData({ ...formData, meetingOutcome: e.target.value })}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }}
+                >
+                  <option value="">Select outcome...</option>
+                  <option value="positive">👍 Positive</option>
+                  <option value="neutral">😐 Neutral</option>
+                  <option value="negative">👎 Negative</option>
+                  <option value="scheduled_followup">📅 Scheduled Follow-up</option>
+                </select>
+              </div>
+            )}
 
             <button
               type="submit"
