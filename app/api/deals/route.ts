@@ -10,7 +10,7 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from('deals')
-      .select('id, contact_id, value, stage')
+      .select('id, value, stage')
 
     if (error) {
       console.error('Supabase error:', error)

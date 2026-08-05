@@ -1,0 +1,162 @@
+'use client'
+
+import { useState } from 'react'
+
+export default function EmailTemplatesPage() {
+  const [selectedTemplate, setSelectedTemplate] = useState('welcome')
+
+  const templates: any = {
+    welcome: {
+      name: 'Welcome Email',
+      subject: 'Welcome to our platform',
+      body: `Hi there,
+
+Welcome aboard! We're excited to have you.
+
+Best regards,
+Team`
+    },
+    followup: {
+      name: 'Follow-up Email',
+      subject: 'Quick follow-up on our conversation',
+      body: `Hi,
+
+I wanted to follow up on our recent discussion.
+
+Looking forward to connecting!
+
+Best regards`
+    },
+    proposal: {
+      name: 'Proposal Email',
+      subject: 'Your Custom Proposal',
+      body: `Hi,
+
+I've prepared a tailored proposal for you.
+
+Let me know your thoughts!
+
+Best regards`
+    },
+    closing: {
+      name: 'Closing Email',
+      subject: 'Let us finalize this',
+      body: `Hi,
+
+I'd love to move forward.
+
+Let's schedule a time!
+
+Best regards`
+    }
+  }
+
+  const currentTemplate = templates[selectedTemplate]
+
+  return (
+    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+      <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '8px' }}>📧 Email Templates</h1>
+      <p style={{ color: '#666', marginBottom: '30px' }}>Professional templates for quick outreach</p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '20px' }}>
+        <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+          <div style={{ padding: '20px', borderBottom: '1px solid #eee' }}>
+            <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#666' }}>Templates</h3>
+          </div>
+          {Object.entries(templates).map(([key, template]: any) => (
+            <button
+              key={key}
+              onClick={() => setSelectedTemplate(key)}
+              style={{
+                width: '100%',
+                padding: '16px 20px',
+                border: 'none',
+                borderBottom: '1px solid #eee',
+                textAlign: 'left',
+                background: selectedTemplate === key ? '#dbeafe' : 'white',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: selectedTemplate === key ? '600' : '500',
+                color: selectedTemplate === key ? '#1e40af' : '#333'
+              }}
+            >
+              {template.name}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '24px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 20px 0' }}>
+            {currentTemplate.name}
+          </h2>
+
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
+              Subject
+            </label>
+            <input
+              type="text"
+              defaultValue={currentTemplate.subject}
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '1px solid #ddd',
+                borderRadius: '6px',
+                fontSize: '14px',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
+              Body
+            </label>
+            <textarea
+              defaultValue={currentTemplate.body}
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '1px solid #ddd',
+                borderRadius: '6px',
+                fontSize: '14px',
+                minHeight: '300px',
+                fontFamily: 'monospace',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <button
+              style={{
+                padding: '10px 20px',
+                background: '#f3f4f6',
+                color: '#333',
+                border: '1px solid #ddd',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: '500'
+              }}
+            >
+              Save Template
+            </button>
+            <button
+              style={{
+                padding: '10px 20px',
+                background: '#2563eb',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: '500'
+              }}
+            >
+              Use Template
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

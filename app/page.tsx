@@ -46,7 +46,7 @@ export default function Home() {
 
       <div style={{ marginTop: '40px' }}>
         <h2>Quick Links</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginTop: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px', marginTop: '20px' }}>
           <a href="/contacts" style={{ textDecoration: 'none', color: 'inherit' }}>
             <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
               <h3>👥 Contacts</h3>
@@ -57,6 +57,18 @@ export default function Home() {
             <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
               <h3>💰 Deals</h3>
               <p>Track your pipeline</p>
+            </div>
+          </a>
+          <a href="/emails" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
+              <h3>📧 Email Templates</h3>
+              <p>Quick outreach templates</p>
+            </div>
+          </a>
+          <a href="/analytics" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
+              <h3>📊 Analytics</h3>
+              <p>Sales pipeline insights</p>
             </div>
           </a>
           <a href="/settings" style={{ textDecoration: 'none', color: 'inherit' }}>
