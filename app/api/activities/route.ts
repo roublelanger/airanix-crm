@@ -36,10 +36,9 @@ export async function POST(request: Request) {
       .insert([{
         contact_id: body.contactId
       }])
-      .select()
 
     if (error) throw error
-    return NextResponse.json(data?.[0], { status: 201 })
+    return NextResponse.json({ success: true }, { status: 201 })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
