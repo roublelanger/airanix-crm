@@ -33,7 +33,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (body.email !== undefined) updateData.email = body.email
     if (body.phone !== undefined) updateData.phone = body.phone
     if (body.company !== undefined) updateData.company = body.company
-    if (body.status !== undefined) updateData.status = body.status
+    if (body.status !== undefined) updateData.status = body.status.toUpperCase()
 
     // Always update the updatedAt timestamp
     updateData.updatedAt = new Date().toISOString()
