@@ -124,7 +124,13 @@ export default function ContactDetailPage() {
         <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>Quick Actions</h2>
 
-          <button onClick={() => { if (contact.phone) window.location.href = `tel:${contact.phone}`; else alert('No phone number available'); }} style={{
+          <button onClick={() => {
+            if (!contact?.phone) {
+              alert('No phone number available for this contact')
+              return
+            }
+            window.location.href = `tel:${contact.phone}`
+          }} style={{
             width: '100%',
             padding: '12px 16px',
             background: '#3b82f6',
@@ -138,7 +144,13 @@ export default function ContactDetailPage() {
             ☎️ Call Now
           </button>
 
-          <button onClick={() => { if (contact.email) window.location.href = `mailto:${contact.email}`; else alert('No email available'); }} style={{
+          <button onClick={() => {
+            if (!contact?.email) {
+              alert('No email available for this contact')
+              return
+            }
+            window.location.href = `mailto:${contact.email}?subject=Follow-up with ${contact.name}`
+          }} style={{
             width: '100%',
             padding: '12px 16px',
             background: '#10b981',
