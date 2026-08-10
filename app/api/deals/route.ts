@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabase
       .from('deals')
-      .insert([{ id: uuidv4(), name, value: parseInt(value), stage: stage || 'LEAD' }])
+      .insert([{ id: uuidv4(), name, title: name, value: parseInt(value), stage: stage || 'LEAD' }])
       .select('id,name,value,stage')
 
     if (error) throw error
