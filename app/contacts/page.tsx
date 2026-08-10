@@ -56,7 +56,8 @@ function ContactsContent() {
               description: formData.followupNotes,
               dueDate: formData.followupDate,
               priority: 'high',
-              status: formData.followupType,
+              type: formData.followupType,
+              status: 'open',
               contactId: data.id || editingId
             })
           })
