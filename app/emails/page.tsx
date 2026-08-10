@@ -4,6 +4,9 @@ import { useState } from 'react'
 
 export default function EmailTemplatesPage() {
   const [selectedTemplate, setSelectedTemplate] = useState('welcome')
+  const [editedSubject, setEditedSubject] = useState('')
+  const [editedBody, setEditedBody] = useState('')
+  const [savedMessage, setSavedMessage] = useState('')
 
   const templates: any = {
     welcome: {
@@ -70,20 +73,51 @@ Best regards,
 
   const currentTemplate = templates[selectedTemplate]
 
+  // Initialize edited content when template changes
+  const currentEditedSubject = editedSubject || currentTemplate.subject
+  const currentEditedBody = editedBody || currentTemplate.body
+
+  const handleTemplateChange = (templateKey: string) => {
+    setSelectedTemplate(templateKey)
+    setEditedSubject('')
+    setEditedBody('')
+    setSavedMessage('')
+  }
+
+  const handleSaveTemplate = () => {
+    const templateData = {
+      name: currentTemplate.name,
+      subject: currentEditedSubject,
+      body: currentEditedBody,
+      savedAt: new Date().toLocaleString()
+    }
+    // Save to localStorage for demo purposes
+    localStorage.setItem(`template_${selectedTemplate}`, JSON.stringify(templateData))
+    setSavedMessage('✓ Template saved successfully!')
+    setTimeout(() => setSavedMessage(''), 3000)
+  }
+
+  const handleUseTemplate = () => {
+    const templateText = `Subject: ${currentEditedSubject}\n\n${currentEditedBody}`
+    navigator.clipboard.writeText(templateText)
+    setSavedMessage('✓ Template copied to clipboard! Ready to paste into your email client.')
+    setTimeout(() => setSavedMessage(''), 3000)
+  }
+
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '40px 20px' }}>
       <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '8px' }}>📧 Email Templates</h1>
       <p style={{ color: '#666', marginBottom: '30px' }}>Professional templates for quick outreach</p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '20px' }}>
-        <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+        <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', height: 'fit-content' }}>
           <div style={{ padding: '20px', borderBottom: '1px solid #eee' }}>
             <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#666' }}>Templates</h3>
           </div>
           {Object.entries(templates).map(([key, template]: any) => (
             <button
               key={key}
-              onClick={() => setSelectedTemplate(key)}
+              onClick={() => handleTemplateChange(key)}
               style={{
                 width: '100%',
                 padding: '16px 20px',
@@ -94,7 +128,8 @@ Best regards,
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: selectedTemplate === key ? '600' : '500',
-                color: selectedTemplate === key ? '#1e40af' : '#333'
+                color: selectedTemplate === key ? '#1e40af' : '#333',
+                transition: 'all 0.2s'
               }}
             >
               {template.name}
@@ -107,13 +142,29 @@ Best regards,
             {currentTemplate.name}
           </h2>
 
+          {savedMessage && (
+            <div style={{
+              padding: '12px',
+              background: '#d1fae5',
+              color: '#065f46',
+              borderRadius: '6px',
+              marginBottom: '16px',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}>
+              {savedMessage}
+            </div>
+          )}
+
           <div style={{ marginBottom: '24px' }}>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
               Subject
             </label>
             <input
               type="text"
-              defaultValue={currentTemplate.subject}
+              value={currentEditedSubject}
+              onChange={(e) => setEditedSubject(e.target.value)}
+              placeholder={currentTemplate.subject}
               style={{
                 width: '100%',
                 padding: '12px',
@@ -130,7 +181,9 @@ Best regards,
               Body
             </label>
             <textarea
-              defaultValue={currentTemplate.body}
+              value={currentEditedBody}
+              onChange={(e) => setEditedBody(e.target.value)}
+              placeholder={currentTemplate.body}
               style={{
                 width: '100%',
                 padding: '12px',
@@ -139,13 +192,20 @@ Best regards,
                 fontSize: '14px',
                 minHeight: '300px',
                 fontFamily: 'monospace',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                resize: 'vertical'
               }}
             />
           </div>
 
+          <div style={{ marginBottom: '16px', padding: '12px', background: '#f0f9ff', borderRadius: '6px', fontSize: '12px', color: '#1e40af' }}>
+            <strong>Available variables:</strong><br/>
+            {{firstName}}, {{companyName}}, {{email}}, {{phone}}, {{topic}}, {{date}}, {{timeline}}, {{senderName}}, {{amount}}
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <button
+              onClick={handleSaveTemplate}
               style={{
                 padding: '10px 20px',
                 background: '#f3f4f6',
@@ -153,12 +213,16 @@ Best regards,
                 border: '1px solid #ddd',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                fontWeight: '500'
+                fontWeight: '500',
+                transition: 'all 0.2s'
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#e5e7eb')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '#f3f4f6')}
             >
-              Save Template
+              💾 Save Template
             </button>
             <button
+              onClick={handleUseTemplate}
               style={{
                 padding: '10px 20px',
                 background: '#2563eb',
@@ -166,10 +230,13 @@ Best regards,
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                fontWeight: '500'
+                fontWeight: '500',
+                transition: 'all 0.2s'
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#1d4ed8')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '#2563eb')}
             >
-              Use Template
+              📋 Copy to Clipboard
             </button>
           </div>
         </div>
