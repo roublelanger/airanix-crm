@@ -12,7 +12,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     const { data, error } = await supabase
       .from('contacts')
-      .select('id,name,email,phone,company,status')
+      .select()
       .eq('id', params.id)
       .single()
 
