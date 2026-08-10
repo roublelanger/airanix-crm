@@ -34,7 +34,8 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from('interactions')
       .insert([{
-        contact_id: body.contactId
+        contact_id: body.contactId,
+        type: body.type
       }])
 
     if (error) throw error
