@@ -52,6 +52,10 @@ export default function ContactDetailPage() {
 
   async function handleActivitySubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!activityForm.title.trim()) {
+      alert('Please enter an activity title')
+      return
+    }
     try {
       const res = await fetch('/api/activities', {
         method: 'POST',
@@ -61,13 +65,18 @@ export default function ContactDetailPage() {
           contactId: params.id
         })
       })
+      const data = await res.json()
       if (res.ok) {
         setActivityForm({ type: 'call', title: '', description: '', outcome: 'pending' })
         setShowActivityForm(false)
         fetchActivities()
+        alert('Activity logged successfully!')
+      } else {
+        alert(`Error: ${data.error || 'Failed to save activity'}`)
       }
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error saving activity:', error)
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to save activity'}`)
     }
   }
 
