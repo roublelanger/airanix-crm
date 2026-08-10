@@ -34,12 +34,14 @@ export async function POST(request: Request) {
     if (!body.contactId) throw new Error('contactId is required')
     if (!body.type) throw new Error('type is required')
 
+    const activityNotes = `${body.title || 'Activity'}: ${body.description || ''}`
+
     const { data, error } = await supabase
       .from('interactions')
       .insert([{
         contact_id: body.contactId,
         type: body.type,
-        notes: body.description || body.title || 'Activity logged'
+        notes: activityNotes.trim()
       }])
 
     if (error) throw error
