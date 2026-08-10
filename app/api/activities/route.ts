@@ -34,9 +34,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from('interactions')
       .insert([{
-        contact_id: body.contactId,
-        type: body.type,
-        title: body.title
+        contact_id: body.contactId
       }])
       .select()
 
