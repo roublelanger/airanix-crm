@@ -222,7 +222,7 @@ function ContactsContent() {
               </tr>
             ) : (
               contacts.filter(c => (!filters.status || c.status === filters.status) && (!filters.company || c.company === filters.company)).map((contact: any) => (
-                <tr key={contact.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                <tr key={contact.id} onClick={() => window.location.href = `/contacts/${contact.id}`} style={{ borderBottom: '1px solid #e5e7eb', cursor: 'pointer', transition: 'background 0.2s', ':hover': { background: '#f9fafb' } }} onMouseEnter={(e) => (e.currentTarget.style.background = '#f9fafb')} onMouseLeave={(e) => (e.currentTarget.style.background = 'white')}>
                   <td style={{ padding: '16px', fontSize: '14px', fontWeight: '500' }}>{contact.name}</td>
                   <td style={{ padding: '16px', fontSize: '14px' }}>{contact.email || '-'}</td>
                   <td style={{ padding: '16px', fontSize: '14px' }}>{contact.phone || '-'}</td>
@@ -239,7 +239,7 @@ function ContactsContent() {
                       {contact.status || 'new'}
                     </span>
                   </td>
-                  <td style={{ padding: '16px', fontSize: '14px' }}>
+                  <td style={{ padding: '16px', fontSize: '14px' }} onClick={(e) => e.stopPropagation()}>
                     <button onClick={() => handleEditContact(contact)} style={{ padding: '6px 12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Edit</button>
                   </td>
                 </tr>
