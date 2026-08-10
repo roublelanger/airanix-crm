@@ -15,6 +15,7 @@ export default function ContactDetailPage() {
     description: '',
     outcome: 'pending'
   })
+  const [followupStatus, setFollowupStatus] = useState('')
 
   useEffect(() => {
     fetchContact()
@@ -169,16 +170,17 @@ export default function ContactDetailPage() {
           <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #eee' }}>
             <p style={{ fontSize: '12px', color: '#666', margin: '0 0 8px 0' }}>Follow-up Status</p>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button style={{ flex: 1, padding: '8px', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}>
+              <button onClick={() => setFollowupStatus('demo')} style={{ flex: 1, padding: '8px', background: followupStatus === 'demo' ? '#fcd34d' : '#fef3c7', border: `2px solid ${followupStatus === 'demo' ? '#d97706' : '#fcd34d'}`, borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}>
                 📋 Demo
               </button>
-              <button style={{ flex: 1, padding: '8px', background: '#dbeafe', border: '1px solid #93c5fd', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}>
+              <button onClick={() => setFollowupStatus('meeting')} style={{ flex: 1, padding: '8px', background: followupStatus === 'meeting' ? '#93c5fd' : '#dbeafe', border: `2px solid ${followupStatus === 'meeting' ? '#3b82f6' : '#93c5fd'}`, borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}>
                 📅 Meeting
               </button>
-              <button style={{ flex: 1, padding: '8px', background: '#d1fae5', border: '1px solid #6ee7b7', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}>
+              <button onClick={() => setFollowupStatus('done')} style={{ flex: 1, padding: '8px', background: followupStatus === 'done' ? '#6ee7b7' : '#d1fae5', border: `2px solid ${followupStatus === 'done' ? '#10b981' : '#6ee7b7'}`, borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}>
                 ✅ Done
               </button>
             </div>
+            {followupStatus && <p style={{ fontSize: '12px', color: '#10b981', margin: '8px 0 0 0', fontWeight: '500' }}>✓ Follow-up marked as {followupStatus}</p>}
           </div>
         </div>
       </div>
