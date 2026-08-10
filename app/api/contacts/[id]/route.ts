@@ -56,3 +56,19 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     return NextResponse.json({ error: error.message || 'Failed to update contact' }, { status: 500 })
   }
 }
+
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const { error } = await supabase
+      .from('contacts')
+      .delete()
+      .eq('id', params.id)
+
+    if (error) throw error
+
+    return NextResponse.json({ success: true }, { status: 200 })
+  } catch (error: any) {
+    console.error('Error deleting contact:', error)
+    return NextResponse.json({ error: error.message || 'Failed to delete contact' }, { status: 500 })
+  }
+}
