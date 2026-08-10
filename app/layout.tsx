@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <style>{`
           @media (max-width: 768px) {
             nav { display: none !important; }
-            main { margin-left: 0 !important; padding-top: 80px !important; }
+            main { margin-left: 0 !important; padding-top: 64px !important; }
           }
         `}</style>
       </head>
@@ -24,46 +24,60 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Desktop Sidebar */}
           <nav style={{
             width: '250px',
-            background: 'linear-gradient(180deg, #1e3a5f 0%, #162842 100%)',
+            background: '#0f2742',
             color: 'white',
-            padding: '24px 0',
+            padding: '0',
             position: 'fixed',
             height: '100vh',
             overflowY: 'auto',
-            boxShadow: '4px 0 16px rgba(0,0,0,0.2)',
+            boxShadow: '2px 0 8px rgba(0,0,0,0.3)',
             zIndex: 10
           }}>
-            <div style={{ paddingLeft: '24px', paddingRight: '20px', marginBottom: '48px' }}>
-              <a href="/" style={{ textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+            {/* Header Section */}
+            <div style={{
+              padding: '28px 24px 24px 24px',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              background: '#0f2742'
+            }}>
+              <a href="/" style={{ textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {/* Logo Circle */}
                 <div style={{
-                  fontSize: '32px',
-                  fontWeight: '800',
-                  background: 'linear-gradient(135deg, #4a9eff 0%, #00d4ff 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  lineHeight: '1',
-                  marginTop: '2px'
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #00bfff 0%, #1e90ff 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  boxShadow: '0 4px 12px rgba(0, 191, 255, 0.2)'
                 }}>
-                  A
+                  <span style={{
+                    fontSize: '24px',
+                    fontWeight: '800',
+                    color: 'white',
+                    lineHeight: '1'
+                  }}>A</span>
                 </div>
-                <div>
-                  <h2 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 2px 0', color: '#ffffff', letterSpacing: '-0.5px' }}>Airanix</h2>
-                  <p style={{ fontSize: '11px', color: '#4a9eff', margin: 0, fontWeight: '600', letterSpacing: '0.5px' }}>PROFESSIONAL CRM</p>
+                {/* Logo Text */}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '16px', fontWeight: '700', color: '#ffffff', lineHeight: '1.2', marginBottom: '2px' }}>Airanix</div>
+                  <div style={{ fontSize: '10px', color: '#00bfff', fontWeight: '600', letterSpacing: '0.8px', lineHeight: '1' }}>CRM PLATFORM</div>
                 </div>
               </a>
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <a href="/" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>🏠 Home</a>
-              <a href="/" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>📈 Dashboard</a>
-              <a href="/contacts" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>👥 Contacts</a>
-              <a href="/deals" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>🎯 Leads</a>
-              <a href="/activities" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>📞 Activities</a>
-              <a href="/followups" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>📋 Follow-ups</a>
-              <a href="/emails" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>📧 Email Templates</a>
-              <a href="/analytics" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>📊 Analytics</a>
-              <a href="/settings" style={{ display: 'block', padding: '12px 20px', color: '#9db4d1', textDecoration: 'none', fontSize: '14px' }}>⚙️ Settings</a>
+            {/* Navigation Section */}
+            <div style={{ padding: '16px 0' }}>
+              <a href="/" style={{ display: 'block', padding: '14px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,191,255,0.08)'; e.currentTarget.style.color = '#00bfff'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#a8c5dd'; }}>🏠 Home</a>
+              <a href="/" style={{ display: 'block', padding: '14px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,191,255,0.08)'; e.currentTarget.style.color = '#00bfff'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#a8c5dd'; }}>📈 Dashboard</a>
+              <a href="/contacts" style={{ display: 'block', padding: '14px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,191,255,0.08)'; e.currentTarget.style.color = '#00bfff'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#a8c5dd'; }}>👥 Contacts</a>
+              <a href="/deals" style={{ display: 'block', padding: '14px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,191,255,0.08)'; e.currentTarget.style.color = '#00bfff'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#a8c5dd'; }}>🎯 Leads</a>
+              <a href="/activities" style={{ display: 'block', padding: '14px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,191,255,0.08)'; e.currentTarget.style.color = '#00bfff'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#a8c5dd'; }}>📞 Activities</a>
+              <a href="/followups" style={{ display: 'block', padding: '14px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,191,255,0.08)'; e.currentTarget.style.color = '#00bfff'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#a8c5dd'; }}>📋 Follow-ups</a>
+              <a href="/emails" style={{ display: 'block', padding: '14px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,191,255,0.08)'; e.currentTarget.style.color = '#00bfff'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#a8c5dd'; }}>📧 Email Templates</a>
+              <a href="/analytics" style={{ display: 'block', padding: '14px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,191,255,0.08)'; e.currentTarget.style.color = '#00bfff'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#a8c5dd'; }}>📊 Analytics</a>
+              <a href="/settings" style={{ display: 'block', padding: '14px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,191,255,0.08)'; e.currentTarget.style.color = '#00bfff'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#a8c5dd'; }}>⚙️ Settings</a>
             </div>
           </nav>
 
