@@ -200,7 +200,7 @@ Best regards,
 
           <div style={{ marginBottom: '16px', padding: '12px', background: '#f0f9ff', borderRadius: '6px', fontSize: '12px', color: '#1e40af' }}>
             <strong>Available variables:</strong><br/>
-            {{firstName}}, {{companyName}}, {{email}}, {{phone}}, {{topic}}, {{date}}, {{timeline}}, {{senderName}}, {{amount}}
+            {'{firstName}'}, {'{companyName}'}, {'{email}'}, {'{phone}'}, {'{topic}'}, {'{date}'}, {'{timeline}'}, {'{senderName}'}, {'{amount}'}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
