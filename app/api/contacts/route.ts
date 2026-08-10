@@ -29,9 +29,12 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { name, email, phone, company, status, comments } = body
 
+    const contactData: any = { name, email, phone, company, status }
+    if (comments) contactData.comments = comments
+
     const { data, error } = await supabase
       .from('contacts')
-      .insert([{ name, email, phone, company, status, comments }])
+      .insert([contactData])
       .select()
 
     if (error) {

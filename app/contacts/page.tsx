@@ -45,14 +45,19 @@ function ContactsContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       })
+      const data = await res.json()
       if (res.ok) {
         setFormData({ name: '', email: '', phone: '', company: '', status: 'new', comments: '' })
         setEditingId(null)
         setShowForm(false)
         fetchContacts()
+        alert('Contact saved successfully!')
+      } else {
+        alert(`Error: ${data.error || 'Failed to save contact'}`)
       }
     } catch (error) {
       console.error('Error saving contact:', error)
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to save contact'}`)
     }
   }
 
