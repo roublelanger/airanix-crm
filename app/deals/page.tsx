@@ -34,10 +34,18 @@ function DealsContent() {
     try {
       const method = editingId ? 'PUT' : 'POST'
       const url = editingId ? `/api/deals/${editingId}` : '/api/deals'
+
+      // Only send fields that exist in database - strip everything else
+      const cleanData = {
+        name: formData.name || '',
+        value: parseInt(formData.value) || 0,
+        stage: formData.stage || 'prospect'
+      }
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, value: parseInt(formData.value) || 0 })
+        body: JSON.stringify(cleanData)
       })
       if (res.ok) {
         setFormData({ name: '', value: '', stage: 'prospect' })

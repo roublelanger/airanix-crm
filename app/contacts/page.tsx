@@ -40,10 +40,20 @@ function ContactsContent() {
     try {
       const method = editingId ? 'PUT' : 'POST'
       const url = editingId ? `/api/contacts/${editingId}` : '/api/contacts'
+
+      // Only send fields that exist in database - strip everything else
+      const cleanData = {
+        name: formData.name || '',
+        email: formData.email || '',
+        phone: formData.phone || '',
+        company: formData.company || '',
+        status: formData.status || 'new'
+      }
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(cleanData)
       })
       const data = await res.json()
       if (res.ok) {
