@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       .from('interactions')
       .insert([{
         contact_id: body.contactId,
-        type: body.type.toUpperCase()
+        type: body.type
       }])
 
     if (error) throw error
