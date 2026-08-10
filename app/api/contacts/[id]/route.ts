@@ -9,14 +9,11 @@ const supabase = createClient(
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const body = await request.json()
-    const { name, email, phone, company, status, comments } = body
-
-    const updateData: any = { name, email, phone, company, status }
-    if (comments) updateData.comments = comments
+    const { name, email, phone, company, status } = body
 
     const { data, error } = await supabase
       .from('contacts')
-      .update(updateData)
+      .update({ name, email, phone, company, status })
       .eq('id', params.id)
       .select()
 

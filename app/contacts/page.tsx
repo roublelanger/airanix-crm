@@ -10,7 +10,7 @@ function ContactsContent() {
   const [error, setError] = useState('')
   const [filters, setFilters] = useState({ status: searchParams.get('status') || '', company: '' })
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', company: '', status: 'new', comments: '' })
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', company: '', status: 'new' })
   const [editingId, setEditingId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -47,7 +47,7 @@ function ContactsContent() {
       })
       const data = await res.json()
       if (res.ok) {
-        setFormData({ name: '', email: '', phone: '', company: '', status: 'new', comments: '' })
+        setFormData({ name: '', email: '', phone: '', company: '', status: 'new' })
         setEditingId(null)
         setShowForm(false)
         fetchContacts()
@@ -62,14 +62,14 @@ function ContactsContent() {
   }
 
   function handleEditContact(contact: any) {
-    setFormData({ name: contact.name, email: contact.email, phone: contact.phone, company: contact.company, status: contact.status, comments: contact.comments || '' })
+    setFormData({ name: contact.name, email: contact.email, phone: contact.phone, company: contact.company, status: contact.status })
     setEditingId(contact.id)
     setShowForm(true)
   }
 
   function handleCloseForm() {
     setShowForm(false)
-    setFormData({ name: '', email: '', phone: '', company: '', status: 'new', comments: '' })
+    setFormData({ name: '', email: '', phone: '', company: '', status: 'new' })
     setEditingId(null)
   }
 
@@ -112,10 +112,6 @@ function ContactsContent() {
               <option value="closed">Closed</option>
               <option value="cold">Cold</option>
             </select>
-          </div>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '6px' }}>Comments</label>
-            <textarea value={formData.comments} onChange={(e) => setFormData({ ...formData, comments: e.target.value })} placeholder="Add notes or comments about this contact" style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%', minHeight: '100px', fontFamily: 'system-ui', boxSizing: 'border-box' }} />
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button onClick={handleSaveContact} style={{ padding: '10px 20px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Save</button>
