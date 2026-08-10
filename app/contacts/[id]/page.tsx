@@ -258,9 +258,9 @@ export default function ContactDetailPage() {
           <div>
             {activities.map((activity: any) => (
               <div key={activity.id} style={{ padding: '12px', borderBottom: '1px solid #eee', fontSize: '13px' }}>
-                <strong>{activity.type === 'call' ? '☎️' : activity.type === 'email' ? '📧' : activity.type === 'meeting' ? '📅' : '📝'} {activity.title || 'Untitled'}</strong>
-                <p style={{ margin: '4px 0 0 0', color: '#666' }}>{activity.description}</p>
-                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#999' }}>{new Date(activity.completed_at).toLocaleString()}</p>
+                <strong>{activity.type === 'call' ? '☎️' : activity.type === 'email' ? '📧' : activity.type === 'meeting' ? '📅' : '📝'} {activity.type.toUpperCase()}</strong>
+                <p style={{ margin: '4px 0 0 0', color: '#666' }}>{activity.notes || 'No details'}</p>
+                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#999' }}>{activity.created_at ? new Date(activity.created_at).toLocaleString() : 'Just now'}</p>
               </div>
             ))}
           </div>
