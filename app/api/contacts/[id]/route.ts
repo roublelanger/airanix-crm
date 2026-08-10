@@ -8,19 +8,27 @@ const supabase = createClient(
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
+    console.log('Fetching contact with ID:', params.id)
+
     const { data, error } = await supabase
       .from('contacts')
       .select('id,name,email,phone,company,status')
       .eq('id', params.id)
       .single()
 
-    if (error) throw error
+    console.log('Query result:', { data, error })
+
+    if (error) {
+      console.error('Supabase error:', error.message)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
     if (!data) return NextResponse.json({ error: 'Contact not found' }, { status: 404 })
 
     return NextResponse.json(data, { status: 200 })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error:', error)
-    return NextResponse.json({ error: 'Failed to fetch contact' }, { status: 500 })
+    return NextResponse.json({ error: error.message || 'Failed to fetch contact' }, { status: 500 })
   }
 }
 
