@@ -24,19 +24,33 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Desktop Sidebar */}
           <nav style={{
             width: '250px',
-            background: '#1e3a5f',
+            background: 'linear-gradient(180deg, #1e3a5f 0%, #162842 100%)',
             color: 'white',
             padding: '24px 0',
             position: 'fixed',
             height: '100vh',
             overflowY: 'auto',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            boxShadow: '4px 0 16px rgba(0,0,0,0.2)',
             zIndex: 10
           }}>
-            <div style={{ paddingLeft: '20px', marginBottom: '40px' }}>
-              <a href="/" style={{ textDecoration: 'none', cursor: 'pointer' }}>
-                <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0, color: '#fff' }}>📊 Airanix</h2>
-                <p style={{ fontSize: '12px', color: '#9db4d1', margin: '4px 0 0 0' }}>Professional CRM</p>
+            <div style={{ paddingLeft: '24px', paddingRight: '20px', marginBottom: '48px' }}>
+              <a href="/" style={{ textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                <div style={{
+                  fontSize: '32px',
+                  fontWeight: '800',
+                  background: 'linear-gradient(135deg, #4a9eff 0%, #00d4ff 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  lineHeight: '1',
+                  marginTop: '2px'
+                }}>
+                  A
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 2px 0', color: '#ffffff', letterSpacing: '-0.5px' }}>Airanix</h2>
+                  <p style={{ fontSize: '11px', color: '#4a9eff', margin: 0, fontWeight: '600', letterSpacing: '0.5px' }}>PROFESSIONAL CRM</p>
+                </div>
               </a>
             </div>
 
