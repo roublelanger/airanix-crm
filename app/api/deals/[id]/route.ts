@@ -30,7 +30,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     const { data, error } = await supabase
       .from('deals')
-      .update({ name, value: parseInt(value), stage: stage || 'prospect' })
+      .update({ name, value: parseInt(value), stage: stage || 'LEAD' })
       .eq('id', params.id)
       .select('id,name,value,stage')
 

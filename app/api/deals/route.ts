@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabase
       .from('deals')
-      .insert([{ name, value: parseInt(value), stage: stage || 'prospect' }])
+      .insert([{ name, value: parseInt(value), stage: stage || 'LEAD' }])
       .select('id,name,value,stage')
 
     if (error) throw error
@@ -51,7 +51,7 @@ export async function PUT(request: Request) {
 
     const { data, error } = await supabase
       .from('deals')
-      .update({ name, value: parseInt(value), stage: stage || 'prospect' })
+      .update({ name, value: parseInt(value), stage: stage || 'LEAD' })
       .eq('id', id)
       .select('id,name,value,stage')
 

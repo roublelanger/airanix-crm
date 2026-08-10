@@ -10,7 +10,7 @@ function DealsContent() {
   const [error, setError] = useState('')
   const stageFilter = searchParams.get('stage') || ''
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({ name: '', value: '', stage: 'prospect' })
+  const [formData, setFormData] = useState({ name: '', value: '', stage: 'LEAD' })
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saveError, setSaveError] = useState('')
   const [saveSuccess, setSaveSuccess] = useState('')
@@ -56,7 +56,7 @@ function DealsContent() {
       const data = await res.json()
       if (res.ok) {
         setSaveSuccess(editingId ? 'Lead updated successfully!' : 'Lead created successfully!')
-        setFormData({ name: '', value: '', stage: 'prospect' })
+        setFormData({ name: '', value: '', stage: 'LEAD' })
         setEditingId(null)
         setTimeout(() => {
           setShowForm(false)
@@ -137,11 +137,11 @@ function DealsContent() {
             <input type="text" placeholder="Lead Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px' }} />
             <input type="number" placeholder="Value (INR) *" value={formData.value} onChange={(e) => setFormData({ ...formData, value: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px' }} />
             <select value={formData.stage} onChange={(e) => setFormData({ ...formData, stage: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px' }}>
-              <option value="prospect">Prospect</option>
-              <option value="contacted">Contacted</option>
-              <option value="proposal">Proposal</option>
-              <option value="won">Won</option>
-              <option value="lost">Lost</option>
+              <option value="LEAD">Lead</option>
+              <option value="CONTACTED">Contacted</option>
+              <option value="PROPOSAL">Proposal</option>
+              <option value="WON">Won</option>
+              <option value="LOST">Lost</option>
             </select>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
