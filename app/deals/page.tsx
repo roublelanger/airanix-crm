@@ -138,9 +138,8 @@ function DealsContent() {
             <input type="number" placeholder="Value (INR) *" value={formData.value} onChange={(e) => setFormData({ ...formData, value: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px' }} />
             <select value={formData.stage} onChange={(e) => setFormData({ ...formData, stage: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px' }}>
               <option value="prospect">Prospect</option>
-              <option value="negotiation">Negotiation</option>
+              <option value="contacted">Contacted</option>
               <option value="proposal">Proposal</option>
-              <option value="active">Active</option>
               <option value="won">Won</option>
               <option value="lost">Lost</option>
             </select>
