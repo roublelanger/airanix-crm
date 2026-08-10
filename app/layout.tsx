@@ -51,7 +51,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div style={{
               padding: '28px 20px 28px 20px',
               borderBottom: '1px solid rgba(255,255,255,0.12)',
-              background: '#2d4e68'
+              background: '#2d4e68',
+              marginBottom: '16px'
             }}>
               <a href="/" style={{ textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '14px' }}>
                 {/* Logo Circle */}
@@ -82,7 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
 
             {/* Navigation Section */}
-            <div style={{ padding: '20px 0 16px 0' }}>
+            <div style={{ padding: '0 0 16px 0' }}>
               <a href="/" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>🏠 Home</a>
               <a href="/" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>📈 Dashboard</a>
               <a href="/contacts" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>👥 Contacts</a>
