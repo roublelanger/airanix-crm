@@ -35,6 +35,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (body.company !== undefined) updateData.company = body.company
     if (body.status !== undefined) updateData.status = body.status
 
+    // Always update the updatedAt timestamp
+    updateData.updatedAt = new Date().toISOString()
+
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }
@@ -48,8 +51,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (error) throw error
 
     return NextResponse.json(data[0], { status: 200 })
-  } catch (error) {
-    console.error('Error:', error)
-    return NextResponse.json({ error: 'Failed to update contact' }, { status: 500 })
+  } catch (error: any) {
+    console.error('Error updating contact:', error)
+    return NextResponse.json({ error: error.message || 'Failed to update contact' }, { status: 500 })
   }
 }
