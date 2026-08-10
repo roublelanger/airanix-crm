@@ -35,11 +35,10 @@ export async function POST(request: Request) {
       .from('interactions')
       .insert([{
         contact_id: body.contactId,
-        type: body.type, // call, email, meeting, note
+        type: body.type,
         title: body.title,
         description: body.description,
-        outcome: body.outcome,
-        completed_at: new Date().toISOString()
+        outcome: body.outcome
       }])
       .select()
 
