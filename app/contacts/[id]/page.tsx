@@ -23,10 +23,14 @@ export default function ContactDetailPage() {
 
   async function fetchContact() {
     try {
+      console.log('Fetching contact with ID:', params.id)
       const res = await fetch(`/api/contacts/${params.id}`)
+      const data = await res.json()
+      console.log('API response:', { status: res.ok, data })
       if (res.ok) {
-        const data = await res.json()
         setContact(data)
+      } else {
+        console.error('API error:', data)
       }
     } catch (error) {
       console.error('Error:', error)
