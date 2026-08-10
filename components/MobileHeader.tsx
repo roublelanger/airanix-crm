@@ -42,10 +42,10 @@ export default function MobileHeader() {
         borderBottom: '1px solid rgba(0,191,255,0.12)'
       }}>
         {/* Logo */}
-        <a href="/" style={{ textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <a href="/" style={{ textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
           <div style={{
-            width: '40px',
-            height: '40px',
+            width: '38px',
+            height: '38px',
             borderRadius: '8px',
             background: 'linear-gradient(135deg, #00bfff 0%, #1e90ff 100%)',
             display: 'flex',
@@ -55,15 +55,15 @@ export default function MobileHeader() {
             boxShadow: '0 4px 12px rgba(0, 191, 255, 0.2)'
           }}>
             <span style={{
-              fontSize: '22px',
+              fontSize: '20px',
               fontWeight: '800',
               color: 'white',
               lineHeight: '1'
             }}>A</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#ffffff', lineHeight: '1.1' }}>Airanix</div>
-            <div style={{ fontSize: '10px', fontWeight: '600', color: '#00bfff', letterSpacing: '0.6px', lineHeight: '1' }}>CRM</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#ffffff', lineHeight: '1.2', whiteSpace: 'nowrap' }}>Airanix</div>
+            <div style={{ fontSize: '9px', fontWeight: '600', color: '#00bfff', letterSpacing: '0.5px', lineHeight: '1', whiteSpace: 'nowrap' }}>CRM</div>
           </div>
         </a>
 

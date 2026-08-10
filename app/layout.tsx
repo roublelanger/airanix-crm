@@ -49,16 +49,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}>
             {/* Header Section */}
             <div style={{
-              padding: '32px 24px 32px 24px',
+              padding: '28px 20px 28px 20px',
               borderBottom: '1px solid rgba(255,255,255,0.12)',
               background: '#2d4e68'
             }}>
-              <a href="/" style={{ textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <a href="/" style={{ textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '14px' }}>
                 {/* Logo Circle */}
                 <div style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '10px',
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '8px',
                   background: 'linear-gradient(135deg, #00bfff 0%, #1e90ff 100%)',
                   display: 'flex',
                   alignItems: 'center',
@@ -67,31 +67,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   boxShadow: '0 4px 12px rgba(0, 191, 255, 0.2)'
                 }}>
                   <span style={{
-                    fontSize: '24px',
+                    fontSize: '22px',
                     fontWeight: '800',
                     color: 'white',
                     lineHeight: '1'
                   }}>A</span>
                 </div>
                 {/* Logo Text */}
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '16px', fontWeight: '700', color: '#ffffff', lineHeight: '1.2', marginBottom: '2px' }}>Airanix</div>
-                  <div style={{ fontSize: '10px', color: '#00bfff', fontWeight: '600', letterSpacing: '0.8px', lineHeight: '1' }}>CRM PLATFORM</div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: '15px', fontWeight: '700', color: '#ffffff', lineHeight: '1.3', marginBottom: '3px', whiteSpace: 'nowrap' }}>Airanix</div>
+                  <div style={{ fontSize: '9px', color: '#00bfff', fontWeight: '600', letterSpacing: '0.5px', lineHeight: '1.2', whiteSpace: 'nowrap' }}>CRM</div>
                 </div>
               </a>
             </div>
 
             {/* Navigation Section */}
-            <div style={{ padding: '24px 0 16px 0' }}>
-              <a href="/" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>🏠 Home</a>
-              <a href="/" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>📈 Dashboard</a>
-              <a href="/contacts" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>👥 Contacts</a>
-              <a href="/deals" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>🎯 Leads</a>
-              <a href="/activities" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>📞 Activities</a>
-              <a href="/followups" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>📋 Follow-ups</a>
-              <a href="/emails" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>📧 Email Templates</a>
-              <a href="/analytics" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>📊 Analytics</a>
-              <a href="/settings" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>⚙️ Settings</a>
+            <div style={{ padding: '20px 0 16px 0' }}>
+              <a href="/" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>🏠 Home</a>
+              <a href="/" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>📈 Dashboard</a>
+              <a href="/contacts" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>👥 Contacts</a>
+              <a href="/deals" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>🎯 Leads</a>
+              <a href="/activities" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>📞 Activities</a>
+              <a href="/followups" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>📋 Follow-ups</a>
+              <a href="/emails" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>📧 Email Templates</a>
+              <a href="/analytics" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>📊 Analytics</a>
+              <a href="/settings" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>⚙️ Settings</a>
             </div>
           </nav>
 
