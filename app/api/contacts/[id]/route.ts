@@ -25,11 +25,23 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { name, email, phone, company, status } = await request.json()
+    const body = await request.json()
+
+    // Only include fields that were provided in the request
+    const updateData: any = {}
+    if (body.name !== undefined) updateData.name = body.name
+    if (body.email !== undefined) updateData.email = body.email
+    if (body.phone !== undefined) updateData.phone = body.phone
+    if (body.company !== undefined) updateData.company = body.company
+    if (body.status !== undefined) updateData.status = body.status
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
+    }
 
     const { data, error } = await supabase
       .from('contacts')
-      .update({ name, email, phone, company, status })
+      .update(updateData)
       .eq('id', params.id)
       .select('id,name,email,phone,company,status')
 
