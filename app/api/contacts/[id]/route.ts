@@ -8,27 +8,38 @@ const supabase = createClient(
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    console.log('Fetching contact with ID:', params.id)
+    console.log('=== Fetching contact ===')
+    console.log('ID:', params.id)
+    console.log('ID type:', typeof params.id)
 
-    const { data, error } = await supabase
+    const { data, error, status } = await supabase
       .from('contacts')
       .select()
       .eq('id', params.id)
       .single()
 
-    console.log('Query result:', { data, error })
+    console.log('=== Query result ===')
+    console.log('Status:', status)
+    console.log('Data:', data)
+    console.log('Error:', error)
+    console.log('Error type:', typeof error)
+    console.log('Error keys:', error ? Object.keys(error) : 'null')
 
     if (error) {
-      console.error('Supabase error:', error.message)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('SUPABASE ERROR:', JSON.stringify(error))
+      return NextResponse.json({ error: `Supabase: ${error?.message || JSON.stringify(error)}` }, { status: 500 })
     }
 
-    if (!data) return NextResponse.json({ error: 'Contact not found' }, { status: 404 })
+    if (!data) {
+      console.error('No data returned for ID:', params.id)
+      return NextResponse.json({ error: 'Contact not found in database' }, { status: 404 })
+    }
 
+    console.log('SUCCESS: Returning contact data')
     return NextResponse.json(data, { status: 200 })
   } catch (error: any) {
-    console.error('Error:', error)
-    return NextResponse.json({ error: error.message || 'Failed to fetch contact' }, { status: 500 })
+    console.error('=== EXCEPTION ===', error)
+    return NextResponse.json({ error: `Exception: ${error?.message || String(error)}` }, { status: 500 })
   }
 }
 
