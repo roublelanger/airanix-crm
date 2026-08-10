@@ -10,23 +10,55 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from('deals')
-      .select('id, value, stage')
+      .select('id,name,value,stage')
 
-    if (error) {
-      console.error('Supabase error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    if (error) throw error
 
-    const dealsWithNames = data?.map((deal: any) => ({
-      id: deal.id,
-      name: `Deal #${deal.id.slice(0, 8)}`,
-      value: deal.value || 0,
-      stage: deal.stage || 'prospect'
-    })) || []
-
-    return NextResponse.json(dealsWithNames)
+    return NextResponse.json(data || [])
   } catch (error) {
-    console.error('API error:', error)
+    console.error('Error:', error)
     return NextResponse.json({ error: 'Failed to fetch deals' }, { status: 500 })
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const { name, value, stage } = await request.json()
+
+    if (!name) throw new Error('Lead name is required')
+    if (!value || value <= 0) throw new Error('Valid lead value is required')
+
+    const { data, error } = await supabase
+      .from('deals')
+      .insert([{ name, value: parseInt(value), stage: stage || 'prospect' }])
+      .select('id,name,value,stage')
+
+    if (error) throw error
+
+    return NextResponse.json(data[0], { status: 201 })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Failed to create lead' }, { status: 500 })
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const { id, name, value, stage } = await request.json()
+
+    if (!id) throw new Error('Lead ID is required')
+    if (!name) throw new Error('Lead name is required')
+    if (!value || value <= 0) throw new Error('Valid lead value is required')
+
+    const { data, error } = await supabase
+      .from('deals')
+      .update({ name, value: parseInt(value), stage: stage || 'prospect' })
+      .eq('id', id)
+      .select('id,name,value,stage')
+
+    if (error) throw error
+
+    return NextResponse.json(data[0], { status: 200 })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Failed to update lead' }, { status: 500 })
   }
 }

@@ -23,11 +23,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
           }}>
             <div style={{ paddingLeft: '20px', marginBottom: '40px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0, color: '#fff' }}>📊 Airanix</h2>
-              <p style={{ fontSize: '12px', color: '#9db4d1', margin: '4px 0 0 0' }}>Professional CRM</p>
+              <a href="/" style={{ textDecoration: 'none', cursor: 'pointer' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0, color: '#fff' }}>📊 Airanix</h2>
+                <p style={{ fontSize: '12px', color: '#9db4d1', margin: '4px 0 0 0' }}>Professional CRM</p>
+              </a>
             </div>
 
             <div style={{ marginBottom: '20px' }}>
+              <a href="/" style={{
+                display: 'block',
+                padding: '12px 20px',
+                color: '#9db4d1',
+                textDecoration: 'none',
+                fontSize: '14px',
+                borderLeft: '4px solid transparent',
+                transition: 'all 0.2s'
+              }}>🏠 Home</a>
+
               <a href="/" style={{
                 display: 'block',
                 padding: '12px 20px',
@@ -56,7 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 fontSize: '14px',
                 borderLeft: '4px solid transparent',
                 transition: 'all 0.2s'
-              }}>💼 Deals</a>
+              }}>🎯 Leads</a>
 
               <a href="/activities" style={{
                 display: 'block',
