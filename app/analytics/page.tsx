@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 
+// Sales Analytics: Currency in INR, Interactive pipeline cards, Auto-refresh every 5 seconds
+
 export default function AnalyticsPage() {
   const [deals, setDeals] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
