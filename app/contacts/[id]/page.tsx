@@ -257,10 +257,15 @@ export default function ContactDetailPage() {
         ) : (
           <div>
             {activities.map((activity: any) => (
-              <div key={activity.id} style={{ padding: '12px', borderBottom: '1px solid #eee', fontSize: '13px' }}>
-                <strong>{activity.type === 'call' ? '☎️' : activity.type === 'email' ? '📧' : activity.type === 'meeting' ? '📅' : '📝'} {activity.type.toUpperCase()}</strong>
-                <p style={{ margin: '4px 0 0 0', color: '#666' }}>{activity.notes || 'No details'}</p>
-                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#999' }}>{activity.created_at ? new Date(activity.created_at).toLocaleString() : 'Just now'}</p>
+              <div key={activity.id} style={{ padding: '16px', borderBottom: '1px solid #eee', background: '#fafafa' }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '16px', marginRight: '8px' }}>
+                    {activity.type === 'call' ? '☎️' : activity.type === 'email' ? '📧' : activity.type === 'meeting' ? '📅' : '📝'}
+                  </span>
+                  <strong style={{ color: '#1e40af' }}>{activity.type.toUpperCase()}</strong>
+                </div>
+                <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#333' }}>{activity.notes || 'Activity logged'}</p>
+                <p style={{ margin: 0, fontSize: '12px', color: '#999' }}>{activity.created_at ? new Date(activity.created_at).toLocaleString() : 'Recently'}</p>
               </div>
             ))}
           </div>
