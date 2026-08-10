@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     const now = new Date().toISOString()
     const { data, error } = await supabase
       .from('deals')
-      .insert([{ id: uuidv4(), name, title: name, value: parseInt(value), stage: stage || 'LEAD', contactId: uuidv4(), createdAt: now, updatedAt: now }])
+      .insert([{ id: uuidv4(), name, title: name, value: parseInt(value), stage: stage || 'LEAD', contactId: null, createdAt: now, updatedAt: now }])
       .select('id,name,value,stage')
 
     if (error) throw error
