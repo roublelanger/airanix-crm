@@ -17,16 +17,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             main { margin-left: 0 !important; padding-top: 64px !important; }
           }
           .nav-link {
-            background: rgba(255,255,255,0.03) !important;
-            border-radius: 6px !important;
-            margin: 4px 12px !important;
+            background: rgba(100, 160, 200, 0.15) !important;
+            border-radius: 8px !important;
+            margin: 6px 12px !important;
             padding: 12px 16px !important;
-            transition: all 0.2s ease !important;
+            transition: all 0.25s ease !important;
+            border-left: 3px solid rgba(0,191,255,0.3) !important;
           }
           .nav-link:hover {
-            background: rgba(0,191,255,0.12) !important;
-            color: #00bfff !important;
+            background: rgba(0,191,255,0.25) !important;
+            color: #ffffff !important;
             padding-left: 20px !important;
+            border-left-color: #00bfff !important;
           }
         `}</style>
       </head>
@@ -36,20 +38,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Desktop Sidebar */}
           <nav style={{
             width: '250px',
-            background: '#1a3a52',
+            background: '#2d4e68',
             color: 'white',
             padding: '0',
             position: 'fixed',
             height: '100vh',
             overflowY: 'auto',
-            boxShadow: '2px 0 8px rgba(0,0,0,0.2)',
+            boxShadow: '2px 0 8px rgba(0,0,0,0.15)',
             zIndex: 10
           }}>
             {/* Header Section */}
             <div style={{
               padding: '32px 24px 32px 24px',
-              borderBottom: '1px solid rgba(255,255,255,0.08)',
-              background: '#1a3a52'
+              borderBottom: '1px solid rgba(255,255,255,0.12)',
+              background: '#2d4e68'
             }}>
               <a href="/" style={{ textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
                 {/* Logo Circle */}

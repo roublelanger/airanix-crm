@@ -29,7 +29,7 @@ export default function MobileHeader() {
         top: 0,
         left: 0,
         right: 0,
-        background: '#1a3a52',
+        background: '#2d4e68',
         color: 'white',
         padding: '12px 16px',
         zIndex: 100,
@@ -37,9 +37,9 @@ export default function MobileHeader() {
         alignItems: 'center',
         justifyContent: 'space-between',
         height: '64px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
         width: '100%',
-        borderBottom: '1px solid rgba(0,191,255,0.08)'
+        borderBottom: '1px solid rgba(0,191,255,0.12)'
       }}>
         {/* Logo */}
         <a href="/" style={{ textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -118,7 +118,7 @@ export default function MobileHeader() {
           left: 0,
           right: 0,
           bottom: 0,
-          background: '#1a3a52',
+          background: '#2d4e68',
           color: 'white',
           zIndex: 99,
           overflowY: 'auto',
@@ -126,7 +126,7 @@ export default function MobileHeader() {
           flexDirection: 'column',
           paddingTop: '8px',
           animation: 'slideIn 0.3s ease-out',
-          borderTop: '1px solid rgba(0,191,255,0.08)'
+          borderTop: '1px solid rgba(0,191,255,0.12)'
         }}>
           <style>{`
             @keyframes slideIn {
@@ -141,14 +141,15 @@ export default function MobileHeader() {
               onClick={() => setMenuOpen(false)}
               style={{
                 padding: '12px 16px',
-                margin: '4px 12px',
-                color: '#b0c4d8',
+                margin: '6px 12px',
+                color: '#c5d9eb',
                 textDecoration: 'none',
                 fontSize: '14px',
                 fontWeight: '500',
-                borderRadius: '6px',
-                background: 'rgba(255,255,255,0.03)',
-                transition: 'all 0.2s ease',
+                borderRadius: '8px',
+                background: 'rgba(100, 160, 200, 0.15)',
+                borderLeft: '3px solid rgba(0,191,255,0.3)',
+                transition: 'all 0.25s ease',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
@@ -156,14 +157,16 @@ export default function MobileHeader() {
                 animation: `slideIn 0.3s ease-out ${index * 0.05}s both`
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(0,191,255,0.12)';
-                e.currentTarget.style.color = '#00bfff';
+                e.currentTarget.style.background = 'rgba(0,191,255,0.25)';
+                e.currentTarget.style.color = '#ffffff';
                 e.currentTarget.style.paddingLeft = '20px';
+                e.currentTarget.style.borderLeftColor = '#00bfff';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                e.currentTarget.style.color = '#b0c4d8';
+                e.currentTarget.style.background = 'rgba(100, 160, 200, 0.15)';
+                e.currentTarget.style.color = '#c5d9eb';
                 e.currentTarget.style.paddingLeft = '16px';
+                e.currentTarget.style.borderLeftColor = 'rgba(0,191,255,0.3)';
               }}
             >
               <span style={{ fontSize: '18px' }}>{link.label.split(' ')[0]}</span>
