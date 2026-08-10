@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { v4 as uuidv4 } from 'uuid'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabase
       .from('deals')
-      .insert([{ name, value: parseInt(value), stage: stage || 'LEAD' }])
+      .insert([{ id: uuidv4(), name, value: parseInt(value), stage: stage || 'LEAD' }])
       .select('id,name,value,stage')
 
     if (error) throw error
