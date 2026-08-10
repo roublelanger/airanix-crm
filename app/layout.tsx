@@ -49,17 +49,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}>
             {/* Header Section */}
             <div style={{
-              padding: '28px 20px 28px 20px',
-              borderBottom: '1px solid rgba(255,255,255,0.12)',
-              background: '#2d4e68',
-              marginBottom: '16px'
+              padding: '24px 20px 20px 20px',
+              borderBottom: '2px solid rgba(0,191,255,0.3)',
+              background: '#253d54',
+              marginBottom: '12px'
             }}>
-              <a href="/" style={{ textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <a href="/" style={{ textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
                 {/* Logo Circle */}
                 <div style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '8px',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '6px',
                   background: 'linear-gradient(135deg, #00bfff 0%, #1e90ff 100%)',
                   display: 'flex',
                   alignItems: 'center',
@@ -68,22 +68,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   boxShadow: '0 4px 12px rgba(0, 191, 255, 0.2)'
                 }}>
                   <span style={{
-                    fontSize: '22px',
+                    fontSize: '20px',
                     fontWeight: '800',
                     color: 'white',
                     lineHeight: '1'
                   }}>A</span>
                 </div>
                 {/* Logo Text */}
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: '15px', fontWeight: '700', color: '#ffffff', lineHeight: '1.3', marginBottom: '3px', whiteSpace: 'nowrap' }}>Airanix</div>
-                  <div style={{ fontSize: '9px', color: '#00bfff', fontWeight: '600', letterSpacing: '0.5px', lineHeight: '1.2', whiteSpace: 'nowrap' }}>CRM</div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#ffffff', lineHeight: '1.2', margin: '0' }}>Airanix</div>
+                  <div style={{ fontSize: '10px', color: '#4fa3d1', fontWeight: '600', letterSpacing: '0.4px', lineHeight: '1.1', margin: '2px 0 0 0' }}>CRM SYSTEM</div>
                 </div>
               </a>
             </div>
 
             {/* Navigation Section */}
-            <div style={{ padding: '0 0 16px 0' }}>
+            <div style={{ padding: '4px 0 16px 0' }}>
               <a href="/" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>🏠 Home</a>
               <a href="/" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>📈 Dashboard</a>
               <a href="/contacts" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>👥 Contacts</a>
