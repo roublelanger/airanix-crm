@@ -31,6 +31,9 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
 
+    if (!body.contactId) throw new Error('contactId is required')
+    if (!body.type) throw new Error('type is required')
+
     const { data, error } = await supabase
       .from('interactions')
       .insert([{
