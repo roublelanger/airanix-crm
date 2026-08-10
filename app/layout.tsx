@@ -16,9 +16,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             nav { display: none !important; }
             main { margin-left: 0 !important; padding-top: 64px !important; }
           }
+          .nav-link {
+            background: rgba(255,255,255,0.03) !important;
+            border-radius: 6px !important;
+            margin: 4px 12px !important;
+            padding: 12px 16px !important;
+            transition: all 0.2s ease !important;
+          }
           .nav-link:hover {
-            background: rgba(0,191,255,0.08) !important;
+            background: rgba(0,191,255,0.12) !important;
             color: #00bfff !important;
+            padding-left: 20px !important;
           }
         `}</style>
       </head>
@@ -28,20 +36,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Desktop Sidebar */}
           <nav style={{
             width: '250px',
-            background: '#0f2742',
+            background: '#1a3a52',
             color: 'white',
             padding: '0',
             position: 'fixed',
             height: '100vh',
             overflowY: 'auto',
-            boxShadow: '2px 0 8px rgba(0,0,0,0.3)',
+            boxShadow: '2px 0 8px rgba(0,0,0,0.2)',
             zIndex: 10
           }}>
             {/* Header Section */}
             <div style={{
               padding: '32px 24px 32px 24px',
-              borderBottom: '1px solid rgba(255,255,255,0.1)',
-              background: '#0f2742'
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              background: '#1a3a52'
             }}>
               <a href="/" style={{ textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
                 {/* Logo Circle */}
@@ -73,15 +81,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             {/* Navigation Section */}
             <div style={{ padding: '24px 0 16px 0' }}>
-              <a href="/" className="nav-link" style={{ display: 'block', padding: '12px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent', margin: '4px 0' }}>🏠 Home</a>
-              <a href="/" className="nav-link" style={{ display: 'block', padding: '12px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent', margin: '4px 0' }}>📈 Dashboard</a>
-              <a href="/contacts" className="nav-link" style={{ display: 'block', padding: '12px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent', margin: '4px 0' }}>👥 Contacts</a>
-              <a href="/deals" className="nav-link" style={{ display: 'block', padding: '12px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent', margin: '4px 0' }}>🎯 Leads</a>
-              <a href="/activities" className="nav-link" style={{ display: 'block', padding: '12px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent', margin: '4px 0' }}>📞 Activities</a>
-              <a href="/followups" className="nav-link" style={{ display: 'block', padding: '12px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent', margin: '4px 0' }}>📋 Follow-ups</a>
-              <a href="/emails" className="nav-link" style={{ display: 'block', padding: '12px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent', margin: '4px 0' }}>📧 Email Templates</a>
-              <a href="/analytics" className="nav-link" style={{ display: 'block', padding: '12px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent', margin: '4px 0' }}>📊 Analytics</a>
-              <a href="/settings" className="nav-link" style={{ display: 'block', padding: '12px 24px', color: '#a8c5dd', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s', borderLeft: '3px solid transparent', margin: '4px 0' }}>⚙️ Settings</a>
+              <a href="/" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>🏠 Home</a>
+              <a href="/" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>📈 Dashboard</a>
+              <a href="/contacts" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>👥 Contacts</a>
+              <a href="/deals" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>🎯 Leads</a>
+              <a href="/activities" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>📞 Activities</a>
+              <a href="/followups" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>📋 Follow-ups</a>
+              <a href="/emails" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>📧 Email Templates</a>
+              <a href="/analytics" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>📊 Analytics</a>
+              <a href="/settings" className="nav-link" style={{ display: 'block', color: '#b0c4d8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>⚙️ Settings</a>
             </div>
           </nav>
 
