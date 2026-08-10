@@ -36,9 +36,7 @@ export async function POST(request: Request) {
       .insert([{
         contact_id: body.contactId,
         type: body.type,
-        title: body.title,
-        description: body.description,
-        outcome: body.outcome
+        title: body.title
       }])
       .select()
 
