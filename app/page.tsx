@@ -1,30 +1,40 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import ExcelImport from '@/components/ExcelImport'
 
 export default function Home() {
   const [metrics, setMetrics] = useState({ totalContacts: 0, activeDeal: 0, newLeads: 0, conversions: 0 })
 
-  useEffect(() => {
-    async function fetchMetrics() {
-      try {
-        const res = await fetch('/api/metrics', { cache: 'no-store' })
-        const data = await res.json()
-        setMetrics(data)
-      } catch (error) {
-        console.error('Error fetching metrics:', error)
-      }
+  async function fetchMetrics() {
+    try {
+      const res = await fetch('/api/metrics', { cache: 'no-store' })
+      const data = await res.json()
+      setMetrics(data)
+    } catch (error) {
+      console.error('Error fetching metrics:', error)
     }
+  }
+
+  useEffect(() => {
     fetchMetrics()
     const interval = setInterval(fetchMetrics, 5000)
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 20px' }}>
-      <h1>Dashboard</h1>
+    <div style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 20px', minHeight: 'calc(100vh - 80px)' }}>
+      <h1 style={{ margin: '0 0 24px 0', fontSize: '28px', fontWeight: 'bold' }}>Dashboard</h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginTop: '30px' }}>
+      {/* Excel Import Component */}
+      <ExcelImport onImportComplete={fetchMetrics} />
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+        gap: '20px',
+        marginTop: '30px'
+      }}>
         <div onClick={() => window.location.href = '/contacts'} style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
           <h3 style={{ color: '#666', fontSize: '14px' }}>Total Contacts</h3>
           <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#2563eb' }}>{metrics.totalContacts}</p>
@@ -48,7 +58,12 @@ export default function Home() {
 
       <div style={{ marginTop: '40px' }}>
         <h2>Quick Links</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px', marginTop: '20px' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: '20px',
+          marginTop: '20px'
+        }}>
           <div onClick={() => window.location.href = '/contacts'} style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
             <h3>👥 Contacts</h3>
             <p>Manage leads and customers</p>
