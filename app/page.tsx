@@ -8,7 +8,7 @@ export default function Home() {
   useEffect(() => {
     async function fetchMetrics() {
       try {
-        const res = await fetch('/api/metrics')
+        const res = await fetch('/api/metrics', { cache: 'no-store' })
         const data = await res.json()
         setMetrics(data)
       } catch (error) {
@@ -16,6 +16,8 @@ export default function Home() {
       }
     }
     fetchMetrics()
+    const interval = setInterval(fetchMetrics, 5000)
+    return () => clearInterval(interval)
   }, [])
 
   return (
