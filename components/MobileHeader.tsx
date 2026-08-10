@@ -23,9 +23,8 @@ export default function MobileHeader() {
 
   return (
     <>
-      {/* Mobile Header */}
-      <div style={{
-        display: 'none',
+      {/* Mobile Header - hidden by default, shown via CSS in layout.tsx */}
+      <div className="mobile-header" style={{
         position: 'fixed',
         top: 0,
         left: 0,
@@ -38,10 +37,7 @@ export default function MobileHeader() {
         justifyContent: 'space-between',
         height: '56px',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        width: '100%',
-        '@media (max-width: 768px)': {
-          display: 'flex'
-        }
+        width: '100%'
       }}>
         <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>📊 Airanix</h2>
         <button onClick={toggleMenu} style={{
@@ -56,7 +52,7 @@ export default function MobileHeader() {
 
       {/* Mobile Navigation Menu */}
       {menuOpen && (
-        <div style={{
+        <div className="mobile-nav-menu" style={{
           position: 'fixed',
           top: '56px',
           left: 0,
@@ -68,10 +64,7 @@ export default function MobileHeader() {
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
-          padding: '16px 0',
-          '@media (min-width: 769px)': {
-            display: 'none'
-          }
+          padding: '16px 0'
         }}>
           {navLinks.map(link => (
             <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)} style={{
