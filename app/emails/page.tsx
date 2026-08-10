@@ -8,46 +8,63 @@ export default function EmailTemplatesPage() {
   const templates: any = {
     welcome: {
       name: 'Welcome Email',
-      subject: 'Welcome to our platform',
-      body: `Hi there,
+      subject: 'Welcome to {{companyName}} - {{firstName}}',
+      body: `Hi {{firstName}},
 
-Welcome aboard! We're excited to have you.
+Thank you for choosing {{companyName}}. We're thrilled to have you on board!
+
+We're here to support you every step of the way. If you have any questions or need assistance getting started, don't hesitate to reach out.
+
+Looking forward to working with you.
 
 Best regards,
-Team`
+{{senderName}}
+{{companyName}}`
     },
     followup: {
       name: 'Follow-up Email',
-      subject: 'Quick follow-up on our conversation',
-      body: `Hi,
+      subject: 'Following Up - {{topic}}',
+      body: `Hi {{firstName}},
 
-I wanted to follow up on our recent discussion.
+I hope this email finds you well. I wanted to follow up on our recent conversation regarding {{topic}}.
 
-Looking forward to connecting!
+I believe our solution can deliver significant value to {{companyName}}, and I'd love to discuss how we can help achieve your goals.
 
-Best regards`
+Would you be available for a brief call this week?
+
+Best regards,
+{{senderName}}`
     },
     proposal: {
       name: 'Proposal Email',
-      subject: 'Your Custom Proposal',
-      body: `Hi,
+      subject: 'Proposal: {{topic}} for {{companyName}}',
+      body: `Hi {{firstName}},
 
-I've prepared a tailored proposal for you.
+Thank you for the opportunity to work with {{companyName}}. I've attached a customized proposal tailored to your specific needs and budget.
 
-Let me know your thoughts!
+Key highlights:
+• Addresses your primary objectives
+• Flexible implementation timeline
+• Transparent pricing structure
 
-Best regards`
+I'm available to discuss any questions or refine the proposal further. Looking forward to your feedback.
+
+Best regards,
+{{senderName}}`
     },
     closing: {
       name: 'Closing Email',
-      subject: 'Let us finalize this',
-      body: `Hi,
+      subject: 'Let\'s Move Forward - Final Steps',
+      body: `Hi {{firstName}},
 
-I'd love to move forward.
+Thank you for the positive feedback on our proposal. I'm excited about the opportunity to work with {{companyName}}.
 
-Let's schedule a time!
+To get started, we just need your approval and can begin implementation on {{date}}. The expected timeline is {{timeline}}.
 
-Best regards`
+Let me know if you have any final questions before we proceed.
+
+Best regards,
+{{senderName}}`
     }
   }
 
