@@ -221,7 +221,14 @@ export default function FollowupsPage() {
           <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>No follow-ups in this category</div>
         ) : (
           <div>
-            {filteredFollowups.map((followup: any) => (
+            {filteredFollowups.map((followup: any) => {
+              const dueDate = new Date(followup.due_date)
+              const today = new Date()
+              const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+              const isUrgent = daysUntilDue <= 1 && daysUntilDue >= 0
+              const isOverdue = daysUntilDue < 0
+
+              return (
               <div
                 key={followup.id}
                 style={{
@@ -229,7 +236,9 @@ export default function FollowupsPage() {
                   borderBottom: '1px solid #eee',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  background: isOverdue ? '#fee2e2' : isUrgent ? '#fef3c7' : 'white',
+                  borderLeft: isOverdue ? '4px solid #dc2626' : isUrgent ? '4px solid #f59e0b' : '4px solid transparent'
                 }}
               >
                 <div style={{ flex: 1 }}>
@@ -282,7 +291,7 @@ export default function FollowupsPage() {
                   </button>
                 )}
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>

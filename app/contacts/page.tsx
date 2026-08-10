@@ -10,7 +10,7 @@ function ContactsContent() {
   const [error, setError] = useState('')
   const [filters, setFilters] = useState({ status: searchParams.get('status') || '', company: '' })
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', company: '', status: 'new', comments: '' })
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', company: '', status: 'new', comments: '', followupDate: '', followupType: 'meeting', followupNotes: '' })
   const [editingId, setEditingId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -43,11 +43,25 @@ function ContactsContent() {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ name: formData.name, email: formData.email, phone: formData.phone, company: formData.company, status: formData.status })
       })
       const data = await res.json()
       if (res.ok) {
-        setFormData({ name: '', email: '', phone: '', company: '', status: 'new', comments: '' })
+        if (formData.followupDate) {
+          await fetch('/api/followups', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: `Follow-up with ${formData.name}`,
+              description: formData.followupNotes,
+              dueDate: formData.followupDate,
+              priority: 'high',
+              status: formData.type,
+              contactId: data.id || editingId
+            })
+          })
+        }
+        setFormData({ name: '', email: '', phone: '', company: '', status: 'new', comments: '', followupDate: '', followupType: 'meeting', followupNotes: '' })
         setEditingId(null)
         setShowForm(false)
         fetchContacts()
@@ -62,14 +76,14 @@ function ContactsContent() {
   }
 
   function handleEditContact(contact: any) {
-    setFormData({ name: contact.name, email: contact.email, phone: contact.phone, company: contact.company, status: contact.status, comments: contact.comments || '' })
+    setFormData({ name: contact.name, email: contact.email, phone: contact.phone, company: contact.company, status: contact.status, comments: contact.comments || '', followupDate: '', followupType: 'meeting', followupNotes: '' })
     setEditingId(contact.id)
     setShowForm(true)
   }
 
   function handleCloseForm() {
     setShowForm(false)
-    setFormData({ name: '', email: '', phone: '', company: '', status: 'new', comments: '' })
+    setFormData({ name: '', email: '', phone: '', company: '', status: 'new', comments: '', followupDate: '', followupType: 'meeting', followupNotes: '' })
     setEditingId(null)
   }
 
@@ -116,6 +130,29 @@ function ContactsContent() {
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '6px' }}>Comments</label>
             <textarea value={formData.comments} onChange={(e) => setFormData({ ...formData, comments: e.target.value })} placeholder="Add notes or comments about this contact" style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%', minHeight: '100px', fontFamily: 'system-ui', boxSizing: 'border-box' }} />
+          </div>
+
+          <div style={{ background: '#f0f9ff', padding: '16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #bfdbfe' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '14px', fontWeight: '600', color: '#1e40af' }}>📅 Set Follow-up Reminder</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#333' }}>Follow-up Date</label>
+                <input type="date" value={formData.followupDate} onChange={(e) => setFormData({ ...formData, followupDate: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#333' }}>Type</label>
+                <select value={formData.followupType} onChange={(e) => setFormData({ ...formData, followupType: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%', boxSizing: 'border-box' }}>
+                  <option value="meeting">📅 Meeting</option>
+                  <option value="demo">🎯 Demo</option>
+                  <option value="call">📞 Call</option>
+                  <option value="email">📧 Email</option>
+                </select>
+              </div>
+            </div>
+            <div style={{ marginTop: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#333' }}>Follow-up Notes</label>
+              <textarea value={formData.followupNotes} onChange={(e) => setFormData({ ...formData, followupNotes: e.target.value })} placeholder="What to discuss or cover during follow-up?" style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%', minHeight: '60px', fontFamily: 'system-ui', boxSizing: 'border-box' }} />
+            </div>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button onClick={handleSaveContact} style={{ padding: '10px 20px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Save</button>
