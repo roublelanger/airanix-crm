@@ -104,20 +104,6 @@ export default function ContactDetailPage() {
             <p style={{ fontSize: '14px', margin: 0 }}>{contact.company || '-'}</p>
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
-            <p style={{ fontSize: '12px', color: '#666', margin: '0 0 4px 0' }}>Designation</p>
-            <p style={{ fontSize: '14px', margin: 0 }}>{contact.designation || '-'}</p>
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <p style={{ fontSize: '12px', color: '#666', margin: '0 0 4px 0' }}>Address</p>
-            <p style={{ fontSize: '14px', margin: 0 }}>{contact.address || '-'}</p>
-          </div>
-
-          <div>
-            <p style={{ fontSize: '12px', color: '#666', margin: '0 0 4px 0' }}>Location</p>
-            <p style={{ fontSize: '14px', margin: 0 }}>{contact.location || '-'}</p>
-          </div>
         </div>
 
         {/* Quick Actions */}
