@@ -3,15 +3,46 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
+interface Contact {
+  id: string
+  name: string
+  email: string
+  phone?: string
+  company?: string
+  location?: string
+  designation?: string
+  industry?: string
+  remarks?: string
+  assigned_to?: string
+  status?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
 function ContactsContent() {
   const searchParams = useSearchParams()
-  const [contacts, setContacts] = useState<any[]>([])
+  const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [filters, setFilters] = useState({ status: searchParams.get('status') || '', company: '' })
+  const [filters, setFilters] = useState({ company: searchParams.get('company') || '' })
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', company: '', status: 'new', comments: '', followupDate: '', followupType: 'meeting', followupNotes: '' })
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company: '',
+    location: '',
+    designation: '',
+    industry: '',
+    remarks: '',
+    assigned_to: '',
+    status: 'NEW',
+    followupDate: '',
+    followupTime: '',
+    followupType: 'meeting',
+    followupNotes: ''
+  })
 
   useEffect(() => {
     fetchContacts()
@@ -37,222 +68,317 @@ function ContactsContent() {
   }
 
   async function handleSaveContact() {
+    if (!formData.name || !formData.email) {
+      alert('Name and Email are required')
+      return
+    }
+
     try {
       const method = editingId ? 'PUT' : 'POST'
       const url = editingId ? `/api/contacts/${editingId}` : '/api/contacts'
+
+      const payload: any = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        company: formData.company || null,
+        location: formData.location || null,
+        designation: formData.designation || null,
+        industry: formData.industry || null,
+        remarks: formData.remarks || null,
+        assigned_to: formData.assigned_to || null,
+        status: formData.status
+      }
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: formData.name, email: formData.email, phone: formData.phone, company: formData.company, status: formData.status })
+        body: JSON.stringify(payload)
       })
-      const data = await res.json()
-      if (res.ok) {
-        if (formData.followupDate) {
-          try {
-            await fetch('/api/followups', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                title: `Follow-up with ${formData.name}`,
-                description: formData.followupNotes,
-                dueDate: formData.followupDate,
-                priority: 'high',
-                type: formData.followupType,
-                status: 'open',
-                contactId: data.id || editingId
-              })
-            })
-          } catch (error) {
-            console.error('Follow-up creation failed:', error)
-          }
-        }
-        setFormData({ name: '', email: '', phone: '', company: '', status: 'new', comments: '', followupDate: '', followupType: 'meeting', followupNotes: '' })
-        setEditingId(null)
-        setShowForm(false)
-        fetchContacts()
-        alert('Contact saved successfully!')
-      } else {
+
+      if (!res.ok) {
+        const data = await res.json()
         alert(`Error: ${data.error || 'Failed to save contact'}`)
+        return
       }
+
+      const data = await res.json()
+
+      // Create follow-up if specified
+      if (formData.followupDate) {
+        try {
+          await fetch('/api/followups', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: `Follow-up with ${formData.name}`,
+              description: formData.followupNotes,
+              dueDate: formData.followupDate,
+              dueTime: formData.followupTime,
+              priority: 'high',
+              type: formData.followupType,
+              status: 'open',
+              contactId: data.id || editingId
+            })
+          })
+        } catch (error) {
+          console.error('Follow-up creation failed:', error)
+        }
+      }
+
+      resetForm()
+      fetchContacts()
+      alert('Contact saved successfully!')
     } catch (error) {
       console.error('Error saving contact:', error)
       alert(`Error: ${error instanceof Error ? error.message : 'Failed to save contact'}`)
     }
   }
 
-  function handleEditContact(contact: any) {
-    setFormData({ name: contact.name, email: contact.email, phone: contact.phone, company: contact.company, status: contact.status, comments: contact.comments || '', followupDate: '', followupType: 'meeting', followupNotes: '' })
+  async function handleDeleteContact(id: string, name: string) {
+    if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/contacts/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        alert('Failed to delete contact')
+        return
+      }
+      fetchContacts()
+      alert('Contact deleted successfully')
+    } catch (error) {
+      console.error('Error deleting contact:', error)
+      alert('Error deleting contact')
+    }
+  }
+
+  function handleEditContact(contact: Contact) {
+    setFormData({
+      name: contact.name,
+      email: contact.email,
+      phone: contact.phone || '',
+      company: contact.company || '',
+      location: contact.location || '',
+      designation: contact.designation || '',
+      industry: contact.industry || '',
+      remarks: contact.remarks || '',
+      assigned_to: contact.assigned_to || '',
+      status: contact.status || 'NEW',
+      followupDate: '',
+      followupTime: '',
+      followupType: 'meeting',
+      followupNotes: ''
+    })
     setEditingId(contact.id)
     setShowForm(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  function handleCloseForm() {
-    setShowForm(false)
-    setFormData({ name: '', email: '', phone: '', company: '', status: 'new', comments: '', followupDate: '', followupType: 'meeting', followupNotes: '' })
+  function resetForm() {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      company: '',
+      location: '',
+      designation: '',
+      industry: '',
+      remarks: '',
+      assigned_to: '',
+      status: 'NEW',
+      followupDate: '',
+      followupTime: '',
+      followupType: 'meeting',
+      followupNotes: ''
+    })
     setEditingId(null)
+    setShowForm(false)
   }
+
+  // Group contacts by company
+  const groupedContacts = contacts.reduce((acc: Record<string, Contact[]>, contact) => {
+    const company = contact.company || 'Unassigned'
+    if (!acc[company]) acc[company] = []
+    acc[company].push(contact)
+    return acc
+  }, {})
+
+  const filteredCompanies = Object.keys(groupedContacts).filter(
+    company => !filters.company || company === filters.company
+  )
+
+  const totalFiltered = filteredCompanies.reduce((sum, company) => sum + groupedContacts[company].length, 0)
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '40px auto', padding: '0 20px' }}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
+      {/* Header */}
       <div style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1>Contacts ({contacts.filter(c => (!filters.status || c.status === filters.status) && (!filters.company || c.company === filters.company)).length})</h1>
-          <p style={{ color: '#666' }}>Manage your leads and customers</p>
+          <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: 'bold' }}>Contacts ({totalFiltered})</h1>
+          <p style={{ color: '#666', margin: 0 }}>Manage your leads and customers by company</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
           style={{
-            padding: '10px 20px',
+            padding: '12px 24px',
             background: '#2563eb',
             color: 'white',
             border: 'none',
-            borderRadius: '6px',
+            borderRadius: '8px',
             cursor: 'pointer',
-            fontWeight: '500'
+            fontWeight: '600',
+            fontSize: '14px'
           }}
         >
           {showForm ? '✕ Cancel' : '+ New Contact'}
         </button>
       </div>
 
+      {/* Form */}
       {showForm && (
-        <div style={{ background: 'white', padding: '24px', borderRadius: '8px', marginBottom: '30px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <h2 style={{ margin: '0 0 20px 0' }}>{editingId ? 'Edit Contact' : 'New Contact'}</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '16px' }}>
-            <input type="text" placeholder="Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px' }} />
-            <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px' }} />
-            <input type="tel" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px' }} />
-            <input type="text" placeholder="Company" value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px' }} />
-          </div>
-          <div style={{ marginBottom: '16px' }}>
-            <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%' }}>
-              <option value="new">New</option>
-              <option value="active">Active</option>
-              <option value="closed">Closed</option>
-              <option value="cold">Cold</option>
-            </select>
-          </div>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '6px' }}>Comments</label>
-            <textarea value={formData.comments} onChange={(e) => setFormData({ ...formData, comments: e.target.value })} placeholder="Add notes or comments about this contact" style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%', minHeight: '100px', fontFamily: 'system-ui', boxSizing: 'border-box' }} />
-          </div>
+        <div style={{ background: 'white', padding: '24px', borderRadius: '12px', marginBottom: '30px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb' }}>
+          <h2 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '600' }}>{editingId ? 'Edit Contact' : 'New Contact'}</h2>
 
-          <div style={{ background: '#f0f9ff', padding: '16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #bfdbfe' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '14px', fontWeight: '600', color: '#1e40af' }}>📅 Set Follow-up Reminder</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#333' }}>Follow-up Date</label>
-                <input type="date" value={formData.followupDate} onChange={(e) => setFormData({ ...formData, followupDate: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%', boxSizing: 'border-box' }} />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#333' }}>Type</label>
-                <select value={formData.followupType} onChange={(e) => setFormData({ ...formData, followupType: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%', boxSizing: 'border-box' }}>
-                  <option value="meeting">📅 Meeting</option>
-                  <option value="demo">🎯 Demo</option>
-                  <option value="call">📞 Call</option>
-                  <option value="email">📧 Email</option>
-                </select>
-              </div>
+          {/* Basic Info */}
+          <fieldset style={{ border: 'none', padding: 0, margin: '0 0 24px 0' }}>
+            <legend style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '12px', textTransform: 'uppercase' }}>Contact Information</legend>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '16px' }}>
+              <input type="text" placeholder="Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }} />
+              <input type="email" placeholder="Email *" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }} />
+              <input type="tel" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }} />
+              <input type="text" placeholder="Location" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }} />
             </div>
-            <div style={{ marginTop: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#333' }}>Follow-up Notes</label>
-              <textarea value={formData.followupNotes} onChange={(e) => setFormData({ ...formData, followupNotes: e.target.value })} placeholder="What to discuss or cover during follow-up?" style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%', minHeight: '60px', fontFamily: 'system-ui', boxSizing: 'border-box' }} />
+          </fieldset>
+
+          {/* Company & Professional */}
+          <fieldset style={{ border: 'none', padding: 0, margin: '0 0 24px 0' }}>
+            <legend style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '12px', textTransform: 'uppercase' }}>Company & Professional Details</legend>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '16px' }}>
+              <input type="text" placeholder="Company" value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }} />
+              <input type="text" placeholder="Designation" value={formData.designation} onChange={(e) => setFormData({ ...formData, designation: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }} />
+              <input type="text" placeholder="Industry" value={formData.industry} onChange={(e) => setFormData({ ...formData, industry: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }} />
+              <input type="text" placeholder="Assigned To" value={formData.assigned_to} onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }} />
             </div>
-          </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={handleSaveContact} style={{ padding: '10px 20px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Save</button>
-            <button onClick={handleCloseForm} style={{ padding: '10px 20px', background: '#f3f4f6', color: '#333', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
+          </fieldset>
+
+          {/* Status & Notes */}
+          <fieldset style={{ border: 'none', padding: 0, margin: '0 0 24px 0' }}>
+            <legend style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '12px', textTransform: 'uppercase' }}>Status & Remarks</legend>
+            <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%', marginBottom: '16px', fontSize: '14px' }}>
+              <option value="NEW">New</option>
+              <option value="LEAD">Lead</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+              <option value="COLD">Cold</option>
+              <option value="CLOSED">Closed</option>
+            </select>
+            <textarea value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} placeholder="Remarks and notes" style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%', minHeight: '80px', fontFamily: 'system-ui', boxSizing: 'border-box', fontSize: '14px', marginBottom: '16px' }} />
+          </fieldset>
+
+          {/* Follow-up */}
+          <fieldset style={{ border: '1px solid #bfdbfe', padding: '16px', borderRadius: '8px', background: '#f0f9ff', margin: '0 0 24px 0' }}>
+            <legend style={{ fontSize: '12px', fontWeight: '600', color: '#1e40af', padding: '0 8px', textTransform: 'uppercase' }}>📅 Schedule Follow-up (Optional)</legend>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '16px', marginTop: '12px' }}>
+              <input type="date" value={formData.followupDate} onChange={(e) => setFormData({ ...formData, followupDate: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }} />
+              <input type="time" value={formData.followupTime} onChange={(e) => setFormData({ ...formData, followupTime: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }} />
+            </div>
+            <select value={formData.followupType} onChange={(e) => setFormData({ ...formData, followupType: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%', marginBottom: '16px', fontSize: '14px' }}>
+              <option value="meeting">📅 Meeting</option>
+              <option value="call">📞 Call</option>
+              <option value="email">📧 Email</option>
+              <option value="demo">🎯 Demo</option>
+            </select>
+            <textarea value={formData.followupNotes} onChange={(e) => setFormData({ ...formData, followupNotes: e.target.value })} placeholder="Follow-up notes and agenda" style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%', minHeight: '60px', fontFamily: 'system-ui', boxSizing: 'border-box', fontSize: '14px' }} />
+          </fieldset>
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+            <button onClick={resetForm} style={{ padding: '10px 20px', background: '#f3f4f6', color: '#333', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }}>Cancel</button>
+            <button onClick={handleSaveContact} style={{ padding: '10px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }}>Save Contact</button>
           </div>
         </div>
       )}
 
-      <div style={{ marginBottom: '30px' }}>
-        {/* Quick Filters */}
-        <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-          <select
-            value={filters.status}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }}
-          >
-            <option value="">All Status</option>
-            <option value="new">New</option>
-            <option value="active">Active</option>
-            <option value="closed">Closed</option>
-            <option value="cold">Cold</option>
-          </select>
-
-          <select
-            value={filters.company}
-            onChange={(e) => setFilters({ ...filters, company: e.target.value })}
-            style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }}
-          >
-            <option value="">All Companies</option>
-            {[...new Set(contacts.map(c => c.company).filter(Boolean))].map(company => (
-              <option key={company} value={company}>{company}</option>
-            ))}
-          </select>
-        </div>
+      {/* Filters */}
+      <div style={{ marginBottom: '24px' }}>
+        <select
+          value={filters.company}
+          onChange={(e) => setFilters({ company: e.target.value })}
+          style={{ padding: '10px 12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }}
+        >
+          <option value="">All Companies</option>
+          {Object.keys(groupedContacts).map(company => (
+            <option key={company} value={company}>{company}</option>
+          ))}
+        </select>
       </div>
 
-      <div style={{ background: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ background: '#f3f4f6', borderBottom: '2px solid #e5e7eb' }}>
-              <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: '600' }}>Name</th>
-              <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: '600' }}>Email</th>
-              <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: '600' }}>Phone</th>
-              <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: '600' }}>Company</th>
-              <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: '600' }}>Status</th>
-              <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: '600' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={6} style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                  Loading...
-                </td>
-              </tr>
-            ) : error ? (
-              <tr>
-                <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: '#d1495a' }}>
-                  Error: {error}
-                </td>
-              </tr>
-            ) : contacts.filter(c => (!filters.status || c.status === filters.status) && (!filters.company || c.company === filters.company)).length === 0 ? (
-              <tr>
-                <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                  No contacts match your filters
-                </td>
-              </tr>
-            ) : (
-              contacts.filter(c => (!filters.status || c.status === filters.status) && (!filters.company || c.company === filters.company)).map((contact: any) => (
-                <tr key={contact.id} onClick={() => { console.log('Clicking contact:', contact.id, contact); window.location.href = `/contacts/${contact.id}`; }} style={{ borderBottom: '1px solid #e5e7eb', cursor: 'pointer' }} onMouseEnter={(e) => (e.currentTarget.style.background = '#f9fafb')} onMouseLeave={(e) => (e.currentTarget.style.background = 'white')}>
-                  <td style={{ padding: '16px', fontSize: '14px', fontWeight: '500' }}>{contact.name}</td>
-                  <td style={{ padding: '16px', fontSize: '14px' }}>{contact.email || '-'}</td>
-                  <td style={{ padding: '16px', fontSize: '14px' }}>{contact.phone || '-'}</td>
-                  <td style={{ padding: '16px', fontSize: '14px' }}>{contact.company || '-'}</td>
-                  <td style={{ padding: '16px', fontSize: '14px' }}>
+      {/* Content */}
+      {loading ? (
+        <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>Loading contacts...</div>
+      ) : error ? (
+        <div style={{ padding: '40px', textAlign: 'center', color: '#d1495a' }}>Error: {error}</div>
+      ) : filteredCompanies.length === 0 ? (
+        <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>No contacts found</div>
+      ) : (
+        filteredCompanies.map(company => (
+          <div key={company} style={{ marginBottom: '32px' }}>
+            {/* Company Header */}
+            <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', marginBottom: '16px', borderLeft: '4px solid #2563eb' }}>
+              <h2 style={{ margin: '0', fontSize: '16px', fontWeight: '600', color: '#1e293b' }}>🏢 {company}</h2>
+              <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#666' }}>{groupedContacts[company].length} contact{groupedContacts[company].length !== 1 ? 's' : ''}</p>
+            </div>
+
+            {/* Contacts Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '16px' }}>
+              {groupedContacts[company].map(contact => (
+                <div key={contact.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; e.currentTarget.style.borderColor = '#2563eb' }} onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'; e.currentTarget.style.borderColor = '#e5e7eb' }}>
+                  {/* Contact Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
+                    <div>
+                      <h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>{contact.name}</h3>
+                      {contact.designation && <p style={{ margin: '0', fontSize: '12px', color: '#2563eb', fontWeight: '500' }}>{contact.designation}</p>}
+                    </div>
                     <span style={{
-                      background: contact.status === 'new' ? '#dbeafe' : contact.status === 'active' ? '#d1fae5' : contact.status === 'closed' ? '#fecaca' : '#f3f4f6',
-                      padding: '6px 12px',
-                      borderRadius: '20px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      textTransform: 'capitalize'
+                      background: contact.status === 'NEW' ? '#dbeafe' : contact.status === 'LEAD' ? '#fef3c7' : contact.status === 'ACTIVE' ? '#d1fae5' : contact.status === 'CLOSED' ? '#fecaca' : '#e5e7eb',
+                      color: contact.status === 'NEW' ? '#0369a1' : contact.status === 'LEAD' ? '#92400e' : contact.status === 'ACTIVE' ? '#047857' : contact.status === 'CLOSED' ? '#991b1b' : '#374151',
+                      padding: '4px 12px',
+                      borderRadius: '12px',
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      textTransform: 'uppercase'
                     }}>
-                      {contact.status || 'new'}
+                      {contact.status || 'NEW'}
                     </span>
-                  </td>
-                  <td style={{ padding: '16px', fontSize: '14px' }} onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => handleEditContact(contact)} style={{ padding: '6px 12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Edit</button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+                  </div>
+
+                  {/* Contact Details */}
+                  <div style={{ fontSize: '13px', lineHeight: '1.8', marginBottom: '16px', color: '#475569' }}>
+                    {contact.email && (
+                      <div style={{ marginBottom: '8px' }}>
+                        <span style={{ fontWeight: '500', color: '#64748b' }}>📧 Email:</span> <a href={`mailto:${contact.email}`} style={{ color: '#2563eb', textDecoration: 'none' }}>{contact.email}</a>
+                      </div>
+                    )}
+                    {contact.phone && <div style={{ marginBottom: '8px' }}><span style={{ fontWeight: '500', color: '#64748b' }}>📱 Phone:</span> <a href={`tel:${contact.phone}`} style={{ color: '#2563eb', textDecoration: 'none' }}>{contact.phone}</a></div>}
+                    {contact.location && <div style={{ marginBottom: '8px' }}><span style={{ fontWeight: '500', color: '#64748b' }}>📍 Location:</span> {contact.location}</div>}
+                    {contact.industry && <div style={{ marginBottom: '8px' }}><span style={{ fontWeight: '500', color: '#64748b' }}>🏭 Industry:</span> {contact.industry}</div>}
+                    {contact.assigned_to && <div style={{ marginBottom: '8px' }}><span style={{ fontWeight: '500', color: '#64748b' }}>👤 Assigned To:</span> {contact.assigned_to}</div>}
+                    {contact.remarks && <div style={{ marginBottom: '8px', paddingTop: '8px', borderTop: '1px solid #e2e8f0' }}><span style={{ fontWeight: '500', color: '#64748b' }}>📝 Notes:</span> <span style={{ color: '#64748b', fontSize: '12px' }}>{contact.remarks}</span></div>}
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: 'flex', gap: '8px', paddingTop: '12px', borderTop: '1px solid #e5e7eb' }}>
+                    <button onClick={() => handleEditContact(contact)} style={{ flex: 1, padding: '8px 12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}>✏️ Edit</button>
+                    <button onClick={() => handleDeleteContact(contact.id, contact.name)} style={{ flex: 1, padding: '8px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}>🗑️ Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
+      )}
     </div>
   )
 }

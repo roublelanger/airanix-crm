@@ -10,7 +10,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
   try {
     const { data, error } = await supabase
       .from('contacts')
-      .select('id,name,email,phone,company,status')
+      .select('id,name,email,phone,company,status,location,designation,industry,remarks,assigned_to,createdAt,updatedAt')
       .eq('id', params.id)
       .single()
 
@@ -27,18 +27,21 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   try {
     const body = await request.json()
 
-    // Only include fields that were provided in the request
     const updateData: any = {}
     if (body.name !== undefined) updateData.name = body.name
     if (body.email !== undefined) updateData.email = body.email
     if (body.phone !== undefined) updateData.phone = body.phone
     if (body.company !== undefined) updateData.company = body.company
     if (body.status !== undefined) updateData.status = body.status.toUpperCase()
+    if (body.location !== undefined) updateData.location = body.location
+    if (body.designation !== undefined) updateData.designation = body.designation
+    if (body.industry !== undefined) updateData.industry = body.industry
+    if (body.remarks !== undefined) updateData.remarks = body.remarks
+    if (body.assigned_to !== undefined) updateData.assigned_to = body.assigned_to
 
-    // Always update the updatedAt timestamp
     updateData.updatedAt = new Date().toISOString()
 
-    if (Object.keys(updateData).length === 0) {
+    if (Object.keys(updateData).length === 1) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }
 
@@ -46,7 +49,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       .from('contacts')
       .update(updateData)
       .eq('id', params.id)
-      .select('id,name,email,phone,company,status')
+      .select('id,name,email,phone,company,status,location,designation,industry,remarks,assigned_to,createdAt,updatedAt')
 
     if (error) throw error
 
