@@ -242,24 +242,65 @@ export default function ActivitiesPage() {
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '4px' }}>
-                    {activityTypeIcons[activity.type]} {activity.title || 'Untitled'}
+                  <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '4px', color: '#1e293b' }}>
+                    {activityTypeIcons[activity.type] || '📌'} {activity.title || activity.description?.substring(0, 30) || 'Activity'}
                   </div>
-                  <p style={{ fontSize: '13px', color: '#666', margin: '0 0 4px 0' }}>{activity.description}</p>
+                  {activity.description && (
+                    <p style={{ fontSize: '13px', color: '#666', margin: '0 0 8px 0', lineHeight: '1.4' }}>{activity.description}</p>
+                  )}
                   <span style={{
                     display: 'inline-block',
                     padding: '4px 8px',
-                    background: `${activityTypeColors[activity.type]}20`,
-                    color: activityTypeColors[activity.type],
+                    background: `${activityTypeColors[activity.type] || '#6b7280'}20`,
+                    color: activityTypeColors[activity.type] || '#6b7280',
                     borderRadius: '4px',
-                    fontSize: '12px',
-                    fontWeight: '500'
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    textTransform: 'capitalize'
                   }}>
-                    {activity.type.charAt(0).toUpperCase() + activity.type.slice(1)} • {activity.outcome}
+                    {activity.type} {activity.outcome ? '• ' + activity.outcome : ''}
                   </span>
                 </div>
-                <div style={{ fontSize: '12px', color: '#999', minWidth: '120px', textAlign: 'right' }}>
-                  {new Date(activity.completed_at).toLocaleDateString()}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', minWidth: '140px' }}>
+                  <div style={{ fontSize: '12px', color: '#999' }}>
+                    {activity.created_at ? new Date(activity.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => alert('Edit functionality coming soon')}
+                      style={{
+                        padding: '6px 12px',
+                        background: '#f3f4f6',
+                        color: '#2563eb',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm('Delete this activity?')) {
+                          alert('Delete functionality coming soon')
+                        }
+                      }}
+                      style={{
+                        padding: '6px 12px',
+                        background: '#fee2e2',
+                        color: '#dc2626',
+                        border: '1px solid #fecaca',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
