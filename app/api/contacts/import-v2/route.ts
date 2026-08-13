@@ -96,7 +96,7 @@ export async function POST(request: Request) {
         industry: contact.industry?.trim() || null,
         remarks: contact.remarks?.trim() || null,
         assigned_to: contact.assigned_to?.trim() || null,
-        status: (contact.status || 'LEAD').toUpperCase().trim()
+        status: 'new'
       })
     }
 
@@ -199,7 +199,6 @@ export async function POST(request: Request) {
           remarks: contact.remarks,
           assigned_to: contact.assigned_to,
           status: contact.status,
-          company: contact.companyName,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
