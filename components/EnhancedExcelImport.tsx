@@ -67,98 +67,65 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
     return normalized.replace(/\s+/g, '_')
   }
 
-  // Robust CSV parsing with proper quote handling
+  // Simple, robust CSV parsing
   const parseCSV = (text: string): ParsedContact[] => {
     try {
-      const lines = text.split('\n').filter(line => line.trim())
+      // Normalize line endings and remove empty lines
+      const normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+      const lines = normalizedText.split('\n').map(line => line.trim()).filter(line => line.length > 0)
 
       if (lines.length < 2) {
         throw new Error('CSV must have header and at least one data row')
       }
 
-      // Parse header row - handle spaces and case variations
+      // Parse header row
       const rawHeaders = lines[0].split(',').map(h => h.trim())
       const headers = rawHeaders.map(mapHeaderToField)
 
       const contacts: ParsedContact[] = []
-      const errors: Array<{ row: number; error: string }> = []
 
+      // Parse data rows
       for (let i = 1; i < lines.length; i++) {
-        try {
-          const values = parseCSVLine(lines[i])
+        const line = lines[i]
 
-          if (values.length === 0 || !values.some(v => v.trim())) {
-            continue // Skip empty rows
+        // Skip empty lines
+        if (!line || line.length === 0) continue
+
+        // Simple split for non-quoted CSV
+        const values = line.split(',').map(v => v.trim())
+
+        // Skip if not enough columns
+        if (values.length < 2) continue
+
+        // Build contact object
+        const contact: any = {}
+        headers.forEach((header, index) => {
+          const value = values[index]
+          if (value && value.length > 0) {
+            contact[header] = value
           }
+        })
 
-          const contact: any = {}
-
-          headers.forEach((header, index) => {
-            const value = values[index]?.trim() || ''
-            if (value) {
-              contact[header] = value
-            }
-          })
-
-          // Validate required fields
-          if (!contact.contact_name || !contact.email) {
-            errors.push({
-              row: i + 1,
-              error: 'Missing required fields (Contact Name and Email)'
-            })
-            continue
-          }
-
-          // Set defaults for required fields
-          contact.company_name = contact.company_name || 'Unassigned'
-          contact.status = contact.status || 'LEAD'
-
-          contacts.push(contact as ParsedContact)
-        } catch (error: any) {
-          errors.push({
-            row: i + 1,
-            error: `Parse error: ${error.message}`
-          })
+        // Validate required fields
+        if (!contact.contact_name || !contact.email) {
+          continue // Skip invalid rows
         }
+
+        // Set defaults
+        contact.company_name = contact.company_name || 'Unassigned'
+        contact.status = contact.status || 'LEAD'
+
+        contacts.push(contact as ParsedContact)
       }
 
       if (contacts.length === 0) {
-        throw new Error('No valid contacts found after parsing')
+        throw new Error('No valid contacts found in CSV (check required fields: Contact Name, Email)')
       }
 
       return contacts
     } catch (error: any) {
       throw new Error(`CSV Parse Error: ${error.message}`)
     }
-  }
-
-  // Parse single CSV line with proper quote handling
-  const parseCSVLine = (line: string): string[] => {
-    const result: string[] = []
-    let current = ''
-    let insideQuotes = false
-
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i]
-      const nextChar = line[i + 1]
-
-      if (char === '"') {
-        if (insideQuotes && nextChar === '"') {
-          current += '"'
-          i++
-        } else {
-          insideQuotes = !insideQuotes
-        }
-      } else if (char === ',' && !insideQuotes) {
-        result.push(current)
-        current = ''
-      } else {
-        current += char
-      }
-    }
-
-    result.push(current)
-    return result
   }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
