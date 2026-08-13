@@ -58,31 +58,16 @@ export async function POST(request: Request) {
       ? `${body.title}: ${body.description || ''}`
       : body.description || 'Activity'
 
-    // Build the insert data
+    // Build the insert data - only use columns that exist in interactions table
+    // The interactions table has: id, contact_id, type, notes, created_at, updated_at, created_by, scheduled_date, completed_date
     const insertData: any = {
       contact_id: body.contactId,
       type: body.type,
-      notes: notes.trim(),
-      outcome: body.outcome || 'pending'
+      notes: notes.trim()
     }
 
-    // Add optional fields based on activity type
-    if (body.type === 'call' && body.callDuration) {
-      insertData.call_duration = parseInt(body.callDuration) || null
-    }
-
-    if (body.type === 'email') {
-      insertData.email_opens = parseInt(body.emailOpens) || 0
-    }
-
-    if (body.type === 'meeting') {
-      if (body.meetingOutcome) {
-        insertData.meeting_outcome = body.meetingOutcome
-      }
-      if (body.meetingDate) {
-        insertData.scheduled_date = body.meetingDate
-      }
-    }
+    // Note: outcome, call_duration, email_opens, and meeting_outcome are stored in the notes field
+    // because the interactions table doesn't have separate columns for these
 
     console.log('Inserting activity:', insertData)
 
