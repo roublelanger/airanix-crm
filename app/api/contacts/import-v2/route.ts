@@ -196,7 +196,9 @@ export async function POST(request: Request) {
           industry: contact.industry,
           remarks: contact.remarks,
           assigned_to: contact.assigned_to,
-          status: contact.status
+          status: contact.status,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }
       })
       .filter((c): c is any => c !== null)
