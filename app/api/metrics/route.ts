@@ -7,16 +7,18 @@ const supabase = createClient(
 
 export async function GET() {
   try {
-    const [contactsRes, dealsRes, leadsRes] = await Promise.all([
-      supabase.from('contacts').select('id', { count: 'exact', head: true }),
-      supabase.from('deals').select('id', { count: 'exact', head: true }),
-      supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('status', 'lead')
-    ])
+    // Fetch all contacts directly to get accurate count
+    const contactsRes = await supabase.from('contacts').select('id, status')
+    const dealsRes = await supabase.from('deals').select('id', { count: 'exact', head: true })
+
+    const contacts = contactsRes.data || []
+    const totalContacts = contacts.length
+    const newLeads = contacts.filter(c => c.status === 'LEAD').length
 
     return Response.json({
-      totalContacts: contactsRes.count || 0,
+      totalContacts,
       activeDeal: dealsRes.count || 0,
-      newLeads: leadsRes.count || 0,
+      newLeads,
       conversions: 0
     })
   } catch (error) {
