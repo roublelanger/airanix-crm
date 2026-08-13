@@ -17,6 +17,19 @@ export default function ContactDetailPage() {
   })
   const [followupStatus, setFollowupStatus] = useState('')
   const [showEmailModal, setShowEmailModal] = useState(false)
+  const [emailFeedback, setEmailFeedback] = useState('')
+
+  // Sanitize email - remove quotes and invalid characters
+  const sanitizeEmail = (email: string) => {
+    if (!email) return ''
+    return email.replace(/["\s]/g, '').toLowerCase().trim()
+  }
+
+  // Validate email format
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
 
   const emailTemplates = [
     {
@@ -214,9 +227,17 @@ export default function ContactDetailPage() {
 
           <button onClick={() => {
             if (!contact?.email) {
-              alert('No email available for this contact')
+              setEmailFeedback('❌ No email available for this contact')
+              setTimeout(() => setEmailFeedback(''), 3000)
               return
             }
+            const cleanEmail = sanitizeEmail(contact.email)
+            if (!isValidEmail(cleanEmail)) {
+              setEmailFeedback('❌ Invalid email format: ' + contact.email)
+              setTimeout(() => setEmailFeedback(''), 3000)
+              return
+            }
+            setEmailFeedback('✅ Email modal opened')
             setShowEmailModal(true)
           }} style={{
             width: '100%',
@@ -266,8 +287,25 @@ export default function ContactDetailPage() {
         </div>
       </div>
 
+      {/* Email Feedback Message */}
+      {emailFeedback && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          background: emailFeedback.includes('❌') ? '#fee2e2' : '#dcfce7',
+          color: emailFeedback.includes('❌') ? '#991b1b' : '#166534',
+          padding: '12px 16px',
+          borderRadius: '6px',
+          zIndex: 2000,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+        }}>
+          {emailFeedback}
+        </div>
+      )}
+
       {/* Email Template Modal */}
-      {showEmailModal && (
+      {showEmailModal && contact?.email && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -289,17 +327,28 @@ export default function ContactDetailPage() {
             overflowY: 'auto',
             boxShadow: '0 20px 25px rgba(0,0,0,0.15)'
           }} onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '600' }}>📧 Select Email Template</h2>
+            <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600' }}>📧 Select Email Template</h2>
+            <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#666' }}>
+              To: {sanitizeEmail(contact.email)}
+            </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px', marginBottom: '20px' }}>
               {emailTemplates.map(template => (
                 <button
                   key={template.id}
                   onClick={() => {
+                    const cleanEmail = sanitizeEmail(contact.email)
+                    if (!isValidEmail(cleanEmail)) {
+                      setEmailFeedback('❌ Invalid email address')
+                      setTimeout(() => setEmailFeedback(''), 3000)
+                      return
+                    }
                     const subject = encodeURIComponent(template.subject);
                     const body = encodeURIComponent(template.body);
-                    window.location.href = `mailto:${contact.email}?subject=${subject}&body=${body}`;
+                    window.location.href = `mailto:${cleanEmail}?subject=${subject}&body=${body}`;
+                    setEmailFeedback('✅ Email client opened')
                     setShowEmailModal(false);
+                    setTimeout(() => setEmailFeedback(''), 3000)
                   }}
                   style={{
                     padding: '16px',
@@ -328,7 +377,10 @@ export default function ContactDetailPage() {
             </div>
 
             <button
-              onClick={() => setShowEmailModal(false)}
+              onClick={() => {
+                setShowEmailModal(false)
+                setEmailFeedback('')
+              }}
               style={{
                 width: '100%',
                 padding: '12px',
