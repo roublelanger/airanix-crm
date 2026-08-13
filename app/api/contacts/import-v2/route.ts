@@ -7,35 +7,9 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 )
 
-interface ImportContact {
-  company_name?: string
-  contact_name?: string
-  name?: string
-  designation?: string
-  email?: string
-  phone?: string
-  location?: string
-  industry?: string
-  remarks?: string
-  assigned_to?: string
-  status?: string
-}
-
-interface ImportResult {
-  success: boolean
-  imported: number
-  failed: number
-  total: number
-  errors: Array<{ row: number; error: string }>
-  summary: {
-    companiesCreated: number
-    contactsAdded: number
-    skipped: number
-  }
-}
-
 export async function POST(request: Request) {
   try {
+    // Validate request
     if (!request.body) {
       return NextResponse.json({ error: 'Request body is required' }, { status: 400 })
     }
@@ -61,63 +35,59 @@ export async function POST(request: Request) {
 
     const errors: Array<{ row: number; error: string }> = []
     const validatedContacts: any[] = []
-    const companyMap = new Map<string, string>() // company name -> id
+    const companyMap = new Map<string, string>()
     let companiesCreated = 0
     let contactsAdded = 0
     let skipped = 0
 
-    // Step 1: Validate and normalize data
+    // Step 1: Validate contacts
     for (let i = 0; i < contacts.length; i++) {
-      try {
-        const contact = contacts[i]
+      const contact = contacts[i]
 
-        // Null/undefined check
-        if (!contact || typeof contact !== 'object') {
-          errors.push({ row: i + 1, error: 'Invalid contact data' })
-          skipped++
-          continue
-        }
+      if (!contact || typeof contact !== 'object') {
+        errors.push({ row: i + 1, error: 'Invalid contact data' })
+        skipped++
+        continue
+      }
 
-        const contactName = String(contact.contact_name || contact.name || '').trim()
-        const email = String(contact.email || '').trim().toLowerCase()
-        const companyName = String(contact.company_name || 'Unassigned').trim()
+      const contactName = String(contact.contact_name || contact.name || '').trim()
+      const email = String(contact.email || '').trim().toLowerCase()
+      const companyName = String(contact.company_name || 'Unassigned').trim()
 
-        // Validation - required fields
-        if (!contactName || contactName.length === 0) {
-          errors.push({ row: i + 1, error: 'Contact name is required and cannot be empty' })
-          skipped++
-          continue
-        }
+      // Validate required fields
+      if (!contactName || contactName.length === 0) {
+        errors.push({ row: i + 1, error: 'Contact name is required' })
+        skipped++
+        continue
+      }
 
-        if (!email || email.length === 0) {
-          errors.push({ row: i + 1, error: 'Email is required and cannot be empty' })
-          skipped++
-          continue
-        }
+      if (!email || email.length === 0) {
+        errors.push({ row: i + 1, error: 'Email is required' })
+        skipped++
+        continue
+      }
 
-        // Basic email validation
-        if (!email.includes('@') || !email.includes('.')) {
-          errors.push({ row: i + 1, error: `Invalid email format: ${email}` })
-          skipped++
-          continue
-        }
+      if (!email.includes('@') || !email.includes('.')) {
+        errors.push({ row: i + 1, error: `Invalid email format: ${email}` })
+        skipped++
+        continue
+      }
 
-        // Length validation
-        if (contactName.length > 255) {
-          errors.push({ row: i + 1, error: 'Contact name too long (max 255 chars)' })
-          skipped++
-          continue
-        }
+      if (contactName.length > 255) {
+        errors.push({ row: i + 1, error: 'Contact name too long (max 255 chars)' })
+        skipped++
+        continue
+      }
 
-        if (email.length > 255) {
-          errors.push({ row: i + 1, error: 'Email too long (max 255 chars)' })
-          skipped++
-          continue
-        }
+      if (email.length > 255) {
+        errors.push({ row: i + 1, error: 'Email too long (max 255 chars)' })
+        skipped++
+        continue
+      }
 
       validatedContacts.push({
         row: i + 1,
-        companyName: companyName || 'Unassigned',
+        companyName,
         name: contactName,
         designation: contact.designation?.trim() || null,
         email,
@@ -126,15 +96,15 @@ export async function POST(request: Request) {
         industry: contact.industry?.trim() || null,
         remarks: contact.remarks?.trim() || null,
         assigned_to: contact.assigned_to?.trim() || null,
-        status: (contact.status?.toUpperCase() || 'LEAD').trim()
+        status: (contact.status || 'LEAD').toUpperCase().trim()
       })
     }
 
     if (validatedContacts.length === 0) {
-      return NextResponse.json({
-        error: 'No valid contacts to import',
-        details: errors
-      }, { status: 400 })
+      return NextResponse.json(
+        { error: 'No valid contacts to import', details: errors },
+        { status: 400 }
+      )
     }
 
     // Step 2: Get or create companies
@@ -144,13 +114,12 @@ export async function POST(request: Request) {
       try {
         if (companyMap.has(companyName)) continue
 
-        // Validate company name
         if (!companyName || companyName.length === 0 || companyName.length > 255) {
           errors.push({ row: 0, error: `Invalid company name: "${companyName}"` })
           continue
         }
 
-        // Try to find existing company
+        // Find existing company
         const { data: existing, error: existingError } = await supabase
           .from('companies')
           .select('id')
@@ -158,55 +127,54 @@ export async function POST(request: Request) {
           .maybeSingle()
 
         if (existingError && existingError.code !== 'PGRST116') {
-          throw new Error(`Database error finding company: ${existingError.message}`)
+          throw new Error(`Database error: ${existingError.message}`)
         }
 
         if (existing) {
           companyMap.set(companyName, existing.id)
-        } else {
-          // Create new company
-          const companyId = uuidv4()
-          const { data: newCompany, error: createError } = await supabase
-            .from('companies')
-            .insert([
-              {
-                id: companyId,
-                name: companyName,
-                industry: null,
-                location: null,
-                remarks: null,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              }
-            ])
-            .select()
-            .single()
+          continue
+        }
 
-          if (createError) {
-            // Check if duplicate constraint error
-            if (createError.message.includes('unique')) {
-              // Try to fetch it again (race condition)
-              const { data: retryExisting } = await supabase
-                .from('companies')
-                .select('id')
-                .eq('name', companyName)
-                .maybeSingle()
-
-              if (retryExisting) {
-                companyMap.set(companyName, retryExisting.id)
-              } else {
-                errors.push({ row: 0, error: `Failed to create company "${companyName}": ${createError.message}` })
-              }
-            } else {
-              errors.push({ row: 0, error: `Failed to create company "${companyName}": ${createError.message}` })
+        // Create new company
+        const companyId = uuidv4()
+        const { data: newCompany, error: createError } = await supabase
+          .from('companies')
+          .insert([
+            {
+              id: companyId,
+              name: companyName,
+              industry: null,
+              location: null,
+              remarks: null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
             }
-          } else if (newCompany) {
-            companyMap.set(companyName, newCompany.id)
-            companiesCreated++
+          ])
+          .select()
+          .single()
+
+        if (createError) {
+          if (createError.message.includes('unique')) {
+            const { data: retryExisting } = await supabase
+              .from('companies')
+              .select('id')
+              .eq('name', companyName)
+              .maybeSingle()
+
+            if (retryExisting) {
+              companyMap.set(companyName, retryExisting.id)
+            } else {
+              errors.push({ row: 0, error: `Failed to create company "${companyName}"` })
+            }
+          } else {
+            errors.push({ row: 0, error: `Failed to create company "${companyName}"` })
           }
+        } else if (newCompany) {
+          companyMap.set(companyName, newCompany.id)
+          companiesCreated++
         }
       } catch (error: any) {
-        errors.push({ row: 0, error: `Company creation error: ${error.message}` })
+        errors.push({ row: 0, error: `Company error: ${error.message}` })
       }
     }
 
@@ -215,7 +183,7 @@ export async function POST(request: Request) {
       .map(contact => {
         const companyId = companyMap.get(contact.companyName)
         if (!companyId) {
-          errors.push({ row: contact.row, error: `Company "${contact.companyName}" could not be resolved` })
+          errors.push({ row: contact.row, error: `Company not found: ${contact.companyName}` })
           return null
         }
 
@@ -223,61 +191,58 @@ export async function POST(request: Request) {
           id: uuidv4(),
           company_id: companyId,
           name: contact.name,
-          designation: contact.designation || null,
+          designation: contact.designation,
           email: contact.email,
-          phone: contact.phone || null,
-          location: contact.location || null,
-          industry: contact.industry || null,
-          remarks: contact.remarks || null,
-          assigned_to: contact.assigned_to || null,
-          status: contact.status || 'LEAD',
-          company: contact.companyName, // Keep for backward compatibility
+          phone: contact.phone,
+          location: contact.location,
+          industry: contact.industry,
+          remarks: contact.remarks,
+          assigned_to: contact.assigned_to,
+          status: contact.status,
+          company: contact.companyName,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
       })
       .filter((c): c is any => c !== null)
 
-    // Step 4: Batch insert contacts with error handling
+    // Step 4: Insert contacts
     if (contactsToInsert.length > 0) {
-      try {
-        const { data: insertedContacts, error: insertError } = await supabase
-          .from('contacts')
-          .insert(contactsToInsert)
-          .select()
+      const { data: insertedContacts, error: insertError } = await supabase
+        .from('contacts')
+        .insert(contactsToInsert)
+        .select()
 
-        if (insertError) {
-          if (insertError.message.includes('violates unique constraint')) {
-            throw new Error(`Duplicate email found: ${insertError.message}`)
-          } else {
-            throw insertError
-          }
-        }
-
-        contactsAdded = insertedContacts?.length || 0
-      } catch (error: any) {
-        throw new Error(`Batch insert failed: ${error.message}`)
+      if (insertError) {
+        throw new Error(`Insert failed: ${insertError.message}`)
       }
+
+      contactsAdded = insertedContacts?.length || 0
     }
 
-    return NextResponse.json({
-      success: true,
-      imported: contactsAdded,
-      failed: errors.length,
-      total: contacts.length,
-      errors: errors.length > 0 ? errors : undefined,
-      summary: {
-        companiesCreated,
-        contactsAdded,
-        skipped
-      }
-    }, { status: 201 })
-
+    return NextResponse.json(
+      {
+        success: true,
+        imported: contactsAdded,
+        failed: errors.length,
+        total: contacts.length,
+        errors: errors.length > 0 ? errors : undefined,
+        summary: {
+          companiesCreated,
+          contactsAdded,
+          skipped
+        }
+      },
+      { status: 201 }
+    )
   } catch (error: any) {
-    console.error('Error importing contacts:', error)
-    return NextResponse.json({
-      error: error.message || 'Failed to import contacts',
-      success: false
-    }, { status: 500 })
+    console.error('Import error:', error)
+    return NextResponse.json(
+      {
+        error: error.message || 'Failed to import contacts',
+        success: false
+      },
+      { status: 500 }
+    )
   }
 }
