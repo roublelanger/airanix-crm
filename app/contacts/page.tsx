@@ -48,19 +48,23 @@ function ContactsContent() {
       const data = await res.json()
       if (res.ok) {
         if (formData.followupDate) {
-          await fetch('/api/followups', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              title: `Follow-up with ${formData.name}`,
-              description: formData.followupNotes,
-              dueDate: formData.followupDate,
-              priority: 'high',
-              type: formData.followupType,
-              status: 'open',
-              contactId: data.id || editingId
+          try {
+            await fetch('/api/followups', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                title: `Follow-up with ${formData.name}`,
+                description: formData.followupNotes,
+                dueDate: formData.followupDate,
+                priority: 'high',
+                type: formData.followupType,
+                status: 'open',
+                contactId: data.id || editingId
+              })
             })
-          })
+          } catch (error) {
+            console.error('Follow-up creation failed:', error)
+          }
         }
         setFormData({ name: '', email: '', phone: '', company: '', status: 'new', comments: '', followupDate: '', followupType: 'meeting', followupNotes: '' })
         setEditingId(null)
