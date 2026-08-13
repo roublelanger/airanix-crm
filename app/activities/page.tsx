@@ -45,9 +45,30 @@ export default function ActivitiesPage() {
         setFormData({ type: 'call', title: '', description: '', outcome: 'pending', contactId: '', callDuration: '', emailOpens: 0, meetingOutcome: '' })
         setShowForm(false)
         fetchActivities()
+      } else {
+        alert('Error saving activity')
       }
     } catch (error) {
       console.error('Error:', error)
+      alert('Error saving activity')
+    }
+  }
+
+  async function handleDeleteActivity(activityId: string) {
+    if (!confirm('Are you sure you want to delete this activity?')) return
+    try {
+      const res = await fetch(`/api/activities/${activityId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      if (res.ok) {
+        fetchActivities()
+      } else {
+        alert('Error deleting activity')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error deleting activity')
     }
   }
 
@@ -282,11 +303,7 @@ export default function ActivitiesPage() {
                       ✏️ Edit
                     </button>
                     <button
-                      onClick={() => {
-                        if (confirm('Delete this activity?')) {
-                          alert('Delete functionality coming soon')
-                        }
-                      }}
+                      onClick={() => handleDeleteActivity(activity.id)}
                       style={{
                         padding: '6px 12px',
                         background: '#fee2e2',
