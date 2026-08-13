@@ -13,7 +13,10 @@ export default function ContactDetailPage() {
     type: 'follow-up-call',
     title: '',
     description: '',
-    outcome: 'pending'
+    outcome: 'pending',
+    assignedTo: '',
+    meetingDate: '',
+    meetingTime: ''
   })
   const [followupStatus, setFollowupStatus] = useState('')
   const [showEmailModal, setShowEmailModal] = useState(false)
@@ -98,22 +101,49 @@ export default function ContactDetailPage() {
 
   async function handleActivitySubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!activityForm.title.trim()) {
-      alert('Please enter an activity title')
-      return
+
+    // Generate title based on type
+    const typeLabels: Record<string, string> = {
+      'follow-up-call': 'Follow-up Call',
+      'follow-up-meeting': 'Follow-up for Meeting',
+      'meeting-booked': 'Meeting Booked',
+      'meeting-happened': 'Meeting Happened',
+      'assigned': 'Contact Assigned'
     }
+    const title = typeLabels[activityForm.type] || 'Activity'
+
+    // Build complete description with meeting details
+    let fullDescription = activityForm.description || ''
+
+    // Add meeting details if applicable
+    if ((activityForm.type === 'meeting-booked' || activityForm.type === 'meeting-happened' || activityForm.type === 'follow-up-meeting') &&
+        (activityForm.meetingDate || activityForm.meetingTime)) {
+      fullDescription += '\n' + (fullDescription ? '\n' : '')
+      if (activityForm.meetingDate) fullDescription += `Date: ${activityForm.meetingDate}\n`
+      if (activityForm.meetingTime) fullDescription += `Time: ${activityForm.meetingTime}\n`
+    }
+
+    // Add assigned to if applicable
+    if ((activityForm.type === 'assigned' || activityForm.type === 'meeting-booked') && activityForm.assignedTo) {
+      fullDescription += '\n' + (fullDescription ? '\n' : '')
+      fullDescription += `Assigned to: ${activityForm.assignedTo}`
+    }
+
     try {
       const res = await fetch('/api/activities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...activityForm,
+          type: activityForm.type,
+          title: title,
+          description: fullDescription,
+          outcome: activityForm.outcome,
           contactId: params.id
         })
       })
       const data = await res.json()
       if (res.ok) {
-        setActivityForm({ type: 'follow-up-call', title: '', description: '', outcome: 'pending' })
+        setActivityForm({ type: 'follow-up-call', title: '', description: '', outcome: 'pending', assignedTo: '', meetingDate: '', meetingTime: '' })
         setShowActivityForm(false)
         fetchActivities()
         alert('Activity logged successfully!')
@@ -563,6 +593,68 @@ export default function ContactDetailPage() {
               <input type="hidden" value={activityForm.type} />
             </fieldset>
 
+            {/* Meeting Details - Show for meeting-related activities */}
+            {(activityForm.type === 'meeting-booked' || activityForm.type === 'meeting-happened' || activityForm.type === 'follow-up-meeting') && (
+              <fieldset style={{ border: 'none', padding: 0, margin: '0 0 24px 0' }}>
+                <legend style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '12px', textTransform: 'uppercase' }}>Meeting Details</legend>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#333' }}>Date</label>
+                    <input
+                      type="date"
+                      value={activityForm.meetingDate}
+                      onChange={(e) => setActivityForm({ ...activityForm, meetingDate: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        fontFamily: 'inherit'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#333' }}>Time</label>
+                    <input
+                      type="time"
+                      value={activityForm.meetingTime}
+                      onChange={(e) => setActivityForm({ ...activityForm, meetingTime: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        fontFamily: 'inherit'
+                      }}
+                    />
+                  </div>
+                </div>
+              </fieldset>
+            )}
+
+            {/* Assigned To - Show for assigned activities */}
+            {(activityForm.type === 'assigned' || activityForm.type === 'meeting-booked') && (
+              <fieldset style={{ border: 'none', padding: 0, margin: '0 0 24px 0' }}>
+                <legend style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '12px', textTransform: 'uppercase' }}>Assign to Sales</legend>
+                <input
+                  type="text"
+                  value={activityForm.assignedTo}
+                  onChange={(e) => setActivityForm({ ...activityForm, assignedTo: e.target.value })}
+                  placeholder="Sales team member name"
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </fieldset>
+            )}
+
             {/* Description/Remarks */}
             <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
               <legend style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '12px', textTransform: 'uppercase' }}>Description & Remarks</legend>
@@ -650,9 +742,28 @@ export default function ContactDetailPage() {
                     <span style={{ fontSize: '18px', marginRight: '10px' }}>{config.icon}</span>
                     <strong style={{ color: config.color, fontSize: '14px' }}>{config.label}</strong>
                   </div>
-                  {activity.description && (
+
+                  {/* Meeting Details */}
+                  {(activity.type === 'meeting-booked' || activity.type === 'meeting-happened') && activity.description && (
+                    <>
+                      {activity.description.includes('Date:') && (
+                        <div style={{ margin: '8px 0', fontSize: '12px', color: '#555', paddingLeft: '28px' }}>
+                          {activity.description.split('\n').map((line: string, idx: number) => (
+                            <div key={idx}>{line}</div>
+                          ))}
+                        </div>
+                      )}
+                      {!activity.description.includes('Date:') && (
+                        <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#333', paddingLeft: '28px' }}>{activity.description}</p>
+                      )}
+                    </>
+                  )}
+
+                  {/* Regular Description */}
+                  {activity.type !== 'meeting-booked' && activity.type !== 'meeting-happened' && activity.description && (
                     <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#333', paddingLeft: '28px' }}>{activity.description}</p>
                   )}
+
                   <p style={{ margin: 0, fontSize: '12px', color: '#999', paddingLeft: '28px' }}>
                     {activity.created_at ? new Date(activity.created_at).toLocaleString() : 'Recently'}
                   </p>
