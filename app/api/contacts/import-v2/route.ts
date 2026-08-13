@@ -145,9 +145,7 @@ export async function POST(request: Request) {
               name: companyName,
               industry: null,
               location: null,
-              remarks: null,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              remarks: null
             }
           ])
           .select()
@@ -198,9 +196,7 @@ export async function POST(request: Request) {
           industry: contact.industry,
           remarks: contact.remarks,
           assigned_to: contact.assigned_to,
-          status: contact.status,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          status: contact.status
         }
       })
       .filter((c): c is any => c !== null)
