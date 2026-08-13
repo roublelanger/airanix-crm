@@ -10,7 +10,7 @@ export default function ContactDetailPage() {
   const [activities, setActivities] = useState<any[]>([])
   const [showActivityForm, setShowActivityForm] = useState(false)
   const [activityForm, setActivityForm] = useState({
-    type: 'call',
+    type: 'follow-up-call',
     title: '',
     description: '',
     outcome: 'pending'
@@ -67,7 +67,7 @@ export default function ContactDetailPage() {
       })
       const data = await res.json()
       if (res.ok) {
-        setActivityForm({ type: 'call', title: '', description: '', outcome: 'pending' })
+        setActivityForm({ type: 'follow-up-call', title: '', description: '', outcome: 'pending' })
         setShowActivityForm(false)
         fetchActivities()
         alert('Activity logged successfully!')
@@ -97,23 +97,61 @@ export default function ContactDetailPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '30px' }}>
         {/* Contact Info */}
         <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>Contact Information</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>📋 Contact Information</h2>
 
-          <div style={{ marginBottom: '16px' }}>
-            <p style={{ fontSize: '12px', color: '#666', margin: '0 0 4px 0' }}>Email</p>
-            <p style={{ fontSize: '14px', margin: 0 }}>{contact.email || '-'}</p>
+          <div style={{ marginBottom: '14px' }}>
+            <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>📧 Email</p>
+            <p style={{ fontSize: '14px', margin: 0, color: '#333' }}>
+              {contact.email ? <a href={`mailto:${contact.email}`} style={{ color: '#2563eb', textDecoration: 'none' }}>{contact.email}</a> : '-'}
+            </p>
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
-            <p style={{ fontSize: '12px', color: '#666', margin: '0 0 4px 0' }}>Phone</p>
-            <p style={{ fontSize: '14px', margin: 0 }}>{contact.phone || '-'}</p>
+          <div style={{ marginBottom: '14px' }}>
+            <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>📱 Phone</p>
+            <p style={{ fontSize: '14px', margin: 0, color: '#333' }}>
+              {contact.phone ? <a href={`tel:${contact.phone}`} style={{ color: '#2563eb', textDecoration: 'none' }}>{contact.phone}</a> : '-'}
+            </p>
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
-            <p style={{ fontSize: '12px', color: '#666', margin: '0 0 4px 0' }}>Company</p>
-            <p style={{ fontSize: '14px', margin: 0 }}>{contact.company || '-'}</p>
+          <div style={{ marginBottom: '14px' }}>
+            <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>🏢 Company</p>
+            <p style={{ fontSize: '14px', margin: 0, color: '#333' }}>{contact.company || '-'}</p>
           </div>
 
+          {contact.designation && (
+            <div style={{ marginBottom: '14px' }}>
+              <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>💼 Designation</p>
+              <p style={{ fontSize: '14px', margin: 0, color: '#333' }}>{contact.designation}</p>
+            </div>
+          )}
+
+          {contact.location && (
+            <div style={{ marginBottom: '14px' }}>
+              <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>📍 Location</p>
+              <p style={{ fontSize: '14px', margin: 0, color: '#333' }}>{contact.location}</p>
+            </div>
+          )}
+
+          {contact.industry && (
+            <div style={{ marginBottom: '14px' }}>
+              <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>🏭 Industry</p>
+              <p style={{ fontSize: '14px', margin: 0, color: '#333' }}>{contact.industry}</p>
+            </div>
+          )}
+
+          {contact.assigned_to && (
+            <div style={{ marginBottom: '14px' }}>
+              <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>👤 Assigned To</p>
+              <p style={{ fontSize: '14px', margin: 0, color: '#333' }}>{contact.assigned_to}</p>
+            </div>
+          )}
+
+          {contact.remarks && (
+            <div>
+              <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>📝 Remarks</p>
+              <p style={{ fontSize: '13px', margin: 0, color: '#555', lineHeight: '1.5' }}>{contact.remarks}</p>
+            </div>
+          )}
         </div>
 
         {/* Quick Actions */}
@@ -201,50 +239,99 @@ export default function ContactDetailPage() {
           padding: '24px',
           borderRadius: '8px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          marginBottom: '30px'
+          marginBottom: '30px',
+          border: '2px solid #2563eb'
         }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>Log Activity</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '20px' }}>📝 Log Call Activity</h2>
           <form onSubmit={handleActivitySubmit}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '6px' }}>Type</label>
-                <select
-                  value={activityForm.type}
-                  onChange={(e) => setActivityForm({ ...activityForm, type: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #ddd', borderRadius: '6px' }}
-                >
-                  <option value="call">☎️ Call</option>
-                  <option value="email">📧 Email</option>
-                  <option value="meeting">📅 Meeting</option>
-                  <option value="note">📝 Note</option>
-                </select>
+            {/* Activity Type Selection */}
+            <fieldset style={{ border: 'none', padding: 0, margin: '0 0 24px 0' }}>
+              <legend style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '12px', textTransform: 'uppercase' }}>Select Activity Type *</legend>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+                {[
+                  { value: 'follow-up-call', label: '☎️ Follow-up Call', desc: 'Regular follow-up call' },
+                  { value: 'follow-up-meeting', label: '🔔 Follow-up for Meeting', desc: 'Follow-up before meeting' },
+                  { value: 'meeting-booked', label: '📅 Meeting Booked', desc: 'Meeting confirmed' },
+                  { value: 'meeting-happened', label: '✅ Meeting Happened', desc: 'Meeting completed' },
+                  { value: 'assigned', label: '👤 Assigned', desc: 'Contact assigned' }
+                ].map(option => (
+                  <div
+                    key={option.value}
+                    onClick={() => setActivityForm({ ...activityForm, type: option.value })}
+                    style={{
+                      padding: '12px',
+                      border: `2px solid ${activityForm.type === option.value ? '#2563eb' : '#ddd'}`,
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      background: activityForm.type === option.value ? '#eff6ff' : '#f9fafb',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: activityForm.type === option.value ? '#2563eb' : '#333', marginBottom: '4px' }}>
+                      {option.label}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>{option.desc}</div>
+                  </div>
+                ))}
               </div>
+              <input type="hidden" value={activityForm.type} />
+            </fieldset>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '6px' }}>Title</label>
-                <input
-                  type="text"
-                  value={activityForm.title}
-                  onChange={(e) => setActivityForm({ ...activityForm, title: e.target.value })}
-                  placeholder="Activity title"
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #ddd', borderRadius: '6px' }}
+            {/* Description/Remarks */}
+            <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+              <legend style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '12px', textTransform: 'uppercase' }}>Description & Remarks</legend>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#333' }}>What happened during the call?</label>
+                <textarea
+                  value={activityForm.description}
+                  onChange={(e) => setActivityForm({ ...activityForm, description: e.target.value })}
+                  placeholder="Add details about the call, discussion points, next steps, etc."
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    minHeight: '120px',
+                    fontFamily: 'system-ui',
+                    boxSizing: 'border-box',
+                    fontSize: '14px'
+                  }}
                 />
               </div>
-            </div>
+            </fieldset>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '6px' }}>Description</label>
-              <textarea
-                value={activityForm.description}
-                onChange={(e) => setActivityForm({ ...activityForm, description: e.target.value })}
-                placeholder="What was discussed?"
-                style={{ width: '100%', padding: '8px 12px', border: '1px solid #ddd', borderRadius: '6px', minHeight: '80px' }}
-              />
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+              <button
+                type="button"
+                onClick={() => setShowActivityForm(false)}
+                style={{
+                  padding: '10px 20px',
+                  background: '#f3f4f6',
+                  color: '#333',
+                  border: '1px solid #ddd',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                style={{
+                  padding: '10px 24px',
+                  background: '#2563eb',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                ✓ Save Activity
+              </button>
             </div>
-
-            <button type="submit" style={{ padding: '10px 20px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '500' }}>
-              Save Activity
-            </button>
           </form>
         </div>
       )}
@@ -256,18 +343,36 @@ export default function ContactDetailPage() {
           <p style={{ color: '#999', textAlign: 'center', margin: 0 }}>No activities yet</p>
         ) : (
           <div>
-            {activities.map((activity: any) => (
-              <div key={activity.id} style={{ padding: '16px', borderBottom: '1px solid #eee', background: '#fafafa' }}>
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '16px', marginRight: '8px' }}>
-                    {activity.type === 'call' ? '☎️' : activity.type === 'email' ? '📧' : activity.type === 'meeting' ? '📅' : '📝'}
-                  </span>
-                  <strong style={{ color: '#1e40af' }}>{activity.type.toUpperCase()}</strong>
+            {activities.map((activity: any) => {
+              const typeConfig: Record<string, { icon: string; label: string; color: string }> = {
+                'follow-up-call': { icon: '☎️', label: 'Follow-up Call', color: '#3b82f6' },
+                'follow-up-meeting': { icon: '🔔', label: 'Follow-up for Meeting', color: '#f59e0b' },
+                'meeting-booked': { icon: '📅', label: 'Meeting Booked', color: '#8b5cf6' },
+                'meeting-happened': { icon: '✅', label: 'Meeting Happened', color: '#10b981' },
+                'assigned': { icon: '👤', label: 'Assigned', color: '#6366f1' },
+                'call': { icon: '☎️', label: 'Call', color: '#3b82f6' },
+                'email': { icon: '📧', label: 'Email', color: '#0ea5e9' },
+                'meeting': { icon: '📅', label: 'Meeting', color: '#a855f7' },
+                'note': { icon: '📝', label: 'Note', color: '#64748b' }
+              };
+
+              const config = typeConfig[activity.type] || { icon: '📌', label: activity.type?.toUpperCase() || 'Activity', color: '#6b7280' };
+
+              return (
+                <div key={activity.id} style={{ padding: '16px', borderBottom: '1px solid #eee', borderLeft: `4px solid ${config.color}`, background: '#fafafa' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '18px', marginRight: '10px' }}>{config.icon}</span>
+                    <strong style={{ color: config.color, fontSize: '14px' }}>{config.label}</strong>
+                  </div>
+                  {activity.description && (
+                    <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#333', paddingLeft: '28px' }}>{activity.description}</p>
+                  )}
+                  <p style={{ margin: 0, fontSize: '12px', color: '#999', paddingLeft: '28px' }}>
+                    {activity.created_at ? new Date(activity.created_at).toLocaleString() : 'Recently'}
+                  </p>
                 </div>
-                <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#333' }}>{activity.notes || 'Activity logged'}</p>
-                <p style={{ margin: 0, fontSize: '12px', color: '#999' }}>{activity.created_at ? new Date(activity.created_at).toLocaleString() : 'Recently'}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
