@@ -67,12 +67,14 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
     return normalized.replace(/\s+/g, '_')
   }
 
-  // Simple, robust CSV parsing
+  // Simple, robust CSV parsing with debugging
   const parseCSV = (text: string): ParsedContact[] => {
     try {
       // Normalize line endings and remove empty lines
       const normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
       const lines = normalizedText.split('\n').map(line => line.trim()).filter(line => line.length > 0)
+
+      console.log('🔍 CSV Debug:', { totalLines: lines.length, firstLine: lines[0]?.substring(0, 100) })
 
       if (lines.length < 2) {
         throw new Error('CSV must have header and at least one data row')
@@ -80,22 +82,33 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
 
       // Parse header row
       const rawHeaders = lines[0].split(',').map(h => h.trim())
+      console.log('📋 Raw Headers:', rawHeaders)
+
       const headers = rawHeaders.map(mapHeaderToField)
+      console.log('🏷️ Mapped Headers:', headers)
 
       const contacts: ParsedContact[] = []
 
       // Parse data rows
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i]
+        console.log(`📍 Row ${i}:`, line.substring(0, 100))
 
         // Skip empty lines
-        if (!line || line.length === 0) continue
+        if (!line || line.length === 0) {
+          console.log(`  → Skipped (empty)`)
+          continue
+        }
 
         // Simple split for non-quoted CSV
         const values = line.split(',').map(v => v.trim())
+        console.log(`  → Values:`, values.slice(0, 3))
 
         // Skip if not enough columns
-        if (values.length < 2) continue
+        if (values.length < 2) {
+          console.log(`  → Skipped (not enough columns: ${values.length})`)
+          continue
+        }
 
         // Build contact object
         const contact: any = {}
@@ -106,17 +119,23 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
           }
         })
 
+        console.log(`  → Contact:`, { contact_name: contact.contact_name, email: contact.email })
+
         // Validate required fields
         if (!contact.contact_name || !contact.email) {
-          continue // Skip invalid rows
+          console.log(`  → Skipped (missing required: contact_name=${contact.contact_name}, email=${contact.email})`)
+          continue
         }
 
         // Set defaults
         contact.company_name = contact.company_name || 'Unassigned'
         contact.status = contact.status || 'LEAD'
 
+        console.log(`  → ✅ Added`)
         contacts.push(contact as ParsedContact)
       }
+
+      console.log('📊 Final:', { totalContacts: contacts.length })
 
       if (contacts.length === 0) {
         throw new Error('No valid contacts found in CSV (check required fields: Contact Name, Email)')
@@ -124,6 +143,7 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
 
       return contacts
     } catch (error: any) {
+      console.error('❌ Parse Error:', error.message)
       throw new Error(`CSV Parse Error: ${error.message}`)
     }
   }
