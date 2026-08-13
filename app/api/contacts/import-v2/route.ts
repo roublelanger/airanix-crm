@@ -197,8 +197,8 @@ export async function POST(request: Request) {
           remarks: contact.remarks,
           assigned_to: contact.assigned_to,
           status: contact.status,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         }
       })
       .filter((c): c is any => c !== null)
