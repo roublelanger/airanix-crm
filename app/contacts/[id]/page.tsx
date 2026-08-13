@@ -16,6 +16,40 @@ export default function ContactDetailPage() {
     outcome: 'pending'
   })
   const [followupStatus, setFollowupStatus] = useState('')
+  const [showEmailModal, setShowEmailModal] = useState(false)
+
+  const emailTemplates = [
+    {
+      id: 'initial-contact',
+      name: '📬 Initial Contact',
+      subject: `Hello from Airanix CRM`,
+      body: `Hi ${contact?.name || 'there'},\n\nI hope this email finds you well. I wanted to reach out to discuss potential opportunities.\n\nBest regards,\nAiranix Team`
+    },
+    {
+      id: 'follow-up',
+      name: '🔄 Follow-up',
+      subject: `Follow-up: ${contact?.name || 'Discussion'}`,
+      body: `Hi ${contact?.name || 'there'},\n\nI hope you received my previous email. I wanted to follow up and see if you're interested in discussing this further.\n\nLooking forward to hearing from you.\n\nBest regards,\nAiranix Team`
+    },
+    {
+      id: 'meeting-confirmation',
+      name: '📅 Meeting Confirmation',
+      subject: `Meeting Confirmation`,
+      body: `Hi ${contact?.name || 'there'},\n\nThank you for confirming our meeting. I'm looking forward to our discussion.\n\nPlease let me know if you need any additional information beforehand.\n\nBest regards,\nAiranix Team`
+    },
+    {
+      id: 'proposal',
+      name: '📊 Proposal',
+      subject: `Proposal for Your Review`,
+      body: `Hi ${contact?.name || 'there'},\n\nPlease find attached our proposal for your review. I would appreciate your feedback and would be happy to discuss any questions you may have.\n\nBest regards,\nAiranix Team`
+    },
+    {
+      id: 'thank-you',
+      name: '🙏 Thank You',
+      subject: `Thank You for Your Time`,
+      body: `Hi ${contact?.name || 'there'},\n\nThank you for taking the time to meet with me today. I appreciate the opportunity to discuss potential collaboration.\n\nI look forward to continuing our conversation.\n\nBest regards,\nAiranix Team`
+    }
+  ]
 
   useEffect(() => {
     fetchContact()
@@ -183,7 +217,7 @@ export default function ContactDetailPage() {
               alert('No email available for this contact')
               return
             }
-            window.location.href = `mailto:${contact.email}?subject=Follow-up with ${contact.name}`
+            setShowEmailModal(true)
           }} style={{
             width: '100%',
             padding: '12px 16px',
@@ -231,6 +265,90 @@ export default function ContactDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Email Template Modal */}
+      {showEmailModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }} onClick={() => setShowEmailModal(false)}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '600px',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            boxShadow: '0 20px 25px rgba(0,0,0,0.15)'
+          }} onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '600' }}>📧 Select Email Template</h2>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px', marginBottom: '20px' }}>
+              {emailTemplates.map(template => (
+                <button
+                  key={template.id}
+                  onClick={() => {
+                    const subject = encodeURIComponent(template.subject);
+                    const body = encodeURIComponent(template.body);
+                    window.location.href = `mailto:${contact.email}?subject=${subject}&body=${body}`;
+                    setShowEmailModal(false);
+                  }}
+                  style={{
+                    padding: '16px',
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s',
+                    hover: {
+                      background: '#f1f5f9',
+                      borderColor: '#2563eb'
+                    }
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f1f5f9';
+                    e.currentTarget.style.borderColor = '#2563eb';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#f8fafc';
+                    e.currentTarget.style.borderColor = '#e2e8f0';
+                  }}
+                >
+                  <div style={{ fontWeight: '600', color: '#1e293b', marginBottom: '4px' }}>{template.name}</div>
+                  <div style={{ fontSize: '12px', color: '#666', lineHeight: '1.4' }}>
+                    Subject: {template.subject}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowEmailModal(false)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                background: '#f3f4f6',
+                color: '#333',
+                border: '1px solid #ddd',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: '500'
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Activity Form */}
       {showActivityForm && (
