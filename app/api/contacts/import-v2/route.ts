@@ -36,11 +36,27 @@ interface ImportResult {
 
 export async function POST(request: Request) {
   try {
+    if (!request.body) {
+      return NextResponse.json({ error: 'Request body is required' }, { status: 400 })
+    }
+
     const body = await request.json()
     const { contacts } = body
 
-    if (!Array.isArray(contacts) || contacts.length === 0) {
-      return NextResponse.json({ error: 'Invalid contacts data' }, { status: 400 })
+    if (!contacts) {
+      return NextResponse.json({ error: 'Contacts field is required' }, { status: 400 })
+    }
+
+    if (!Array.isArray(contacts)) {
+      return NextResponse.json({ error: 'Contacts must be an array' }, { status: 400 })
+    }
+
+    if (contacts.length === 0) {
+      return NextResponse.json({ error: 'No contacts provided' }, { status: 400 })
+    }
+
+    if (contacts.length > 1000) {
+      return NextResponse.json({ error: 'Maximum 1000 contacts per import' }, { status: 400 })
     }
 
     const errors: Array<{ row: number; error: string }> = []
@@ -52,23 +68,52 @@ export async function POST(request: Request) {
 
     // Step 1: Validate and normalize data
     for (let i = 0; i < contacts.length; i++) {
-      const contact = contacts[i]
-      const contactName = (contact.contact_name || contact.name)?.trim()
-      const email = contact.email?.trim()?.toLowerCase()
-      const companyName = contact.company_name?.trim()
+      try {
+        const contact = contacts[i]
 
-      // Validation
-      if (!contactName) {
-        errors.push({ row: i + 1, error: 'Contact name is required' })
-        skipped++
-        continue
-      }
+        // Null/undefined check
+        if (!contact || typeof contact !== 'object') {
+          errors.push({ row: i + 1, error: 'Invalid contact data' })
+          skipped++
+          continue
+        }
 
-      if (!email) {
-        errors.push({ row: i + 1, error: 'Email is required' })
-        skipped++
-        continue
-      }
+        const contactName = String(contact.contact_name || contact.name || '').trim()
+        const email = String(contact.email || '').trim().toLowerCase()
+        const companyName = String(contact.company_name || 'Unassigned').trim()
+
+        // Validation - required fields
+        if (!contactName || contactName.length === 0) {
+          errors.push({ row: i + 1, error: 'Contact name is required and cannot be empty' })
+          skipped++
+          continue
+        }
+
+        if (!email || email.length === 0) {
+          errors.push({ row: i + 1, error: 'Email is required and cannot be empty' })
+          skipped++
+          continue
+        }
+
+        // Basic email validation
+        if (!email.includes('@') || !email.includes('.')) {
+          errors.push({ row: i + 1, error: `Invalid email format: ${email}` })
+          skipped++
+          continue
+        }
+
+        // Length validation
+        if (contactName.length > 255) {
+          errors.push({ row: i + 1, error: 'Contact name too long (max 255 chars)' })
+          skipped++
+          continue
+        }
+
+        if (email.length > 255) {
+          errors.push({ row: i + 1, error: 'Email too long (max 255 chars)' })
+          skipped++
+          continue
+        }
 
       validatedContacts.push({
         row: i + 1,
@@ -93,79 +138,126 @@ export async function POST(request: Request) {
     }
 
     // Step 2: Get or create companies
-    const uniqueCompanies = [...new Set(validatedContacts.map(c => c.companyName))]
+    const uniqueCompanies = [...new Set(validatedContacts.map(c => c.companyName))].filter(c => c && c.length > 0)
 
     for (const companyName of uniqueCompanies) {
-      if (companyMap.has(companyName)) continue
+      try {
+        if (companyMap.has(companyName)) continue
 
-      // Try to find existing company
-      const { data: existing } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('name', companyName)
-        .single()
-
-      if (existing) {
-        companyMap.set(companyName, existing.id)
-      } else {
-        // Create new company
-        const { data: newCompany, error } = await supabase
-          .from('companies')
-          .insert([
-            {
-              id: uuidv4(),
-              name: companyName,
-              industry: null,
-              location: null,
-              remarks: null,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }
-          ])
-          .select()
-          .single()
-
-        if (error) {
-          errors.push({ row: 0, error: `Failed to create company "${companyName}": ${error.message}` })
-        } else if (newCompany) {
-          companyMap.set(companyName, newCompany.id)
-          companiesCreated++
+        // Validate company name
+        if (!companyName || companyName.length === 0 || companyName.length > 255) {
+          errors.push({ row: 0, error: `Invalid company name: "${companyName}"` })
+          continue
         }
+
+        // Try to find existing company
+        const { data: existing, error: existingError } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('name', companyName)
+          .maybeSingle()
+
+        if (existingError && existingError.code !== 'PGRST116') {
+          throw new Error(`Database error finding company: ${existingError.message}`)
+        }
+
+        if (existing) {
+          companyMap.set(companyName, existing.id)
+        } else {
+          // Create new company
+          const companyId = uuidv4()
+          const { data: newCompany, error: createError } = await supabase
+            .from('companies')
+            .insert([
+              {
+                id: companyId,
+                name: companyName,
+                industry: null,
+                location: null,
+                remarks: null,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }
+            ])
+            .select()
+            .single()
+
+          if (createError) {
+            // Check if duplicate constraint error
+            if (createError.message.includes('unique')) {
+              // Try to fetch it again (race condition)
+              const { data: retryExisting } = await supabase
+                .from('companies')
+                .select('id')
+                .eq('name', companyName)
+                .maybeSingle()
+
+              if (retryExisting) {
+                companyMap.set(companyName, retryExisting.id)
+              } else {
+                errors.push({ row: 0, error: `Failed to create company "${companyName}": ${createError.message}` })
+              }
+            } else {
+              errors.push({ row: 0, error: `Failed to create company "${companyName}": ${createError.message}` })
+            }
+          } else if (newCompany) {
+            companyMap.set(companyName, newCompany.id)
+            companiesCreated++
+          }
+        }
+      } catch (error: any) {
+        errors.push({ row: 0, error: `Company creation error: ${error.message}` })
       }
     }
 
     // Step 3: Prepare contacts for insertion
     const contactsToInsert = validatedContacts
-      .filter(contact => companyMap.has(contact.companyName))
-      .map(contact => ({
-        id: uuidv4(),
-        company_id: companyMap.get(contact.companyName),
-        name: contact.name,
-        designation: contact.designation,
-        email: contact.email,
-        phone: contact.phone,
-        location: contact.location,
-        industry: contact.industry,
-        remarks: contact.remarks,
-        assigned_to: contact.assigned_to,
-        status: contact.status,
-        company: contact.companyName, // Keep for backward compatibility
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }))
+      .map(contact => {
+        const companyId = companyMap.get(contact.companyName)
+        if (!companyId) {
+          errors.push({ row: contact.row, error: `Company "${contact.companyName}" could not be resolved` })
+          return null
+        }
 
-    // Step 4: Batch insert contacts
+        return {
+          id: uuidv4(),
+          company_id: companyId,
+          name: contact.name,
+          designation: contact.designation || null,
+          email: contact.email,
+          phone: contact.phone || null,
+          location: contact.location || null,
+          industry: contact.industry || null,
+          remarks: contact.remarks || null,
+          assigned_to: contact.assigned_to || null,
+          status: contact.status || 'LEAD',
+          company: contact.companyName, // Keep for backward compatibility
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      })
+      .filter((c): c is any => c !== null)
+
+    // Step 4: Batch insert contacts with error handling
     if (contactsToInsert.length > 0) {
-      const { data: insertedContacts, error: insertError } = await supabase
-        .from('contacts')
-        .insert(contactsToInsert)
-        .select()
+      try {
+        const { data: insertedContacts, error: insertError } = await supabase
+          .from('contacts')
+          .insert(contactsToInsert)
+          .select()
 
-      if (insertError) {
-        throw insertError
+        if (insertError) {
+          if (insertError.message.includes('violates unique constraint')) {
+            throw new Error(`Duplicate email found: ${insertError.message}`)
+          } else {
+            throw insertError
+          }
+        }
+
+        contactsAdded = insertedContacts?.length || 0
+      } catch (error: any) {
+        throw new Error(`Batch insert failed: ${error.message}`)
       }
-
-      contactsAdded = insertedContacts?.length || 0
     }
 
     return NextResponse.json({
