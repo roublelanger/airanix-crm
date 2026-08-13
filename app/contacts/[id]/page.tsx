@@ -308,11 +308,7 @@ export default function ContactDetailPage() {
                     borderRadius: '8px',
                     cursor: 'pointer',
                     textAlign: 'left',
-                    transition: 'all 0.2s',
-                    hover: {
-                      background: '#f1f5f9',
-                      borderColor: '#2563eb'
-                    }
+                    transition: 'all 0.2s'
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = '#f1f5f9';
