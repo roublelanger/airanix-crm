@@ -18,6 +18,12 @@ export default function ContactDetailPage() {
   const [followupStatus, setFollowupStatus] = useState('')
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [emailFeedback, setEmailFeedback] = useState('')
+  const [emailTemplates, setEmailTemplates] = useState<any[]>([])
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null)
+  const [emailActivityForm, setEmailActivityForm] = useState({
+    type: 'email-sent',
+    description: ''
+  })
 
   // Sanitize email - remove quotes and invalid characters
   const sanitizeEmail = (email: string) => {
@@ -31,38 +37,31 @@ export default function ContactDetailPage() {
     return emailRegex.test(email)
   }
 
-  const emailTemplates = [
-    {
-      id: 'initial-contact',
-      name: '📬 Initial Contact',
-      subject: `Hello from Airanix CRM`,
-      body: `Hi ${contact?.name || 'there'},\n\nI hope this email finds you well. I wanted to reach out to discuss potential opportunities.\n\nBest regards,\nAiranix Team`
-    },
-    {
-      id: 'follow-up',
-      name: '🔄 Follow-up',
-      subject: `Follow-up: ${contact?.name || 'Discussion'}`,
-      body: `Hi ${contact?.name || 'there'},\n\nI hope you received my previous email. I wanted to follow up and see if you're interested in discussing this further.\n\nLooking forward to hearing from you.\n\nBest regards,\nAiranix Team`
-    },
-    {
-      id: 'meeting-confirmation',
-      name: '📅 Meeting Confirmation',
-      subject: `Meeting Confirmation`,
-      body: `Hi ${contact?.name || 'there'},\n\nThank you for confirming our meeting. I'm looking forward to our discussion.\n\nPlease let me know if you need any additional information beforehand.\n\nBest regards,\nAiranix Team`
-    },
-    {
-      id: 'proposal',
-      name: '📊 Proposal',
-      subject: `Proposal for Your Review`,
-      body: `Hi ${contact?.name || 'there'},\n\nPlease find attached our proposal for your review. I would appreciate your feedback and would be happy to discuss any questions you may have.\n\nBest regards,\nAiranix Team`
-    },
-    {
-      id: 'thank-you',
-      name: '🙏 Thank You',
-      subject: `Thank You for Your Time`,
-      body: `Hi ${contact?.name || 'there'},\n\nThank you for taking the time to meet with me today. I appreciate the opportunity to discuss potential collaboration.\n\nI look forward to continuing our conversation.\n\nBest regards,\nAiranix Team`
+  // Interpolate template with contact data
+  const interpolateTemplate = (template: any, contactData: any) => {
+    let body = template.body
+    let subject = template.subject
+
+    body = body.replace(/{{contact_name}}/g, contactData?.name || 'there')
+    subject = subject.replace(/{{contact_name}}/g, contactData?.name || 'Contact')
+
+    return { ...template, body, subject }
+  }
+
+  // Fetch email templates from API
+  useEffect(() => {
+    const fetchEmailTemplates = async () => {
+      try {
+        const res = await fetch('/api/email-templates')
+        const data = await res.json()
+        setEmailTemplates(data)
+      } catch (error) {
+        console.error('Error fetching email templates:', error)
+      }
     }
-  ]
+    fetchEmailTemplates()
+  }, [])
+
 
   useEffect(() => {
     fetchContact()
@@ -237,7 +236,9 @@ export default function ContactDetailPage() {
               setTimeout(() => setEmailFeedback(''), 3000)
               return
             }
-            setEmailFeedback('✅ Email modal opened')
+            setSelectedTemplate(null)
+            setEmailActivityForm({ type: 'email-sent', description: '' })
+            setEmailFeedback('✅ Select email template')
             setShowEmailModal(true)
           }} style={{
             width: '100%',
@@ -327,73 +328,192 @@ export default function ContactDetailPage() {
             overflowY: 'auto',
             boxShadow: '0 20px 25px rgba(0,0,0,0.15)'
           }} onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600' }}>📧 Select Email Template</h2>
-            <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#666' }}>
-              To: {sanitizeEmail(contact.email)}
-            </p>
+            {!selectedTemplate ? (
+              <>
+                <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600' }}>📧 Select Email Template</h2>
+                <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#666' }}>
+                  To: {sanitizeEmail(contact.email)}
+                </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px', marginBottom: '20px' }}>
-              {emailTemplates.map(template => (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px', marginBottom: '20px' }}>
+                  {emailTemplates.length > 0 ? emailTemplates.map(template => (
+                    <button
+                      key={template.id}
+                      onClick={() => setSelectedTemplate(interpolateTemplate(template, contact))}
+                      style={{
+                        padding: '16px',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#f1f5f9';
+                        e.currentTarget.style.borderColor = '#2563eb';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#f8fafc';
+                        e.currentTarget.style.borderColor = '#e2e8f0';
+                      }}
+                    >
+                      <div style={{ fontWeight: '600', color: '#1e293b', marginBottom: '4px' }}>{template.name}</div>
+                      <div style={{ fontSize: '12px', color: '#666', lineHeight: '1.4' }}>
+                        Subject: {template.subject}
+                      </div>
+                    </button>
+                  )) : <p style={{ color: '#999' }}>Loading templates...</p>}
+                </div>
+
                 <button
-                  key={template.id}
                   onClick={() => {
-                    const cleanEmail = sanitizeEmail(contact.email)
-                    if (!isValidEmail(cleanEmail)) {
-                      setEmailFeedback('❌ Invalid email address')
-                      setTimeout(() => setEmailFeedback(''), 3000)
-                      return
-                    }
-                    const subject = encodeURIComponent(template.subject);
-                    const body = encodeURIComponent(template.body);
-                    window.location.href = `mailto:${cleanEmail}?subject=${subject}&body=${body}`;
-                    setEmailFeedback('✅ Email client opened')
-                    setShowEmailModal(false);
-                    setTimeout(() => setEmailFeedback(''), 3000)
+                    setShowEmailModal(false)
+                    setEmailFeedback('')
                   }}
                   style={{
-                    padding: '16px',
-                    background: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
+                    width: '100%',
+                    padding: '12px',
+                    background: '#f3f4f6',
+                    color: '#333',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
                     cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#f1f5f9';
-                    e.currentTarget.style.borderColor = '#2563eb';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#f8fafc';
-                    e.currentTarget.style.borderColor = '#e2e8f0';
+                    fontWeight: '500'
                   }}
                 >
-                  <div style={{ fontWeight: '600', color: '#1e293b', marginBottom: '4px' }}>{template.name}</div>
-                  <div style={{ fontSize: '12px', color: '#666', lineHeight: '1.4' }}>
-                    Subject: {template.subject}
-                  </div>
+                  Cancel
                 </button>
-              ))}
-            </div>
+              </>
+            ) : (
+              <>
+                <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600' }}>📝 Email Activity Details</h2>
+                <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#666' }}>
+                  Template: {selectedTemplate?.name} | To: {sanitizeEmail(contact.email)}
+                </p>
 
-            <button
-              onClick={() => {
-                setShowEmailModal(false)
-                setEmailFeedback('')
-              }}
-              style={{
-                width: '100%',
-                padding: '12px',
-                background: '#f3f4f6',
-                color: '#333',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: '500'
-              }}
-            >
-              Close
-            </button>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                    Activity Type *
+                  </label>
+                  <select
+                    value={emailActivityForm.type}
+                    onChange={(e) => setEmailActivityForm({ ...emailActivityForm, type: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      fontFamily: 'inherit'
+                    }}
+                  >
+                    <option value="email-sent">📧 Email Sent</option>
+                    <option value="follow-up-call">☎️ Follow-up Call</option>
+                    <option value="meeting-booked">📅 Meeting Booked</option>
+                    <option value="proposal-sent">📊 Proposal Sent</option>
+                  </select>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                    Activity Notes
+                  </label>
+                  <textarea
+                    value={emailActivityForm.description}
+                    onChange={(e) => setEmailActivityForm({ ...emailActivityForm, description: e.target.value })}
+                    placeholder="Add any notes about this email (optional)"
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      minHeight: '80px',
+                      fontFamily: 'inherit',
+                      resize: 'none'
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <button
+                    onClick={() => {
+                      setSelectedTemplate(null)
+                      setEmailActivityForm({ type: 'email-sent', description: '' })
+                    }}
+                    style={{
+                      padding: '12px',
+                      background: '#f3f4f6',
+                      color: '#333',
+                      border: '1px solid #ddd',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const cleanEmail = sanitizeEmail(contact.email)
+                      if (!isValidEmail(cleanEmail)) {
+                        setEmailFeedback('❌ Invalid email address')
+                        setTimeout(() => setEmailFeedback(''), 3000)
+                        return
+                      }
+
+                      try {
+                        // Log as activity
+                        await fetch('/api/email-activities', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            contactId: contact.id,
+                            templateId: selectedTemplate.id,
+                            templateName: selectedTemplate.name,
+                            subject: selectedTemplate.subject,
+                            description: emailActivityForm.description
+                          })
+                        })
+
+                        // Open email client with pre-filled content
+                        const subject = encodeURIComponent(selectedTemplate.subject);
+                        const body = encodeURIComponent(selectedTemplate.body);
+                        window.location.href = `mailto:${cleanEmail}?subject=${subject}&body=${body}`;
+
+                        setEmailFeedback('✅ Email client opened & activity logged')
+                        setShowEmailModal(false)
+                        setSelectedTemplate(null)
+                        setEmailActivityForm({ type: 'email-sent', description: '' })
+
+                        // Refresh activities
+                        const res = await fetch(`/api/activities?contactId=${contact.id}`)
+                        const data = await res.json()
+                        if (Array.isArray(data)) setActivities(data)
+
+                        setTimeout(() => setEmailFeedback(''), 3000)
+                      } catch (error) {
+                        console.error('Error sending email:', error)
+                        setEmailFeedback('❌ Error logging email activity')
+                        setTimeout(() => setEmailFeedback(''), 3000)
+                      }
+                    }}
+                    style={{
+                      padding: '12px',
+                      background: '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: '500'
+                    }}
+                  >
+                    📧 Send Email
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
