@@ -148,7 +148,7 @@ export async function POST(request: Request) {
               remarks: null
             }
           ])
-          .select()
+          .select('id')
           .single()
 
         if (createError) {
@@ -203,16 +203,15 @@ export async function POST(request: Request) {
 
     // Step 4: Insert contacts
     if (contactsToInsert.length > 0) {
-      const { data: insertedContacts, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('contacts')
         .insert(contactsToInsert)
-        .select()
 
       if (insertError) {
         throw new Error(`Insert failed: ${insertError.message}`)
       }
 
-      contactsAdded = insertedContacts?.length || 0
+      contactsAdded = contactsToInsert.length
     }
 
     return NextResponse.json(
