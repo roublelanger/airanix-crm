@@ -96,7 +96,7 @@ export async function POST(request: Request) {
         industry: contact.industry?.trim() || null,
         remarks: contact.remarks?.trim() || null,
         assigned_to: contact.assigned_to?.trim() || null,
-        status: 'new'
+        status: 'NEW'
       })
     }
 
