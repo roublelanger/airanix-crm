@@ -8,21 +8,32 @@ const supabase = createClient(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
 
-    const { error } = await supabase
+    if (!id) {
+      return NextResponse.json({ error: 'Activity ID is required' }, { status: 400 })
+    }
+
+    const { error, data } = await supabase
       .from('activities')
       .delete()
       .eq('id', id)
+      .select()
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase delete error:', error)
+      throw error
+    }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, deleted: data })
   } catch (error: any) {
     console.error('Error deleting activity:', error)
-    return NextResponse.json({ error: error.message || 'Failed to delete activity' }, { status: 500 })
+    return NextResponse.json(
+      { error: error.message || 'Failed to delete activity' },
+      { status: 500 }
+    )
   }
 }
