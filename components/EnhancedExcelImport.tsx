@@ -49,6 +49,24 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
   const [previewData, setPreviewData] = useState<ParsedContact[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Map CSV headers to expected field names
+  const mapHeaderToField = (header: string): string => {
+    const normalized = header.toLowerCase().trim()
+
+    if (normalized.includes('company')) return 'company_name'
+    if (normalized.includes('contact') || normalized === 'name') return 'contact_name'
+    if (normalized.includes('designation')) return 'designation'
+    if (normalized.includes('email')) return 'email'
+    if (normalized.includes('phone')) return 'phone'
+    if (normalized.includes('location')) return 'location'
+    if (normalized.includes('industry')) return 'industry'
+    if (normalized.includes('remark')) return 'remarks'
+    if (normalized.includes('assigned')) return 'assigned_to'
+    if (normalized.includes('status')) return 'status'
+
+    return normalized.replace(/\s+/g, '_')
+  }
+
   // Robust CSV parsing with proper quote handling
   const parseCSV = (text: string): ParsedContact[] => {
     try {
@@ -60,13 +78,7 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
 
       // Parse header row - handle spaces and case variations
       const rawHeaders = lines[0].split(',').map(h => h.trim())
-      const headers = rawHeaders.map(h =>
-        h.toLowerCase()
-          .replace(/\s+/g, '_')
-          .replace('company', 'company_name')
-          .replace('contact', 'contact_name')
-          .replace('name', 'contact_name')
-      )
+      const headers = rawHeaders.map(mapHeaderToField)
 
       const contacts: ParsedContact[] = []
       const errors: Array<{ row: number; error: string }> = []
