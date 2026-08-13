@@ -22,7 +22,7 @@ export async function DELETE(
     console.log('Deleting activity with ID:', id)
 
     const { error, data } = await supabase
-      .from('activities')
+      .from('interactions')
       .delete()
       .eq('id', id)
       .select()
