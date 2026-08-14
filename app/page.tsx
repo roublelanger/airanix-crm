@@ -26,35 +26,40 @@ export default function Home() {
     <div
       onClick={onClick}
       style={{
-        background: 'white',
-        border: '1px solid #e5e7eb',
-        borderRadius: '12px',
-        padding: '24px',
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+        border: '1px solid #e2e8f0',
+        borderRadius: '14px',
+        padding: '28px',
         cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        position: 'relative',
+        overflow: 'hidden'
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = '#d1d5db'
-        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
-        e.currentTarget.style.transform = 'translateY(-2px)'
+        e.currentTarget.style.borderColor = '#cbd5e1'
+        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)'
+        e.currentTarget.style.transform = 'translateY(-4px)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = '#e5e7eb'
-        e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
+        e.currentTarget.style.borderColor = '#e2e8f0'
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'
         e.currentTarget.style.transform = 'translateY(0)'
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-        <span style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           {title}
         </span>
-        <span style={{ fontSize: '24px' }}>{icon}</span>
+        <span style={{ fontSize: '28px', opacity: 0.8 }}>{icon}</span>
       </div>
-      <p style={{ fontSize: '36px', fontWeight: '700', color: '#111827', margin: '0', lineHeight: '1' }}>
+      <p style={{ fontSize: '40px', fontWeight: '800', color: '#0f172a', margin: '0 0 12px 0', lineHeight: '1.1' }}>
         {value.toLocaleString()}
       </p>
-      <p style={{ fontSize: '12px', color: '#9ca3af', margin: '8px 0 0 0' }}>View details →</p>
+      <p style={{ fontSize: '13px', color: '#78716c', margin: '0', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span>View details</span>
+        <span style={{ transition: 'transform 0.2s ease' }}>→</span>
+      </p>
     </div>
   )
 
@@ -62,33 +67,36 @@ export default function Home() {
     <div
       onClick={onClick}
       style={{
-        background: 'white',
-        border: '1px solid #e5e7eb',
-        borderRadius: '12px',
-        padding: '20px',
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+        border: '1px solid #e2e8f0',
+        borderRadius: '14px',
+        padding: '24px',
         cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         display: 'flex',
         alignItems: 'center',
         gap: '16px',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = '#d1d5db'
-        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
-        e.currentTarget.style.backgroundColor = '#f9fafb'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = '#e5e7eb'
-        e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
+        e.currentTarget.style.borderColor = '#cbd5e1'
+        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)'
+        e.currentTarget.style.transform = 'translateY(-4px)'
         e.currentTarget.style.backgroundColor = 'white'
       }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = '#e2e8f0'
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'
+        e.currentTarget.style.transform = 'translateY(0)'
+        e.currentTarget.style.backgroundColor = 'rgba(248, 250, 252, 0.5)'
+      }}
     >
-      <div style={{ fontSize: '32px' }}>{icon}</div>
-      <div>
-        <h3 style={{ margin: '0', fontSize: '15px', fontWeight: '600', color: '#111827' }}>{title}</h3>
-        <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>{description}</p>
+      <div style={{ fontSize: '36px', opacity: 0.85 }}>{icon}</div>
+      <div style={{ flex: 1 }}>
+        <h3 style={{ margin: '0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{title}</h3>
+        <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#64748b', fontWeight: '500' }}>{description}</p>
       </div>
+      <div style={{ fontSize: '18px', color: '#94a3b8', transition: 'transform 0.2s ease' }}>→</div>
     </div>
   )
 
