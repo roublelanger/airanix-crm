@@ -55,7 +55,7 @@ function DealsContent() {
       })
       const data = await res.json()
       if (res.ok) {
-        setSaveSuccess(editingId ? 'Lead updated successfully!' : 'Lead created successfully!')
+        setSaveSuccess(editingId ? 'Deal updated successfully!' : 'Deal created successfully!')
         setFormData({ name: '', value: '', stage: 'LEAD' })
         setEditingId(null)
         setTimeout(() => {
@@ -63,7 +63,7 @@ function DealsContent() {
           fetchDeals()
         }, 500)
       } else {
-        setSaveError(data.error || 'Failed to save lead')
+        setSaveError(data.error || 'Failed to save deal')
       }
     } catch (error) {
       setSaveError(`Error: ${error instanceof Error ? error.message : 'Failed to save'}`)
@@ -71,15 +71,14 @@ function DealsContent() {
   }
 
   async function handleDeleteDeal(id: string) {
-    if (!confirm('Move this lead to trash?')) return
+    if (!confirm('Delete this deal?')) return
 
     try {
       const res = await fetch(`/api/deals/${id}`, { method: 'DELETE' })
       if (res.ok) {
         fetchDeals()
-        alert('Lead moved to trash')
       } else {
-        alert('Failed to delete lead')
+        alert('Failed to delete deal')
       }
     } catch (error) {
       console.error('Error deleting deal:', error)
@@ -96,7 +95,7 @@ function DealsContent() {
 
   function handleCloseForm() {
     setShowForm(false)
-    setFormData({ name: '', value: '', stage: 'prospect' })
+    setFormData({ name: '', value: '', stage: 'LEAD' })
     setEditingId(null)
     setSaveError('')
     setSaveSuccess('')
@@ -105,99 +104,367 @@ function DealsContent() {
   const filteredDeals = stageFilter ? deals.filter(d => d.stage === stageFilter) : deals
   const totalValue = filteredDeals.reduce((sum, deal) => sum + (deal.value || 0), 0)
 
+  const stageConfig: Record<string, { color: string; bg: string; textColor: string }> = {
+    LEAD: { color: '#0369a1', bg: '#dbeafe', textColor: '#0369a1' },
+    CONTACTED: { color: '#7c2d12', bg: '#fed7aa', textColor: '#7c2d12' },
+    PROPOSAL: { color: '#4338ca', bg: '#e0e7ff', textColor: '#4338ca' },
+    WON: { color: '#047857', bg: '#d1fae5', textColor: '#047857' },
+    LOST: { color: '#991b1b', bg: '#fecaca', textColor: '#991b1b' },
+  }
+
   return (
-    <div style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 24px', minHeight: 'calc(100vh - 80px)' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h1>Leads ({filteredDeals.length}) {stageFilter && `- ${stageFilter}`}</h1>
-          <p style={{ color: '#666' }}>Track your sales pipeline</p>
+          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', fontWeight: '800', color: '#111827', letterSpacing: '-0.5px' }}>
+            Leads
+          </h1>
+          <p style={{ margin: '0', fontSize: '14px', color: '#6b7280' }}>
+            Manage your sales pipeline • {filteredDeals.length} {stageFilter && `in ${stageFilter}`}
+          </p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
           style={{
             padding: '10px 20px',
-            background: '#2563eb',
+            background: showForm ? '#ef4444' : '#2563eb',
             color: 'white',
             border: 'none',
-            borderRadius: '6px',
+            borderRadius: '8px',
             cursor: 'pointer',
-            fontWeight: '500'
+            fontWeight: '600',
+            fontSize: '14px',
+            transition: 'all 0.2s ease',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.3)'
+            e.currentTarget.style.transform = 'translateY(-1px)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
+            e.currentTarget.style.transform = 'translateY(0)'
           }}
         >
-          {showForm ? '✕ Cancel' : '+ New Lead'}
+          {showForm ? '✕ Cancel' : '➕ New Deal'}
         </button>
       </div>
 
+      {/* Form */}
       {showForm && (
-        <div style={{ background: 'white', padding: '24px', borderRadius: '8px', marginBottom: '30px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <h2 style={{ margin: '0 0 20px 0' }}>{editingId ? 'Edit Lead' : 'New Lead'}</h2>
-          {saveError && <div style={{ background: '#fee2e2', color: '#991b1b', padding: '12px', borderRadius: '6px', marginBottom: '16px', fontSize: '14px' }}>⚠️ {saveError}</div>}
-          {saveSuccess && <div style={{ background: '#d1fae5', color: '#065f46', padding: '12px', borderRadius: '6px', marginBottom: '16px', fontSize: '14px' }}>✓ {saveSuccess}</div>}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '16px' }}>
-            <input type="text" placeholder="Lead Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px' }} />
-            <input type="number" placeholder="Value (INR) *" value={formData.value} onChange={(e) => setFormData({ ...formData, value: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px' }} />
-            <select value={formData.stage} onChange={(e) => setFormData({ ...formData, stage: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px' }}>
-              <option value="LEAD">Lead</option>
-              <option value="CONTACTED">Contacted</option>
-              <option value="PROPOSAL">Proposal</option>
-              <option value="WON">Won</option>
-              <option value="LOST">Lost</option>
+        <div
+          style={{
+            background: 'white',
+            padding: '28px',
+            borderRadius: '12px',
+            marginBottom: '32px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+            border: '1px solid #e5e7eb',
+          }}
+        >
+          <h2 style={{ margin: '0 0 24px 0', fontSize: '20px', fontWeight: '700', color: '#111827' }}>
+            {editingId ? '✏️ Edit Deal' : '➕ New Deal'}
+          </h2>
+          {saveError && (
+            <div
+              style={{
+                background: '#fee2e2',
+                color: '#991b1b',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                marginBottom: '16px',
+                fontSize: '14px',
+                fontWeight: '500',
+                border: '1px solid #fecaca',
+              }}
+            >
+              ⚠️ {saveError}
+            </div>
+          )}
+          {saveSuccess && (
+            <div
+              style={{
+                background: '#d1fae5',
+                color: '#065f46',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                marginBottom: '16px',
+                fontSize: '14px',
+                fontWeight: '500',
+                border: '1px solid #a7f3d0',
+              }}
+            >
+              ✓ {saveSuccess}
+            </div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
+            <input
+              type="text"
+              placeholder="Deal Name *"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              style={{
+                padding: '10px 14px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                fontSize: '14px',
+                transition: 'all 0.2s',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#2563eb'
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = '#e5e7eb'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            />
+            <input
+              type="number"
+              placeholder="Value (₹) *"
+              value={formData.value}
+              onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+              style={{
+                padding: '10px 14px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                fontSize: '14px',
+                transition: 'all 0.2s',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#2563eb'
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = '#e5e7eb'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            />
+            <select
+              value={formData.stage}
+              onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
+              style={{
+                padding: '10px 14px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                fontSize: '14px',
+                backgroundColor: 'white',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#2563eb'
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = '#e5e7eb'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              <option value="LEAD">🎯 Lead</option>
+              <option value="CONTACTED">📞 Contacted</option>
+              <option value="PROPOSAL">📋 Proposal</option>
+              <option value="WON">🏆 Won</option>
+              <option value="LOST">❌ Lost</option>
             </select>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={handleSaveDeal} style={{ padding: '10px 20px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '500' }}>Save Lead</button>
-            <button onClick={handleCloseForm} style={{ padding: '10px 20px', background: '#f3f4f6', color: '#333', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
+            <button
+              onClick={handleSaveDeal}
+              style={{
+                padding: '10px 24px',
+                background: '#2563eb',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '14px',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.3)'
+                e.currentTarget.style.transform = 'translateY(-1px)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
+            >
+              Save Deal
+            </button>
+            <button
+              onClick={handleCloseForm}
+              style={{
+                padding: '10px 24px',
+                background: '#f3f4f6',
+                color: '#374151',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '14px',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#e5e7eb'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#f3f4f6'
+              }}
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
 
-      <div style={{ background: 'white', padding: '20px', borderRadius: '8px', marginBottom: '30px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <h3 style={{ color: '#666', marginBottom: '8px' }}>Pipeline Value</h3>
-        <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#1e40af', margin: 0 }}>₹ {totalValue.toLocaleString('en-IN')}</p>
+      {/* Pipeline Value */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%)',
+          padding: '24px',
+          borderRadius: '12px',
+          marginBottom: '32px',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+          border: '1px solid #bfdbfe',
+        }}
+      >
+        <p style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: '600', color: '#0369a1', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          💰 Total Pipeline Value
+        </p>
+        <p style={{ fontSize: '36px', fontWeight: '800', color: '#0369a1', margin: '0', lineHeight: '1' }}>
+          ₹ {totalValue.toLocaleString('en-IN')}
+        </p>
       </div>
 
-      <div style={{ background: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginTop: '30px', overflowX: 'auto' }}>
+      {/* Table */}
+      <div style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb', overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
           <thead>
-            <tr style={{ background: '#f3f4f6', borderBottom: '2px solid #e5e7eb' }}>
-              <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: '600' }}>Lead Name</th>
-              <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: '600' }}>Value</th>
-              <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: '600' }}>Stage</th>
-              <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: '600' }}>Actions</th>
+            <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+              <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Deal Name
+              </th>
+              <th style={{ padding: '16px 20px', textAlign: 'right', fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Value
+              </th>
+              <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Stage
+              </th>
+              <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                  Loading...
+                <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: '#999', fontSize: '14px' }}>
+                  Loading deals...
                 </td>
               </tr>
             ) : error ? (
               <tr>
-                <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: '#d1495a' }}>
+                <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: '#d1495a', fontSize: '14px' }}>
                   Error: {error}
                 </td>
               </tr>
             ) : filteredDeals.length === 0 ? (
               <tr>
-                <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                  {stageFilter ? `No leads in ${stageFilter} stage` : 'No leads yet'}
+                <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: '#999', fontSize: '14px' }}>
+                  {stageFilter ? `No deals in ${stageFilter} stage` : 'No deals yet'}
                 </td>
               </tr>
             ) : (
-              filteredDeals.map((deal: any) => (
-                <tr key={deal.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '16px', fontSize: '14px', fontWeight: '500' }}>{deal.name}</td>
-                  <td style={{ padding: '16px', fontSize: '14px' }}>₹ {(deal.value || 0).toLocaleString('en-IN')}</td>
-                  <td style={{ padding: '16px', fontSize: '14px' }}>
-                    <span style={{ background: '#dbeafe', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '500', textTransform: 'capitalize' }}>
-                      {deal.stage || 'prospect'}
+              filteredDeals.map((deal: any, idx: number) => (
+                <tr
+                  key={deal.id}
+                  style={{
+                    borderBottom: idx < filteredDeals.length - 1 ? '1px solid #e5e7eb' : 'none',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f9fafb'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'white'
+                  }}
+                >
+                  <td style={{ padding: '16px 20px', fontSize: '14px', fontWeight: '600', color: '#111827' }}>
+                    {deal.name}
+                  </td>
+                  <td style={{ padding: '16px 20px', fontSize: '14px', fontWeight: '700', color: '#0369a1', textAlign: 'right' }}>
+                    ₹ {(deal.value || 0).toLocaleString('en-IN')}
+                  </td>
+                  <td style={{ padding: '16px 20px' }}>
+                    <span
+                      style={{
+                        background: (stageConfig[deal.stage] || stageConfig.LEAD).bg,
+                        color: (stageConfig[deal.stage] || stageConfig.LEAD).textColor,
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: '700',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.3px',
+                        display: 'inline-block',
+                      }}
+                    >
+                      {deal.stage || 'LEAD'}
                     </span>
                   </td>
-                  <td style={{ padding: '16px', fontSize: '14px', display: 'flex', gap: '8px' }}>
-                    <button onClick={() => handleEditDeal(deal)} style={{ padding: '6px 12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Edit</button>
-                    <button onClick={() => handleDeleteDeal(deal.id)} style={{ padding: '6px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Delete</button>
+                  <td style={{ padding: '16px 20px', fontSize: '14px', display: 'flex', gap: '10px' }}>
+                    <button
+                      onClick={() => handleEditDeal(deal)}
+                      style={{
+                        padding: '6px 12px',
+                        background: '#2563eb',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.boxShadow = '0 2px 6px rgba(37, 99, 235, 0.3)'
+                        e.currentTarget.style.transform = 'translateY(-1px)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow = 'none'
+                        e.currentTarget.style.transform = 'translateY(0)'
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteDeal(deal.id)}
+                      style={{
+                        padding: '6px 12px',
+                        background: '#fee2e2',
+                        color: '#dc2626',
+                        border: '1px solid #fecaca',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#fecaca'
+                        e.currentTarget.style.color = '#991b1b'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#fee2e2'
+                        e.currentTarget.style.color = '#dc2626'
+                      }}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))
