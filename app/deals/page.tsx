@@ -112,6 +112,20 @@ function DealsContent() {
     LOST: { color: '#991b1b', bg: '#fecaca', textColor: '#991b1b' },
   }
 
+  if (loading) {
+    return (
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 24px', minHeight: 'calc(100vh - 80px)' }}>
+        <div style={{ textAlign: 'center', paddingTop: '80px' }}>
+          <div style={{ display: 'inline-block', marginBottom: '16px' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '4px solid #e5e7eb', borderTop: '4px solid #2563eb', animation: 'spin 1s linear infinite' }}></div>
+          </div>
+          <p style={{ fontSize: '16px', color: '#6b7280', fontWeight: '500', margin: '0' }}>Loading deals...</p>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    )
+  }
+
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 24px', minHeight: 'calc(100vh - 80px)' }}>
       {/* Header */}
@@ -121,7 +135,7 @@ function DealsContent() {
             Leads
           </h1>
           <p style={{ margin: '0', fontSize: '14px', color: '#6b7280' }}>
-            Manage your sales pipeline • {filteredDeals.length} {stageFilter && `in ${stageFilter}`}
+            Manage your sales pipeline • {filteredDeals.length} deal{filteredDeals.length !== 1 ? 's' : ''} {stageFilter && `in ${stageFilter}`}
           </p>
         </div>
         <button
@@ -360,22 +374,24 @@ function DealsContent() {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
+            {error ? (
               <tr>
-                <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: '#999', fontSize: '14px' }}>
-                  Loading deals...
-                </td>
-              </tr>
-            ) : error ? (
-              <tr>
-                <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: '#d1495a', fontSize: '14px' }}>
-                  Error: {error}
+                <td colSpan={4} style={{ padding: '60px 40px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚠️</div>
+                  <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#991b1b', margin: '0 0 8px 0' }}>Error Loading Deals</h3>
+                  <p style={{ fontSize: '14px', color: '#7c2515', margin: '0' }}>{error}</p>
                 </td>
               </tr>
             ) : filteredDeals.length === 0 ? (
               <tr>
-                <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: '#999', fontSize: '14px' }}>
-                  {stageFilter ? `No deals in ${stageFilter} stage` : 'No deals yet'}
+                <td colSpan={4} style={{ padding: '60px 40px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '32px', marginBottom: '12px' }}>💼</div>
+                  <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', margin: '0 0 8px 0' }}>
+                    {stageFilter ? `No deals in ${stageFilter} stage` : 'No deals yet'}
+                  </h3>
+                  <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>
+                    {stageFilter ? 'Try a different stage or create a new deal' : 'Add your first deal to get started'}
+                  </p>
                 </td>
               </tr>
             ) : (
