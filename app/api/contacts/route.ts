@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { v4 as uuidv4 } from 'uuid'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -38,6 +39,7 @@ export async function POST(request: Request) {
     if (!email) throw new Error('email is required')
 
     const insertData: any = {
+      id: uuidv4(),
       name,
       email,
       phone: phone || null,
