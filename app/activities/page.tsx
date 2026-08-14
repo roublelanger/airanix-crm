@@ -288,21 +288,6 @@ export default function ActivitiesPage() {
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
-                      onClick={() => alert('Edit functionality coming soon')}
-                      style={{
-                        padding: '6px 12px',
-                        background: '#f3f4f6',
-                        color: '#2563eb',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: '500'
-                      }}
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
                       onClick={() => handleDeleteActivity(activity.id)}
                       style={{
                         padding: '6px 12px',
