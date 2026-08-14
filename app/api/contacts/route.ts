@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from('contacts')
       .insert([insertData])
-      .select(SELECT_FIELDS)
+      .select()
 
     if (error) {
       console.error('Supabase insert error:', {
