@@ -38,13 +38,17 @@ export async function POST(request: Request) {
     if (!name) throw new Error('name is required')
     if (!email) throw new Error('email is required')
 
+    const now = new Date().toISOString()
+
     const insertData: any = {
       id: uuidv4(),
       name,
       email,
-      phone: phone || null,
-      company: company || null,
-      status: status?.toUpperCase() || 'NEW'
+      phone: phone || '',
+      company: company || '',
+      status: status?.toUpperCase() || 'NEW',
+      created_at: now,
+      updated_at: now
     }
 
     // Add optional fields
