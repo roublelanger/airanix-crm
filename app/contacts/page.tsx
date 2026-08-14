@@ -14,6 +14,7 @@ interface Contact {
   industry?: string
   remarks?: string
   assigned_to?: string
+  platform?: string
   status?: string
   createdAt?: string
   updatedAt?: string
