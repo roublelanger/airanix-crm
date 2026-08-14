@@ -38,6 +38,7 @@ function ContactsContent() {
     remarks: '',
     assigned_to: '',
     status: 'NEW',
+    platform: '',
     followupDate: '',
     followupTime: '',
     followupType: 'meeting',
@@ -87,7 +88,8 @@ function ContactsContent() {
         industry: formData.industry || null,
         remarks: formData.remarks || null,
         assigned_to: formData.assigned_to || null,
-        status: formData.status
+        status: formData.status,
+        platform: formData.platform || null
       }
 
       const res = await fetch(url, {
@@ -166,6 +168,7 @@ function ContactsContent() {
       remarks: contact.remarks || '',
       assigned_to: contact.assigned_to || '',
       status: contact.status || 'NEW',
+      platform: contact.platform || '',
       followupDate: '',
       followupTime: '',
       followupType: 'meeting',
@@ -188,6 +191,7 @@ function ContactsContent() {
       remarks: '',
       assigned_to: '',
       status: 'NEW',
+      platform: '',
       followupDate: '',
       followupTime: '',
       followupType: 'meeting',
@@ -286,6 +290,27 @@ function ContactsContent() {
               <input type="text" placeholder="Industry" value={formData.industry} onChange={(e) => setFormData({ ...formData, industry: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }} />
               <input type="text" placeholder="Assigned To" value={formData.assigned_to} onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }} />
             </div>
+          </fieldset>
+
+          {/* Platform & Domain */}
+          <fieldset style={{ border: '1px solid #e0e7ff', padding: '16px', borderRadius: '8px', background: '#f0f4ff', margin: '0 0 24px 0' }}>
+            <legend style={{ fontSize: '12px', fontWeight: '600', color: '#1e40af', padding: '0 8px', textTransform: 'uppercase' }}>☁️ Platform/Domain (Optional)</legend>
+            <select value={formData.platform} onChange={(e) => setFormData({ ...formData, platform: e.target.value })} style={{ padding: '10px', border: '1px solid #bfdbfe', borderRadius: '6px', width: '100%', marginTop: '12px', fontSize: '14px', backgroundColor: 'white' }}>
+              <option value="">-- Select Platform --</option>
+              <option value="Google Workspace">🔵 Google Workspace</option>
+              <option value="Microsoft 365">🔷 Microsoft 365</option>
+              <option value="Zoho">🟣 Zoho Suite</option>
+              <option value="AWS">🟠 AWS</option>
+              <option value="Azure">🔵 Azure</option>
+              <option value="Salesforce">☁️ Salesforce</option>
+              <option value="HubSpot">🧡 HubSpot</option>
+              <option value="Monday.com">📅 Monday.com</option>
+              <option value="Asana">✓ Asana</option>
+              <option value="Jira">🔵 Jira</option>
+              <option value="Slack">🟣 Slack</option>
+              <option value="Teams">💜 Microsoft Teams</option>
+              <option value="Other">🔧 Other</option>
+            </select>
           </fieldset>
 
           {/* Status & Notes */}
@@ -519,6 +544,12 @@ function ContactsContent() {
                       <div style={{ marginBottom: '10px' }}>
                         <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '12px' }}>📍</span>
                         <span style={{ marginLeft: '8px', fontSize: '13px', color: '#111827', fontWeight: '500' }}>{contact.location}</span>
+                      </div>
+                    )}
+                    {contact.platform && (
+                      <div style={{ marginBottom: '10px' }}>
+                        <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '12px' }}>☁️</span>
+                        <span style={{ marginLeft: '8px', fontSize: '13px', color: '#2563eb', fontWeight: '500', display: 'inline-block', background: '#eff6ff', padding: '2px 8px', borderRadius: '4px' }}>{contact.platform}</span>
                       </div>
                     )}
                     {contact.industry && (

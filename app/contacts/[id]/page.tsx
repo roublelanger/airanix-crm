@@ -271,6 +271,13 @@ export default function ContactDetailPage() {
             </div>
           )}
 
+          {contact.platform && (
+            <div style={{ marginBottom: '18px', padding: '12px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px' }}>
+              <p style={{ fontSize: '11px', color: '#0369a1', margin: '0 0 6px 0', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>☁️ Platform/Domain</p>
+              <p style={{ fontSize: '14px', margin: 0, color: '#0369a1', fontWeight: '500' }}>{contact.platform}</p>
+            </div>
+          )}
+
           {contact.industry && (
             <div style={{ marginBottom: '18px' }}>
               <p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 6px 0', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>🏭 Industry</p>
