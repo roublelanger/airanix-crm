@@ -22,67 +22,170 @@ export default function Home() {
     return () => clearInterval(interval)
   }, [])
 
+  const MetricCard = ({ title, value, onClick, icon }: { title: string; value: number; onClick: () => void; icon: string }) => (
+    <div
+      onClick={onClick}
+      style={{
+        background: 'white',
+        border: '1px solid #e5e7eb',
+        borderRadius: '12px',
+        padding: '24px',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = '#d1d5db'
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
+        e.currentTarget.style.transform = 'translateY(-2px)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = '#e5e7eb'
+        e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
+        e.currentTarget.style.transform = 'translateY(0)'
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <span style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          {title}
+        </span>
+        <span style={{ fontSize: '24px' }}>{icon}</span>
+      </div>
+      <p style={{ fontSize: '36px', fontWeight: '700', color: '#111827', margin: '0', lineHeight: '1' }}>
+        {value.toLocaleString()}
+      </p>
+      <p style={{ fontSize: '12px', color: '#9ca3af', margin: '8px 0 0 0' }}>View details →</p>
+    </div>
+  )
+
+  const QuickLink = ({ title, description, onClick, icon }: { title: string; description: string; onClick: () => void; icon: string }) => (
+    <div
+      onClick={onClick}
+      style={{
+        background: 'white',
+        border: '1px solid #e5e7eb',
+        borderRadius: '12px',
+        padding: '20px',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = '#d1d5db'
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
+        e.currentTarget.style.backgroundColor = '#f9fafb'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = '#e5e7eb'
+        e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
+        e.currentTarget.style.backgroundColor = 'white'
+      }}
+    >
+      <div style={{ fontSize: '32px' }}>{icon}</div>
+      <div>
+        <h3 style={{ margin: '0', fontSize: '15px', fontWeight: '600', color: '#111827' }}>{title}</h3>
+        <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>{description}</p>
+      </div>
+    </div>
+  )
+
   return (
-    <div style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 20px', minHeight: 'calc(100vh - 80px)' }}>
-      <h1 style={{ margin: '0 0 24px 0', fontSize: '28px', fontWeight: 'bold' }}>Dashboard</h1>
+    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 24px', minHeight: 'calc(100vh - 80px)' }}>
+      {/* Header */}
+      <div style={{ marginBottom: '40px' }}>
+        <h1 style={{ margin: '0 0 12px 0', fontSize: '32px', fontWeight: '800', color: '#111827', letterSpacing: '-0.5px' }}>
+          Dashboard
+        </h1>
+        <p style={{ margin: 0, fontSize: '14px', color: '#6b7280' }}>
+          Welcome back. Here's your sales pipeline at a glance.
+        </p>
+      </div>
 
-      <EnhancedExcelImport onImportComplete={fetchMetrics} />
+      {/* CSV Import */}
+      <div style={{ marginBottom: '32px' }}>
+        <EnhancedExcelImport onImportComplete={fetchMetrics} />
+      </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-        gap: '20px',
-        marginTop: '30px'
-      }}>
-        <div onClick={() => window.location.href = '/contacts'} style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
-          <h3 style={{ color: '#666', fontSize: '14px' }}>Total Contacts</h3>
-          <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#2563eb' }}>{metrics.totalContacts}</p>
-        </div>
-
-        <div onClick={() => window.location.href = '/contacts?status=lead'} style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
-          <h3 style={{ color: '#666', fontSize: '14px' }}>New Leads</h3>
-          <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#2563eb' }}>{metrics.newLeads}</p>
-        </div>
-
-        <div onClick={() => window.location.href = '/deals'} style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
-          <h3 style={{ color: '#666', fontSize: '14px' }}>Active Deals</h3>
-          <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#2563eb' }}>{metrics.activeDeal}</p>
-        </div>
-
-        <div onClick={() => window.location.href = '/deals?stage=won'} style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
-          <h3 style={{ color: '#666', fontSize: '14px' }}>Conversions</h3>
-          <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#2563eb' }}>{metrics.conversions}</p>
+      {/* Key Metrics */}
+      <div style={{ marginBottom: '40px' }}>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '700', color: '#111827' }}>Key Metrics</h2>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '16px',
+          }}
+        >
+          <MetricCard
+            title="Total Contacts"
+            value={metrics.totalContacts}
+            icon="👥"
+            onClick={() => (window.location.href = '/contacts')}
+          />
+          <MetricCard
+            title="New Leads"
+            value={metrics.newLeads}
+            icon="🎯"
+            onClick={() => (window.location.href = '/contacts?status=lead')}
+          />
+          <MetricCard
+            title="Active Deals"
+            value={metrics.activeDeal}
+            icon="💼"
+            onClick={() => (window.location.href = '/deals')}
+          />
+          <MetricCard
+            title="Conversions"
+            value={metrics.conversions}
+            icon="🏆"
+            onClick={() => (window.location.href = '/deals?stage=won')}
+          />
         </div>
       </div>
 
-      <div style={{ marginTop: '40px' }}>
-        <h2>Quick Links</h2>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: '20px',
-          marginTop: '20px'
-        }}>
-          <div onClick={() => window.location.href = '/contacts'} style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
-            <h3>👥 Contacts</h3>
-            <p>Manage leads and customers</p>
-          </div>
-          <div onClick={() => window.location.href = '/deals'} style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
-            <h3>💰 Deals</h3>
-            <p>Track your pipeline</p>
-          </div>
-          <div onClick={() => window.location.href = '/emails'} style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
-            <h3>📧 Email Templates</h3>
-            <p>Quick outreach templates</p>
-          </div>
-          <div onClick={() => window.location.href = '/analytics'} style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
-            <h3>📊 Analytics</h3>
-            <p>Sales pipeline insights</p>
-          </div>
-          <div onClick={() => window.location.href = '/settings'} style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
-            <h3>⚙️ Settings</h3>
-            <p>Configure your CRM</p>
-          </div>
+      {/* Quick Navigation */}
+      <div>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '700', color: '#111827' }}>Quick Navigation</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '12px' }}>
+          <QuickLink
+            title="Contacts"
+            description="Manage leads and customers"
+            icon="👥"
+            onClick={() => (window.location.href = '/contacts')}
+          />
+          <QuickLink
+            title="Deals"
+            description="Track your sales pipeline"
+            icon="💰"
+            onClick={() => (window.location.href = '/deals')}
+          />
+          <QuickLink
+            title="Activities"
+            description="View calls, emails, meetings"
+            icon="📞"
+            onClick={() => (window.location.href = '/activities')}
+          />
+          <QuickLink
+            title="Follow-ups"
+            description="Scheduled reminders & tasks"
+            icon="📋"
+            onClick={() => (window.location.href = '/followups')}
+          />
+          <QuickLink
+            title="Email Templates"
+            description="Quick outreach templates"
+            icon="📧"
+            onClick={() => (window.location.href = '/emails')}
+          />
+          <QuickLink
+            title="Analytics"
+            description="Sales pipeline insights"
+            icon="📊"
+            onClick={() => (window.location.href = '/analytics')}
+          />
         </div>
       </div>
     </div>
