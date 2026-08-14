@@ -7,7 +7,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 )
 
-const SELECT_FIELDS = 'id,name,email,phone,company,status,location,designation,industry,remarks,assigned_to,created_at,updated_at'
+const SELECT_FIELDS = 'id,name,email,phone,company,status,location,designation,industry,remarks,assigned_to,createdAt,updatedAt'
 
 export async function GET() {
   try {
@@ -47,8 +47,8 @@ export async function POST(request: Request) {
       phone: phone || '',
       company: company || '',
       status: status?.toUpperCase() || 'NEW',
-      created_at: now,
-      updated_at: now
+      createdAt: now,
+      updatedAt: now
     }
 
     // Add optional fields
