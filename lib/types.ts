@@ -12,6 +12,7 @@ export interface Contact {
   email?: string
   phone?: string
   company?: string
+  platform?: string
   status: 'lead' | 'prospect' | 'customer' | 'lost'
   created_at: string
 }
