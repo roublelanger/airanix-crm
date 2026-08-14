@@ -12,7 +12,13 @@ export interface Contact {
   email?: string
   phone?: string
   company?: string
+  designation?: string
+  location?: string
+  industry?: string
+  remarks?: string
+  assigned_to?: string
   platform?: string
+  needs?: string
   status: 'lead' | 'prospect' | 'customer' | 'lost'
   created_at: string
 }
