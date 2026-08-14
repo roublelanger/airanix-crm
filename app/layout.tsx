@@ -85,7 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* Navigation Section */}
             <div style={{ padding: '4px 0 16px 0' }}>
               <a href="/" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>🏠 Home</a>
-              <a href="/" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>📈 Dashboard</a>
+              <a href="/dashboard" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>📈 Dashboard</a>
               <a href="/contacts" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>👥 Contacts</a>
               <a href="/deals" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>🎯 Leads</a>
               <a href="/activities" className="nav-link" style={{ display: 'block', color: '#c5d9eb', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5' }}>📞 Activities</a>
