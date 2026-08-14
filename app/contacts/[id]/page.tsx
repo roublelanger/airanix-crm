@@ -834,7 +834,7 @@ export default function ContactDetailPage() {
       <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb', marginBottom: '32px' }}>
         <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px', color: '#111827' }}>📊 Activity Timeline</h2>
         {activities.length === 0 ? (
-          <div style={{ textAlign: 'center', paddingY: '32px', color: '#9ca3af' }}>
+          <div style={{ textAlign: 'center', padding: '32px 0', color: '#9ca3af' }}>
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>📝</div>
             <p style={{ margin: '0', fontSize: '14px', fontWeight: '500' }}>No activities recorded yet</p>
             <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#d1d5db' }}>Start by logging a call, meeting, or email activity</p>
@@ -898,7 +898,7 @@ export default function ContactDetailPage() {
       <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
         <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px', color: '#111827' }}>📋 Scheduled Follow-ups</h2>
         {followups.length === 0 ? (
-          <div style={{ textAlign: 'center', paddingY: '32px', color: '#9ca3af' }}>
+          <div style={{ textAlign: 'center', padding: '32px 0', color: '#9ca3af' }}>
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>📋</div>
             <p style={{ margin: '0', fontSize: '14px', fontWeight: '500' }}>No follow-ups scheduled yet</p>
             <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#d1d5db' }}>Add a follow-up from the form above to get started</p>
