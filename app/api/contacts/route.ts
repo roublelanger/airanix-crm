@@ -40,30 +40,28 @@ export async function POST(request: Request) {
 
     const now = new Date().toISOString()
 
-    const insertData: any = {
+    // Match the exact format from import endpoint that works
+    const insertData = {
       id: uuidv4(),
-      name,
-      email,
-      phone: phone || '',
-      company: company || '',
-      status: status?.toUpperCase() || 'NEW',
+      name: name?.trim() || '',
+      email: email?.trim()?.toLowerCase() || '',
+      phone: phone?.trim() || '',
+      company: company?.trim() || '',
+      status: (status?.toUpperCase() || 'NEW') as string,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      ...(location && { location: location.trim() }),
+      ...(designation && { designation: designation.trim() }),
+      ...(industry && { industry: industry.trim() }),
+      ...(remarks && { remarks: remarks.trim() }),
+      ...(assigned_to && { assigned_to: assigned_to.trim() })
     }
-
-    // Add optional fields
-    if (location) insertData.location = location
-    if (designation) insertData.designation = designation
-    if (industry) insertData.industry = industry
-    if (remarks) insertData.remarks = remarks
-    if (assigned_to) insertData.assigned_to = assigned_to
 
     console.log('Creating contact with data:', insertData)
 
     const { data, error } = await supabase
       .from('contacts')
       .insert([insertData])
-      .select()
 
     if (error) {
       console.error('Supabase insert error:', {
@@ -74,18 +72,14 @@ export async function POST(request: Request) {
       throw error
     }
 
-    if (!data || data.length === 0) {
-      throw new Error('No data returned after insert')
-    }
+    console.log('Contact created successfully')
 
-    console.log('Contact created successfully:', data[0].id)
-    return NextResponse.json(data[0], { status: 201 })
+    return NextResponse.json({
+      success: true,
+      contact: insertData
+    }, { status: 201 })
   } catch (error: any) {
-    console.error('POST /api/contacts error:', {
-      message: error.message,
-      code: error.code,
-      details: error.details
-    })
+    console.error('POST /api/contacts error:', error.message)
     return NextResponse.json(
       { error: error.message || 'Failed to create contact' },
       { status: 500 }
