@@ -621,14 +621,20 @@ export default function ContactDetailPage() {
       {/* Activity Form */}
       {showActivityForm && (
         <div style={{
-          background: 'white',
-          padding: '24px',
-          borderRadius: '8px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          marginBottom: '30px',
-          border: '2px solid #2563eb'
+          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+          padding: '28px',
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+          marginBottom: '32px',
+          border: '1px solid #e2e8f0'
         }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '20px' }}>📝 Log Call Activity</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+            <span style={{ fontSize: '24px' }}>📝</span>
+            <div>
+              <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', margin: '0 0 4px 0' }}>Log Activity</h2>
+              <p style={{ fontSize: '12px', color: '#6b7280', margin: '0' }}>Record a call, meeting, or interaction with this contact</p>
+            </div>
+          </div>
           <form onSubmit={handleActivitySubmit}>
             {/* Activity Type Selection */}
             <fieldset style={{ border: 'none', padding: 0, margin: '0 0 24px 0' }}>
@@ -669,35 +675,43 @@ export default function ContactDetailPage() {
                 <legend style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '12px', textTransform: 'uppercase' }}>Meeting Details</legend>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#333' }}>Date</label>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.3px' }}>📅 Date</label>
                     <input
                       type="date"
                       value={activityForm.meetingDate}
                       onChange={(e) => setActivityForm({ ...activityForm, meetingDate: e.target.value })}
                       style={{
                         width: '100%',
-                        padding: '10px',
-                        border: '1px solid #ddd',
-                        borderRadius: '6px',
+                        padding: '10px 12px',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '8px',
                         fontSize: '14px',
-                        fontFamily: 'inherit'
+                        fontFamily: 'inherit',
+                        backgroundColor: 'white',
+                        transition: 'all 0.2s'
                       }}
+                      onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }}
+                      onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }}
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#333' }}>Time</label>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.3px' }}>🕐 Time</label>
                     <input
                       type="time"
                       value={activityForm.meetingTime}
                       onChange={(e) => setActivityForm({ ...activityForm, meetingTime: e.target.value })}
                       style={{
                         width: '100%',
-                        padding: '10px',
-                        border: '1px solid #ddd',
-                        borderRadius: '6px',
+                        padding: '10px 12px',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '8px',
                         fontSize: '14px',
-                        fontFamily: 'inherit'
+                        fontFamily: 'inherit',
+                        backgroundColor: 'white',
+                        transition: 'all 0.2s'
                       }}
+                      onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }}
+                      onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }}
                     />
                   </div>
                 </div>
@@ -715,12 +729,16 @@ export default function ContactDetailPage() {
                   placeholder="Sales team member name"
                   style={{
                     width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '6px',
+                    padding: '10px 12px',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
                     fontSize: '14px',
-                    fontFamily: 'inherit'
+                    fontFamily: 'inherit',
+                    backgroundColor: 'white',
+                    transition: 'all 0.2s'
                   }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }}
                 />
               </fieldset>
             )}
@@ -729,38 +747,53 @@ export default function ContactDetailPage() {
             <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
               <legend style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '12px', textTransform: 'uppercase' }}>Description & Remarks</legend>
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#333' }}>What happened during the call?</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.3px' }}>📝 Notes & Details</label>
                 <textarea
                   value={activityForm.description}
                   onChange={(e) => setActivityForm({ ...activityForm, description: e.target.value })}
-                  placeholder="Add details about the call, discussion points, next steps, etc."
+                  placeholder="Add details about the call, discussion points, next steps, outcomes, etc."
                   style={{
                     width: '100%',
                     padding: '12px',
-                    border: '1px solid #ddd',
-                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
                     minHeight: '120px',
                     fontFamily: 'system-ui',
                     boxSizing: 'border-box',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    backgroundColor: 'white',
+                    transition: 'all 0.2s',
+                    resize: 'vertical'
                   }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }}
                 />
               </div>
             </fieldset>
 
             {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', paddingTop: '24px', borderTop: '1px solid #e2e8f0', marginTop: '24px' }}>
               <button
                 type="button"
                 onClick={() => setShowActivityForm(false)}
                 style={{
-                  padding: '10px 20px',
-                  background: '#f3f4f6',
-                  color: '#333',
-                  border: '1px solid #ddd',
-                  borderRadius: '6px',
+                  padding: '10px 24px',
+                  background: '#f1f5f9',
+                  color: '#475569',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                  fontWeight: '500'
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#e2e8f0';
+                  e.currentTarget.style.borderColor = '#94a3b8';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#f1f5f9';
+                  e.currentTarget.style.borderColor = '#cbd5e1';
                 }}
               >
                 Cancel
@@ -768,13 +801,26 @@ export default function ContactDetailPage() {
               <button
                 type="submit"
                 style={{
-                  padding: '10px 24px',
+                  padding: '10px 28px',
                   background: '#2563eb',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                  fontWeight: '600'
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 1px 3px rgba(37,99,235,0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#1d4ed8';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(37,99,235,0.4)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#2563eb';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(37,99,235,0.3)';
+                  e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
                 ✓ Save Activity
