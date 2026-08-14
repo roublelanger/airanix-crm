@@ -174,76 +174,121 @@ export default function ContactDetailPage() {
     }
   }
 
-  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading...</div>
-  if (!contact) return <div style={{ padding: '40px', textAlign: 'center', color: '#d1495a' }}>Contact not found</div>
+  if (loading) {
+    return (
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 24px', minHeight: 'calc(100vh - 80px)' }}>
+        <div style={{ textAlign: 'center', paddingTop: '60px' }}>
+          <div style={{ display: 'inline-block', marginBottom: '20px' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '4px solid #e5e7eb', borderTop: '4px solid #2563eb', animation: 'spin 1s linear infinite' }}></div>
+          </div>
+          <p style={{ fontSize: '16px', color: '#6b7280', fontWeight: '500' }}>Loading contact details...</p>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    )
+  }
+
+  if (!contact) {
+    return (
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 24px', minHeight: 'calc(100vh - 80px)' }}>
+        <div style={{ textAlign: 'center', paddingTop: '80px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
+          <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#111827', marginBottom: '8px' }}>Contact Not Found</h2>
+          <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px' }}>This contact doesn't exist or has been deleted.</p>
+          <a href="/contacts" style={{ display: 'inline-block', padding: '10px 24px', background: '#2563eb', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: '600' }}>← Back to Contacts</a>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 24px', minHeight: 'calc(100vh - 80px)' }}>
       {/* Header */}
-      <div style={{ marginBottom: '30px' }}>
-        <a href="/contacts" style={{ color: '#2563eb', textDecoration: 'none', fontSize: '14px' }}>← Back to Contacts</a>
-        <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '16px 0 0 0' }}>{contact.name}</h1>
-        <span style={{ background: contact.status === 'lead' ? '#fef3c7' : '#dbeafe', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '500' }}>
-          {contact.status || 'lead'}
-        </span>
+      <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
+        <a href="/contacts" style={{ color: '#2563eb', textDecoration: 'none', fontSize: '14px', fontWeight: '500', display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '16px', transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'} onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
+          ← Back to Contacts
+        </a>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px' }}>
+          <div>
+            <h1 style={{ margin: '0 0 12px 0', fontSize: '32px', fontWeight: '800', color: '#111827', letterSpacing: '-0.5px' }}>{contact.name}</h1>
+            <p style={{ margin: '0', fontSize: '14px', color: '#6b7280' }}>
+              {contact.designation && <span>{contact.designation}</span>}
+              {contact.designation && contact.company && <span> at </span>}
+              {contact.company && <span style={{ fontWeight: '600' }}>{contact.company}</span>}
+            </p>
+          </div>
+          <span style={{
+            background: contact.status === 'NEW' ? '#dbeafe' : contact.status === 'LEAD' ? '#fef3c7' : contact.status === 'ACTIVE' ? '#d1fae5' : contact.status === 'CLOSED' ? '#fecaca' : '#e5e7eb',
+            color: contact.status === 'NEW' ? '#0369a1' : contact.status === 'LEAD' ? '#92400e' : contact.status === 'ACTIVE' ? '#047857' : contact.status === 'CLOSED' ? '#991b1b' : '#374151',
+            padding: '8px 16px',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: '700',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            whiteSpace: 'nowrap'
+          }}>
+            {contact.status || 'NEW'}
+          </span>
+        </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '30px' }}>
-        {/* Contact Info */}
-        <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>📋 Contact Information</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
+        {/* Contact Info Card */}
+        <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px', color: '#111827' }}>📋 Contact Information</h2>
 
-          <div style={{ marginBottom: '14px' }}>
-            <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>📧 Email</p>
+          <div style={{ marginBottom: '18px' }}>
+            <p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 6px 0', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>📧 Email</p>
             <p style={{ fontSize: '14px', margin: 0, color: '#333' }}>
-              {contact.email ? <a href={`mailto:${contact.email}`} style={{ color: '#2563eb', textDecoration: 'none' }}>{contact.email}</a> : '-'}
+              {contact.email ? <a href={`mailto:${contact.email}`} style={{ color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>{contact.email}</a> : <span style={{ color: '#9ca3af' }}>Not provided</span>}
             </p>
           </div>
 
-          <div style={{ marginBottom: '14px' }}>
-            <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>📱 Phone</p>
+          <div style={{ marginBottom: '18px' }}>
+            <p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 6px 0', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>📱 Phone</p>
             <p style={{ fontSize: '14px', margin: 0, color: '#333' }}>
-              {contact.phone ? <a href={`tel:${contact.phone}`} style={{ color: '#2563eb', textDecoration: 'none' }}>{contact.phone}</a> : '-'}
+              {contact.phone ? <a href={`tel:${contact.phone}`} style={{ color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>{contact.phone}</a> : <span style={{ color: '#9ca3af' }}>Not provided</span>}
             </p>
           </div>
 
-          <div style={{ marginBottom: '14px' }}>
-            <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>🏢 Company</p>
-            <p style={{ fontSize: '14px', margin: 0, color: '#333' }}>{contact.company || '-'}</p>
+          <div style={{ marginBottom: '18px' }}>
+            <p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 6px 0', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>🏢 Company</p>
+            <p style={{ fontSize: '14px', margin: 0, color: '#333' }}>{contact.company ? <span style={{ fontWeight: '500' }}>{contact.company}</span> : <span style={{ color: '#9ca3af' }}>Not provided</span>}</p>
           </div>
 
           {contact.designation && (
-            <div style={{ marginBottom: '14px' }}>
-              <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>💼 Designation</p>
+            <div style={{ marginBottom: '18px' }}>
+              <p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 6px 0', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>💼 Designation</p>
               <p style={{ fontSize: '14px', margin: 0, color: '#333' }}>{contact.designation}</p>
             </div>
           )}
 
           {contact.location && (
-            <div style={{ marginBottom: '14px' }}>
-              <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>📍 Location</p>
+            <div style={{ marginBottom: '18px' }}>
+              <p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 6px 0', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>📍 Location</p>
               <p style={{ fontSize: '14px', margin: 0, color: '#333' }}>{contact.location}</p>
             </div>
           )}
 
           {contact.industry && (
-            <div style={{ marginBottom: '14px' }}>
-              <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>🏭 Industry</p>
+            <div style={{ marginBottom: '18px' }}>
+              <p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 6px 0', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>🏭 Industry</p>
               <p style={{ fontSize: '14px', margin: 0, color: '#333' }}>{contact.industry}</p>
             </div>
           )}
 
           {contact.assigned_to && (
-            <div style={{ marginBottom: '14px' }}>
-              <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>👤 Assigned To</p>
+            <div style={{ marginBottom: '18px' }}>
+              <p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 6px 0', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>👤 Assigned To</p>
               <p style={{ fontSize: '14px', margin: 0, color: '#333' }}>{contact.assigned_to}</p>
             </div>
           )}
 
           {contact.remarks && (
-            <div>
-              <p style={{ fontSize: '11px', color: '#999', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '600' }}>📝 Remarks</p>
-              <p style={{ fontSize: '13px', margin: 0, color: '#555', lineHeight: '1.5' }}>{contact.remarks}</p>
+            <div style={{ paddingTop: '12px', borderTop: '1px solid #e5e7eb' }}>
+              <p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 6px 0', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>📝 Remarks</p>
+              <p style={{ fontSize: '13px', margin: 0, color: '#4b5563', lineHeight: '1.6' }}>{contact.remarks}</p>
             </div>
           )}
         </div>
@@ -733,10 +778,14 @@ export default function ContactDetailPage() {
       )}
 
       {/* Activities Timeline */}
-      <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>Activity Timeline</h2>
+      <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb', marginBottom: '32px' }}>
+        <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px', color: '#111827' }}>📊 Activity Timeline</h2>
         {activities.length === 0 ? (
-          <p style={{ color: '#999', textAlign: 'center', margin: 0 }}>No activities yet</p>
+          <div style={{ textAlign: 'center', paddingY: '32px', color: '#9ca3af' }}>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>📝</div>
+            <p style={{ margin: '0', fontSize: '14px', fontWeight: '500' }}>No activities recorded yet</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#d1d5db' }}>Start by logging a call, meeting, or email activity</p>
+          </div>
         ) : (
           <div>
             {activities.map((activity: any) => {
@@ -755,10 +804,10 @@ export default function ContactDetailPage() {
               const config = typeConfig[activity.type] || { icon: '📌', label: activity.type?.toUpperCase() || 'Activity', color: '#6b7280' };
 
               return (
-                <div key={activity.id} style={{ padding: '16px', borderBottom: '1px solid #eee', borderLeft: `4px solid ${config.color}`, background: '#fafafa' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '18px', marginRight: '10px' }}>{config.icon}</span>
-                    <strong style={{ color: config.color, fontSize: '14px' }}>{config.label}</strong>
+                <div key={activity.id} style={{ padding: '16px', borderBottom: '1px solid #e5e7eb', borderLeft: `4px solid ${config.color}`, background: '#f9fafb', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#f3f4f6'; e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = '#f9fafb'; e.currentTarget.style.boxShadow = 'none'; }}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '18px', marginRight: '12px' }}>{config.icon}</span>
+                    <strong style={{ color: config.color, fontSize: '14px', fontWeight: '600' }}>{config.label}</strong>
                   </div>
 
                   {/* Meeting Details */}
@@ -793,12 +842,19 @@ export default function ContactDetailPage() {
       </div>
 
       {/* Follow-ups Section */}
-      <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>📋 Scheduled Follow-ups</h2>
+      <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
+        <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px', color: '#111827' }}>📋 Scheduled Follow-ups</h2>
         {followups.length === 0 ? (
-          <p style={{ color: '#999', textAlign: 'center', margin: 0 }}>No follow-ups scheduled</p>
+          <div style={{ textAlign: 'center', paddingY: '32px', color: '#9ca3af' }}>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>📋</div>
+            <p style={{ margin: '0', fontSize: '14px', fontWeight: '500' }}>No follow-ups scheduled yet</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#d1d5db' }}>Add a follow-up from the form above to get started</p>
+          </div>
         ) : (
-          <div>
+          <div style={{ position: 'relative' }}>
+            {/* Timeline line */}
+            <div style={{ position: 'absolute', left: '12px', top: '0', bottom: '0', width: '2px', background: '#e5e7eb' }}></div>
+
             {followups.map((followup: any, idx: number) => {
               const scheduledDate = new Date(followup.scheduledDate || followup.scheduled_date)
               const isUpcoming = scheduledDate > new Date()
@@ -806,26 +862,47 @@ export default function ContactDetailPage() {
               const priorityColor = followup.priority === 'HIGH' ? '#dc2626' : followup.priority === 'MEDIUM' ? '#f59e0b' : '#10b981'
 
               return (
-                <div key={idx} style={{ padding: '16px', borderBottom: idx < followups.length - 1 ? '1px solid #eee' : 'none', borderLeft: `4px solid ${isUpcoming ? priorityColor : '#ccc'}`, background: isUpcoming ? '#fafafa' : '#f9fafb', opacity: isUpcoming ? 1 : 0.6 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                    <div>
-                      <strong style={{ color: '#333', fontSize: '14px' }}>{typeLabel}</strong>
-                      {followup.priority && (
-                        <span style={{ marginLeft: '12px', padding: '2px 8px', background: priorityColor + '20', color: priorityColor, borderRadius: '4px', fontSize: '11px', fontWeight: '600' }}>
-                          {followup.priority}
-                        </span>
-                      )}
+                <div key={idx} style={{ paddingLeft: '40px', paddingBottom: idx < followups.length - 1 ? '24px' : '0', position: 'relative' }}>
+                  {/* Timeline dot */}
+                  <div style={{
+                    position: 'absolute',
+                    left: '4px',
+                    top: '2px',
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '50%',
+                    background: isUpcoming ? priorityColor : '#d1d5db',
+                    border: '3px solid white',
+                    boxShadow: `0 0 0 2px ${isUpcoming ? priorityColor : '#d1d5db'}`
+                  }}></div>
+
+                  <div style={{
+                    background: isUpcoming ? (priorityColor === '#dc2626' ? '#fee2e2' : priorityColor === '#f59e0b' ? '#fef3c7' : '#d1fae5') : '#f9fafb',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: `1px solid ${isUpcoming ? (priorityColor === '#dc2626' ? '#fecaca' : priorityColor === '#f59e0b' ? '#fcd34d' : '#a7f3d0') : '#e5e7eb'}`,
+                    opacity: isUpcoming ? 1 : 0.6
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                        <strong style={{ color: '#111827', fontSize: '14px', fontWeight: '600' }}>{typeLabel}</strong>
+                        {followup.priority && (
+                          <span style={{ padding: '2px 8px', background: priorityColor + '25', color: priorityColor, borderRadius: '4px', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                            {followup.priority}
+                          </span>
+                        )}
+                      </div>
+                      {!isUpcoming && <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>✓ Completed</span>}
                     </div>
-                    {!isUpcoming && <span style={{ fontSize: '12px', color: '#999' }}>Completed</span>}
-                  </div>
 
-                  {followup.description && (
-                    <p style={{ margin: '8px 0', fontSize: '14px', color: '#555' }}>{followup.description}</p>
-                  )}
+                    {followup.description && (
+                      <p style={{ margin: '10px 0', fontSize: '13px', color: '#4b5563', lineHeight: '1.5' }}>{followup.description}</p>
+                    )}
 
-                  <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#666', marginTop: '8px' }}>
-                    <span>📅 {scheduledDate.toLocaleDateString()}</span>
-                    <span>🕐 {scheduledDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#6b7280', fontWeight: '500', marginTop: '10px' }}>
+                      <span>📅 {scheduledDate.toLocaleDateString()}</span>
+                      <span>🕐 {scheduledDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
                   </div>
                 </div>
               );
