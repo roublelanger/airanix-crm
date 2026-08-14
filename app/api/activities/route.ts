@@ -50,8 +50,15 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
 
-    if (!body.contactId) throw new Error('contactId is required')
     if (!body.type) throw new Error('type is required')
+
+    // Validate contactId if provided - should be a UUID
+    if (body.contactId) {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      if (!uuidRegex.test(body.contactId)) {
+        throw new Error('Invalid contact ID format. Contact ID must be a valid UUID.')
+      }
+    }
 
     // Build notes from title and description
     const notes = body.title
@@ -61,9 +68,13 @@ export async function POST(request: Request) {
     // Build the insert data - only use columns that exist in interactions table
     // The interactions table has: id, contact_id, type, notes, created_at, updated_at, created_by, scheduled_date, completed_date
     const insertData: any = {
-      contact_id: body.contactId,
       type: body.type,
       notes: notes.trim()
+    }
+
+    // Only add contact_id if provided and valid
+    if (body.contactId) {
+      insertData.contact_id = body.contactId
     }
 
     // Note: outcome, call_duration, email_opens, and meeting_outcome are stored in the notes field
