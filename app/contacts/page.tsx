@@ -360,11 +360,24 @@ function ContactsContent() {
 
       {/* Content */}
       {loading ? (
-        <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>Loading contacts...</div>
+        <div style={{ padding: '60px 40px', textAlign: 'center' }}>
+          <div style={{ display: 'inline-block', marginBottom: '16px' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '4px solid #e5e7eb', borderTop: '4px solid #2563eb', animation: 'spin 1s linear infinite' }}></div>
+          </div>
+          <p style={{ fontSize: '14px', color: '#6b7280', fontWeight: '500', margin: '0' }}>Loading contacts...</p>
+        </div>
       ) : error ? (
-        <div style={{ padding: '40px', textAlign: 'center', color: '#d1495a' }}>Error: {error}</div>
+        <div style={{ padding: '60px 40px', textAlign: 'center', background: '#fee2e2', borderRadius: '12px', border: '1px solid #fecaca' }}>
+          <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚠️</div>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#991b1b', margin: '0 0 8px 0' }}>Error Loading Contacts</h3>
+          <p style={{ fontSize: '14px', color: '#7c2515', margin: '0' }}>{error}</p>
+        </div>
       ) : filteredCompanies.length === 0 ? (
-        <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>No contacts found</div>
+        <div style={{ padding: '60px 40px', textAlign: 'center' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>👥</div>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', margin: '0 0 8px 0' }}>No contacts found</h3>
+          <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>Add your first contact to get started</p>
+        </div>
       ) : (
         filteredCompanies.map(company => (
           <div key={company} style={{ marginBottom: '40px' }}>
@@ -505,7 +518,7 @@ function ContactsContent() {
                     {contact.location && (
                       <div style={{ marginBottom: '10px' }}>
                         <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '12px' }}>📍</span>
-                        <span style={{ marginLeft: '8px', fontSize: '13px', color: '#6b7280' }}>{contact.location}</span>
+                        <span style={{ marginLeft: '8px', fontSize: '13px', color: '#111827', fontWeight: '500' }}>{contact.location}</span>
                       </div>
                     )}
                     {contact.industry && (
@@ -589,11 +602,16 @@ function ContactsContent() {
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = '#fecaca'
                         e.currentTarget.style.color = '#991b1b'
+                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)'
+                        e.currentTarget.style.transform = 'translateY(-1px)'
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = '#fee2e2'
                         e.currentTarget.style.color = '#dc2626'
+                        e.currentTarget.style.boxShadow = 'none'
+                        e.currentTarget.style.transform = 'translateY(0)'
                       }}
+                      title="Delete this contact (this action cannot be undone)"
                     >
                       🗑️ Delete
                     </button>
@@ -610,8 +628,11 @@ function ContactsContent() {
 
 export default function ContactsPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Loading contacts...</div>}>
-      <ContactsContent />
-    </Suspense>
+    <>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Loading contacts...</div>}>
+        <ContactsContent />
+      </Suspense>
+    </>
   )
 }
