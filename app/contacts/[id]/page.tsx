@@ -27,6 +27,7 @@ export default function ContactDetailPage() {
     type: 'email-sent',
     description: ''
   })
+  const [followups, setFollowups] = useState<any[]>([])
 
   // Sanitize email - remove quotes and invalid characters
   const sanitizeEmail = (email: string) => {
@@ -69,6 +70,7 @@ export default function ContactDetailPage() {
   useEffect(() => {
     fetchContact()
     fetchActivities()
+    fetchFollowups()
   }, [params.id])
 
   async function fetchContact() {
@@ -96,6 +98,22 @@ export default function ContactDetailPage() {
       setActivities(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Error:', error)
+    }
+  }
+
+  async function fetchFollowups() {
+    try {
+      const res = await fetch('/api/followups')
+      const data = await res.json()
+      const contactFollowups = Array.isArray(data) ? data.filter((f: any) => f.contactId === params.id || f.contact_id === params.id) : []
+      const sorted = contactFollowups.sort((a: any, b: any) => {
+        const dateA = new Date(a.scheduledDate || a.scheduled_date || 0).getTime()
+        const dateB = new Date(b.scheduledDate || b.scheduled_date || 0).getTime()
+        return dateA - dateB
+      })
+      setFollowups(sorted)
+    } catch (error) {
+      console.error('Error fetching followups:', error)
     }
   }
 
@@ -715,7 +733,7 @@ export default function ContactDetailPage() {
       )}
 
       {/* Activities Timeline */}
-      <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+      <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
         <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>Activity Timeline</h2>
         {activities.length === 0 ? (
           <p style={{ color: '#999', textAlign: 'center', margin: 0 }}>No activities yet</p>
@@ -767,6 +785,48 @@ export default function ContactDetailPage() {
                   <p style={{ margin: 0, fontSize: '12px', color: '#999', paddingLeft: '28px' }}>
                     {activity.created_at ? new Date(activity.created_at).toLocaleString() : 'Recently'}
                   </p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Follow-ups Section */}
+      <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>📋 Scheduled Follow-ups</h2>
+        {followups.length === 0 ? (
+          <p style={{ color: '#999', textAlign: 'center', margin: 0 }}>No follow-ups scheduled</p>
+        ) : (
+          <div>
+            {followups.map((followup: any, idx: number) => {
+              const scheduledDate = new Date(followup.scheduledDate || followup.scheduled_date)
+              const isUpcoming = scheduledDate > new Date()
+              const typeLabel = followup.type === 'call' ? '☎️ Call' : followup.type === 'meeting' ? '📅 Meeting' : followup.type === 'email' ? '📧 Email' : '📋 ' + (followup.type || 'Follow-up')
+              const priorityColor = followup.priority === 'HIGH' ? '#dc2626' : followup.priority === 'MEDIUM' ? '#f59e0b' : '#10b981'
+
+              return (
+                <div key={idx} style={{ padding: '16px', borderBottom: idx < followups.length - 1 ? '1px solid #eee' : 'none', borderLeft: `4px solid ${isUpcoming ? priorityColor : '#ccc'}`, background: isUpcoming ? '#fafafa' : '#f9fafb', opacity: isUpcoming ? 1 : 0.6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                    <div>
+                      <strong style={{ color: '#333', fontSize: '14px' }}>{typeLabel}</strong>
+                      {followup.priority && (
+                        <span style={{ marginLeft: '12px', padding: '2px 8px', background: priorityColor + '20', color: priorityColor, borderRadius: '4px', fontSize: '11px', fontWeight: '600' }}>
+                          {followup.priority}
+                        </span>
+                      )}
+                    </div>
+                    {!isUpcoming && <span style={{ fontSize: '12px', color: '#999' }}>Completed</span>}
+                  </div>
+
+                  {followup.description && (
+                    <p style={{ margin: '8px 0', fontSize: '14px', color: '#555' }}>{followup.description}</p>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#666', marginTop: '8px' }}>
+                    <span>📅 {scheduledDate.toLocaleDateString()}</span>
+                    <span>🕐 {scheduledDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
                 </div>
               );
             })}
