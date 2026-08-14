@@ -74,9 +74,6 @@ export default function Home() {
           Welcome
         </p>
 
-        {/* Debug Marker - Remove after verification */}
-        <div style={{ color: '#10b981', fontSize: '14px', margin: '20px 0', fontWeight: 'bold' }}>✓ LIVE HOME PAGE DEPLOYED</div>
-
         {/* CTA Button */}
         <a href="/dashboard" style={{
           display: 'inline-block',
