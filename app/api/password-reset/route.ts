@@ -23,6 +23,9 @@ const createTransporter = () => {
     auth: {
       user: process.env.EMAIL_USER || 'your-email@gmail.com',
       pass: process.env.EMAIL_PASSWORD || 'your-app-password'
+    },
+    tls: {
+      rejectUnauthorized: false // Allow self-signed certs (dev mode only)
     }
   })
 }
