@@ -1921,6 +1921,38 @@ function ContactsContent() {
         </div>
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Download Template Button */}
+          <a
+            href="/api/contacts/template"
+            download
+            style={{
+              padding: '10px 16px',
+              background: '#8b5cf6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: '600',
+              transition: 'all 0.2s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              textDecoration: 'none'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#7c3aed'
+              e.currentTarget.style.boxShadow = '0 4px 8px rgba(139, 92, 246, 0.3)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#8b5cf6'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+            title="Download Excel template for importing contacts"
+          >
+            📋 Template
+          </a>
+
           {/* Import Button */}
           <label style={{
             padding: '10px 16px',
