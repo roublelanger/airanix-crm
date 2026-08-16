@@ -82,6 +82,80 @@ function ContactsContent() {
   // Statistics
   const [stats, setStats] = useState({ total: 0, byStatus: {} as Record<string, number> })
 
+  // Tags and Notes
+  const [showTagsModal, setShowTagsModal] = useState(false)
+  const [showNotesModal, setShowNotesModal] = useState(false)
+  const [selectedContactForModal, setSelectedContactForModal] = useState<Contact | null>(null)
+  const [newTag, setNewTag] = useState('')
+  const [newNote, setNewNote] = useState('')
+  const [availableTags] = useState(['Client', 'Partner', 'Prospect', 'Lead', 'VIP', 'Inactive', 'Hot', 'Cold'])
+
+  // Add or remove tag from contact
+  async function handleTagToggle(contactId: string, tag: string) {
+    try {
+      const contact = contacts.find(c => c.id === contactId)
+      if (!contact) return
+
+      const tags = (contact.remarks ? contact.remarks.split(',').map(t => t.trim()) : [])
+      const tagIndex = tags.indexOf(tag)
+
+      if (tagIndex > -1) {
+        tags.splice(tagIndex, 1)
+      } else {
+        tags.push(tag)
+      }
+
+      const remarksValue = tags.length > 0 ? tags.join(', ') : ''
+
+      const res = await fetch(`/api/contacts/${contactId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ remarks: remarksValue })
+      })
+
+      if (res.ok) {
+        fetchContacts()
+        showToast('success', `Tag updated for ${contact.name}`)
+      }
+    } catch (error) {
+      console.error('Error updating tags:', error)
+      showToast('error', 'Failed to update tag')
+    }
+  }
+
+  // Add note to contact
+  async function handleAddNote(contactId: string, noteText: string) {
+    if (!noteText.trim()) {
+      showToast('warning', 'Note cannot be empty')
+      return
+    }
+
+    try {
+      const contact = contacts.find(c => c.id === contactId)
+      if (!contact) return
+
+      const timestamp = new Date().toLocaleString()
+      const noteWithTime = `[${timestamp}] ${noteText}`
+
+      const existingNotes = contact.location ? `${contact.location}\n${noteWithTime}` : noteWithTime
+
+      const res = await fetch(`/api/contacts/${contactId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ location: existingNotes })
+      })
+
+      if (res.ok) {
+        fetchContacts()
+        setNewNote('')
+        showToast('success', 'Note added')
+      }
+    } catch (error) {
+      console.error('Error adding note:', error)
+      showToast('error', 'Failed to add note')
+    }
+  }
+
   // Load stored password from localStorage on mount
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('deletePassword') : null
@@ -2551,12 +2625,21 @@ function ContactsContent() {
                           .join('')
                           .toUpperCase()}
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <span style={{ fontWeight: '600', color: '#111827' }}>{contact.name}</span>
                         {contact.createdAt && (
                           <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '400' }}>
                             📅 {new Date(contact.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                           </span>
+                        )}
+                        {contact.remarks && (
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            {contact.remarks.split(',').map((tag, idx) => (
+                              <span key={idx} style={{ fontSize: '11px', background: '#dbeafe', color: '#0369a1', padding: '3px 8px', borderRadius: '12px', fontWeight: '500' }}>
+                                🏷️ {tag.trim()}
+                              </span>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -2594,11 +2677,63 @@ function ContactsContent() {
                     </td>
                   )}
                   <td style={{ padding: '14px 20px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <button
+                        onClick={() => {
+                          setSelectedContactForModal(contact)
+                          setShowTagsModal(true)
+                        }}
+                        style={{
+                          padding: '6px 10px',
+                          background: '#f3f4f6',
+                          color: '#374151',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#e5e7eb'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#f3f4f6'
+                        }}
+                        title="Manage tags"
+                      >
+                        🏷️
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedContactForModal(contact)
+                          setShowNotesModal(true)
+                        }}
+                        style={{
+                          padding: '6px 10px',
+                          background: '#f3f4f6',
+                          color: '#374151',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#e5e7eb'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#f3f4f6'
+                        }}
+                        title="Add/view notes"
+                      >
+                        📝
+                      </button>
                       <button
                         onClick={() => handleEditContact(contact)}
                         style={{
-                          padding: '6px 12px',
+                          padding: '6px 10px',
                           background: '#2563eb',
                           color: 'white',
                           border: 'none',
@@ -2622,7 +2757,7 @@ function ContactsContent() {
                       <button
                         onClick={() => handleDeleteContact(contact.id, contact.name)}
                         style={{
-                          padding: '6px 12px',
+                          padding: '6px 10px',
                           background: '#fee2e2',
                           color: '#dc2626',
                           border: '1px solid #fecaca',
@@ -2749,6 +2884,209 @@ function ContactsContent() {
                 }}
               >
                 ✓ Import {importData.length} Contact{importData.length !== 1 ? 's' : ''}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tags Modal */}
+      {showTagsModal && selectedContactForModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            maxWidth: '500px',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            boxShadow: '0 20px 25px rgba(0,0,0,0.15)',
+          }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: '0 0 24px 0' }}>
+              🏷️ Manage Tags - {selectedContactForModal.name}
+            </h2>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '12px', textTransform: 'uppercase' }}>
+                Available Tags
+              </label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {availableTags.map(tag => {
+                  const currentTags = selectedContactForModal.remarks ? selectedContactForModal.remarks.split(',').map(t => t.trim()) : []
+                  const isSelected = currentTags.includes(tag)
+                  return (
+                    <button
+                      key={tag}
+                      onClick={() => handleTagToggle(selectedContactForModal.id, tag)}
+                      style={{
+                        padding: '8px 16px',
+                        background: isSelected ? '#dbeafe' : '#f3f4f6',
+                        color: isSelected ? '#0369a1' : '#6b7280',
+                        border: `2px solid ${isSelected ? '#bfdbfe' : '#e5e7eb'}`,
+                        borderRadius: '20px',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {isSelected ? '✓ ' : ''}{tag}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowTagsModal(false)
+                  setSelectedContactForModal(null)
+                }}
+                style={{
+                  padding: '10px 24px',
+                  background: '#e5e7eb',
+                  color: '#374151',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#d1d5db')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#e5e7eb')}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notes Modal */}
+      {showNotesModal && selectedContactForModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            maxWidth: '600px',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            boxShadow: '0 20px 25px rgba(0,0,0,0.15)',
+          }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: '0 0 24px 0' }}>
+              📝 Notes - {selectedContactForModal.name}
+            </h2>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>
+                Add Note
+              </label>
+              <textarea
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                placeholder="Type your note here..."
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                  minHeight: '100px',
+                  boxSizing: 'border-box',
+                  marginBottom: '12px',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#2563eb'
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '#d1d5db'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              />
+              <button
+                onClick={() => handleAddNote(selectedContactForModal.id, newNote)}
+                style={{
+                  padding: '10px 16px',
+                  background: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '13px',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#059669'
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#10b981'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                ✓ Add Note
+              </button>
+            </div>
+
+            {selectedContactForModal.location && (
+              <div style={{ marginBottom: '24px', background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', maxHeight: '300px', overflowY: 'auto' }}>
+                <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#374151', margin: '0 0 16px 0', textTransform: 'uppercase' }}>
+                  📋 Previous Notes
+                </h3>
+                <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  {selectedContactForModal.location}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowNotesModal(false)
+                  setSelectedContactForModal(null)
+                  setNewNote('')
+                }}
+                style={{
+                  padding: '10px 24px',
+                  background: '#e5e7eb',
+                  color: '#374151',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#d1d5db')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#e5e7eb')}
+              >
+                Close
               </button>
             </div>
           </div>
