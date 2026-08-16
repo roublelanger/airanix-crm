@@ -29,7 +29,7 @@ function PasswordResetContent() {
     setTokenValid(true)
   }, [token])
 
-  const handleReset = (e: React.FormEvent) => {
+  const handleReset = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!newPassword || !confirmPassword) {
@@ -47,22 +47,37 @@ function PasswordResetContent() {
       return
     }
 
-    // In production, would call:
-    // POST /api/password-reset/confirm with { token, newPassword }
-    // Backend would validate token and update password
+    try {
+      // Call backend API to verify token and confirm reset
+      const res = await fetch('/api/password-reset', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, newPassword })
+      })
 
-    // For demo, show success
-    localStorage.setItem('deletePassword', newPassword)
-    setSubmitted(true)
-    setMessage({
-      type: 'success',
-      text: 'Password reset successfully! Redirecting to login...'
-    })
+      const data = await res.json()
 
-    // Redirect after 3 seconds
-    setTimeout(() => {
-      window.location.href = '/contacts'
-    }, 3000)
+      if (!res.ok) {
+        setMessage({ type: 'error', text: data.error || 'Failed to reset password' })
+        return
+      }
+
+      // Update local password
+      localStorage.setItem('deletePassword', newPassword)
+      setSubmitted(true)
+      setMessage({
+        type: 'success',
+        text: 'Password reset successfully! Redirecting to contacts...'
+      })
+
+      // Redirect after 3 seconds
+      setTimeout(() => {
+        window.location.href = '/contacts'
+      }, 3000)
+    } catch (error) {
+      console.error('Reset error:', error)
+      setMessage({ type: 'error', text: 'Failed to reset password. Please try again.' })
+    }
   }
 
   if (loading) {

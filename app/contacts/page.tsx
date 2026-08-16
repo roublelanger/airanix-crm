@@ -1268,22 +1268,47 @@ function ContactsContent() {
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  // Simulate sending reset email
-                  setResetEmailStatus({
-                    type: 'success',
-                    message: `Password reset link sent to ${resetEmail}. Please check your email and click the link to reset your password.`
-                  })
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/password-reset', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email: resetEmail })
+                    })
 
-                  // In production, this would call:
-                  // POST /api/password-reset with { email: resetEmail }
-                  // Backend would generate a token and send email
+                    const data = await res.json()
 
-                  // For demo, we'll show success and close after 3 seconds
-                  setTimeout(() => {
-                    setShowPasswordReset(false)
-                    setResetEmailStatus(null)
-                  }, 3000)
+                    if (!res.ok) {
+                      setResetEmailStatus({
+                        type: 'error',
+                        message: data.error || 'Failed to send password reset email'
+                      })
+                      return
+                    }
+
+                    setResetEmailStatus({
+                      type: 'success',
+                      message: data.message || `Password reset link sent to ${resetEmail}. Please check your email and click the link to reset your password.`
+                    })
+
+                    // Show dev token in console if available (development mode)
+                    if (data.devToken) {
+                      console.log('📧 DEV MODE - Reset Link:', data.devLink)
+                      console.log('Token:', data.devToken)
+                    }
+
+                    // Close after 4 seconds
+                    setTimeout(() => {
+                      setShowPasswordReset(false)
+                      setResetEmailStatus(null)
+                    }, 4000)
+                  } catch (error) {
+                    console.error('Password reset error:', error)
+                    setResetEmailStatus({
+                      type: 'error',
+                      message: 'Failed to send password reset email. Please try again.'
+                    })
+                  }
                 }}
                 style={{
                   flex: 1,
