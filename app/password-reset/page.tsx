@@ -15,18 +15,27 @@ function PasswordResetContent() {
   const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
-    // Validate token
-    if (!token) {
-      setLoading(false)
-      setTokenValid(false)
-      setMessage({ type: 'error', text: 'No reset token provided. Invalid or expired link.' })
-      return
+    const validateToken = async () => {
+      if (!token) {
+        setLoading(false)
+        setTokenValid(false)
+        setMessage({ type: 'error', text: 'No reset token provided. Invalid or expired link.' })
+        return
+      }
+
+      // Quick validation - token just needs to exist and be non-empty
+      // Full validation happens on the backend when user submits new password
+      if (token && token.length > 20) {
+        setLoading(false)
+        setTokenValid(true)
+      } else {
+        setLoading(false)
+        setTokenValid(false)
+        setMessage({ type: 'error', text: 'Invalid reset token format.' })
+      }
     }
 
-    // In production, would validate token against backend
-    // For now, we'll accept any non-empty token as valid
-    setLoading(false)
-    setTokenValid(true)
+    validateToken()
   }, [token])
 
   const handleReset = async (e: React.FormEvent) => {
