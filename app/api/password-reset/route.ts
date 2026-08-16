@@ -14,18 +14,18 @@ function generateToken(): string {
   return token
 }
 
-// Email configuration (using Gmail example - update with your credentials)
-const createTransporter = () => {
-  // For demo purposes, we'll use a test email service
-  // In production, configure with your email provider
+// Email configuration - Using Ethereal Email (reliable, no setup needed)
+const createTransporter = async () => {
+  // Create Ethereal test account
+  const testAccount = await nodemailer.createTestAccount()
+
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.ethereal.email',
+    port: 587,
+    secure: false,
     auth: {
-      user: process.env.EMAIL_USER || 'your-email@gmail.com',
-      pass: process.env.EMAIL_PASSWORD || 'your-app-password'
-    },
-    tls: {
-      rejectUnauthorized: false // Allow self-signed certs (dev mode only)
+      user: testAccount.user,
+      pass: testAccount.pass
     }
   })
 }
@@ -115,12 +115,12 @@ export async function POST(request: NextRequest) {
       </html>
     `
 
-    // Send email (try, but don't fail if email service not configured)
+    // Send email
     try {
-      const transporter = createTransporter()
+      const transporter = await createTransporter()
 
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER || 'noreply@airanix.com',
+      const mailResult = await transporter.sendMail({
+        from: 'noreply@airanix.com',
         to: email,
         subject: '🔐 Airanix CRM - Password Reset Request',
         html: emailHTML,
@@ -128,19 +128,15 @@ export async function POST(request: NextRequest) {
       })
 
       console.log(`✅ Password reset email sent to ${email}`)
+      console.log(`📧 Preview URL: ${nodemailer.getTestMessageUrl(mailResult)}`)
     } catch (emailError) {
-      // For demo/development, show the token in console but still return success
-      console.warn('⚠️ Email service not configured, but token generated:', {
+      console.error('❌ Email sending failed:', emailError)
+      console.warn('⚠️ Token generated (fallback):', {
         token,
         email,
         resetLink,
         expiresAt: expiresAt.toISOString()
       })
-
-      // In development, you can copy the link from console
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`\n📧 DEV MODE - Copy this reset link:\n${resetLink}\n`)
-      }
     }
 
     return NextResponse.json(
@@ -211,10 +207,10 @@ export async function PUT(request: NextRequest) {
 
     // Send confirmation email
     try {
-      const transporter = createTransporter()
+      const transporter = await createTransporter()
 
       await transporter.sendMail({
-        from: process.env.EMAIL_USER || 'noreply@airanix.com',
+        from: 'noreply@airanix.com',
         to: resetData.email,
         subject: '✅ Airanix CRM - Password Reset Successful',
         html: `
@@ -235,7 +231,6 @@ export async function PUT(request: NextRequest) {
       })
     } catch (emailError) {
       console.warn('Failed to send confirmation email:', emailError)
-      // Don't fail the reset if confirmation email fails
     }
 
     return NextResponse.json(
