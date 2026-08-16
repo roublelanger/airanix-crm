@@ -44,6 +44,20 @@ function ContactsContent() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 15
+  const [deletePassword, setDeletePassword] = useState('')
+  const [showDeletePassword, setShowDeletePassword] = useState(false)
+  const [showPasswordChange, setShowPasswordChange] = useState(false)
+  const [passwordChangeForm, setPasswordChangeForm] = useState({ current: '', new: '', confirm: '' })
+  const [passwordChangeStatus, setPasswordChangeStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [storedPassword, setStoredPassword] = useState('191288')
+
+  // Load stored password from localStorage on mount
+  useEffect(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('deletePassword') : null
+    if (saved) setStoredPassword(saved)
+  }, [])
+
+  const correctPassword = storedPassword
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -425,31 +439,59 @@ function ContactsContent() {
             Manage your {totalFiltered} leads and customers
           </p>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          style={{
-            padding: '10px 20px',
-            background: showForm ? '#ef4444' : '#2563eb',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: '600',
-            fontSize: '14px',
-            transition: 'all 0.2s ease',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.3)'
-            e.currentTarget.style.transform = 'translateY(-1px)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
-            e.currentTarget.style.transform = 'translateY(0)'
-          }}
-        >
-          {showForm ? '✕ Cancel' : '+ New Contact'}
-        </button>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button
+            onClick={() => setShowPasswordChange(!showPasswordChange)}
+            style={{
+              padding: '10px 16px',
+              background: '#6366f1',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '13px',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(99, 102, 241, 0.3)'
+              e.currentTarget.style.transform = 'translateY(-1px)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
+              e.currentTarget.style.transform = 'translateY(0)'
+            }}
+            title="Change delete password"
+          >
+            🔐 Change Password
+          </button>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            style={{
+              padding: '10px 20px',
+              background: showForm ? '#ef4444' : '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '14px',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.3)'
+              e.currentTarget.style.transform = 'translateY(-1px)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
+              e.currentTarget.style.transform = 'translateY(0)'
+            }}
+          >
+            {showForm ? '✕ Cancel' : '+ New Contact'}
+          </button>
+        </div>
       </div>
 
       {/* Form */}
@@ -677,7 +719,7 @@ function ContactsContent() {
             background: 'white',
             borderRadius: '12px',
             padding: '32px',
-            maxWidth: '400px',
+            maxWidth: '450px',
             width: '90%',
             boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
           }}>
@@ -690,12 +732,314 @@ function ContactsContent() {
             <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px', lineHeight: '1.6' }}>
               Are you sure you want to delete <strong>{deleteConfirm.contactName}</strong>?
             </p>
-            <p style={{ fontSize: '12px', color: '#991b1b', marginBottom: '24px', fontWeight: '500' }}>
+            <p style={{ fontSize: '12px', color: '#991b1b', marginBottom: '20px', fontWeight: '500' }}>
               This action cannot be undone.
             </p>
+
+            {!showDeletePassword ? (
+              <button
+                onClick={() => setShowDeletePassword(true)}
+                style={{
+                  width: '100%',
+                  padding: '12px 20px',
+                  background: '#fca5a5',
+                  color: '#7c2515',
+                  border: '1px solid #fecaca',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  marginBottom: '12px',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#f87171'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#fca5a5'
+                }}
+              >
+                Click to Delete
+              </button>
+            ) : (
+              <>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#374151', display: 'block', marginBottom: '6px' }}>
+                    🔐 Enter Password to Confirm Deletion
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Enter password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && deletePassword === correctPassword) {
+                        confirmDelete(deleteConfirm.contactId)
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: deletePassword === correctPassword && deletePassword ? '1px solid #10b981' : '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      boxSizing: 'border-box',
+                      transition: 'all 0.2s',
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#2563eb'
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.boxShadow = 'none'
+                    }}
+                  />
+                  {deletePassword && deletePassword !== correctPassword && (
+                    <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#dc2626', fontWeight: '500' }}>❌ Incorrect password</p>
+                  )}
+                  {deletePassword === correctPassword && (
+                    <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#10b981', fontWeight: '500' }}>✅ Password correct</p>
+                  )}
+                </div>
+              </>
+            )}
+
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
-                onClick={() => setDeleteConfirm(null)}
+                onClick={() => {
+                  setDeleteConfirm(null)
+                  setDeletePassword('')
+                  setShowDeletePassword(false)
+                }}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#e5e7eb'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#f3f4f6'
+                }}
+              >
+                Cancel
+              </button>
+              {showDeletePassword && (
+                <button
+                  onClick={() => {
+                    setShowDeletePassword(false)
+                    setDeletePassword('')
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '12px 20px',
+                    background: '#fef3c7',
+                    color: '#92400e',
+                    border: '1px solid #fcd34d',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#fde047'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#fef3c7'
+                  }}
+                >
+                  Back
+                </button>
+              )}
+              <button
+                onClick={() => confirmDelete(deleteConfirm.contactId)}
+                disabled={!showDeletePassword || deletePassword !== correctPassword}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: showDeletePassword && deletePassword === correctPassword ? '#dc2626' : '#d1d5db',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: showDeletePassword && deletePassword === correctPassword ? 'pointer' : 'not-allowed',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.2s',
+                  opacity: showDeletePassword && deletePassword === correctPassword ? 1 : 0.5,
+                }}
+                onMouseEnter={(e) => {
+                  if (showDeletePassword && deletePassword === correctPassword) {
+                    e.currentTarget.style.background = '#b91c1c'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.3)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (showDeletePassword && deletePassword === correctPassword) {
+                    e.currentTarget.style.background = '#dc2626'
+                    e.currentTarget.style.boxShadow = 'none'
+                  }
+                }}
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Change Modal */}
+      {showPasswordChange && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1500,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            maxWidth: '450px',
+            width: '90%',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          }}>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+              <span style={{ fontSize: '28px' }}>🔐</span>
+              <h3 style={{ margin: '0', fontSize: '18px', fontWeight: '700', color: '#111827' }}>
+                Change Delete Password
+              </h3>
+            </div>
+
+            {passwordChangeStatus && (
+              <div style={{
+                padding: '12px 16px',
+                borderRadius: '8px',
+                marginBottom: '20px',
+                fontSize: '14px',
+                fontWeight: '500',
+                background: passwordChangeStatus.type === 'success' ? '#d1fae5' : '#fee2e2',
+                color: passwordChangeStatus.type === 'success' ? '#065f46' : '#7c2515',
+                border: `1px solid ${passwordChangeStatus.type === 'success' ? '#6ee7b7' : '#fca5a5'}`,
+              }}>
+                {passwordChangeStatus.type === 'success' ? '✅' : '❌'} {passwordChangeStatus.message}
+              </div>
+            )}
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#374151', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>
+                Current Password
+              </label>
+              <input
+                type="password"
+                placeholder="Enter current password"
+                value={passwordChangeForm.current}
+                onChange={(e) => setPasswordChangeForm({ ...passwordChangeForm, current: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.2s',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#2563eb'
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.borderColor = '#cbd5e1'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#374151', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>
+                New Password
+              </label>
+              <input
+                type="password"
+                placeholder="Enter new password"
+                value={passwordChangeForm.new}
+                onChange={(e) => setPasswordChangeForm({ ...passwordChangeForm, new: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.2s',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#2563eb'
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.borderColor = '#cbd5e1'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#374151', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>
+                Confirm New Password
+              </label>
+              <input
+                type="password"
+                placeholder="Confirm new password"
+                value={passwordChangeForm.confirm}
+                onChange={(e) => setPasswordChangeForm({ ...passwordChangeForm, confirm: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: passwordChangeForm.new && passwordChangeForm.confirm && passwordChangeForm.new === passwordChangeForm.confirm ? '1px solid #10b981' : '1px solid #cbd5e1',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.2s',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#2563eb'
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.borderColor = passwordChangeForm.new && passwordChangeForm.confirm && passwordChangeForm.new === passwordChangeForm.confirm ? '#10b981' : '#cbd5e1'
+                }}
+              />
+              {passwordChangeForm.new && passwordChangeForm.confirm && passwordChangeForm.new !== passwordChangeForm.confirm && (
+                <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#dc2626', fontWeight: '500' }}>❌ Passwords do not match</p>
+              )}
+              {passwordChangeForm.new && passwordChangeForm.confirm && passwordChangeForm.new === passwordChangeForm.confirm && (
+                <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#10b981', fontWeight: '500' }}>✅ Passwords match</p>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => {
+                  setShowPasswordChange(false)
+                  setPasswordChangeForm({ current: '', new: '', confirm: '' })
+                  setPasswordChangeStatus(null)
+                }}
                 style={{
                   flex: 1,
                   padding: '12px 20px',
@@ -718,29 +1062,57 @@ function ContactsContent() {
                 Cancel
               </button>
               <button
-                onClick={() => confirmDelete(deleteConfirm.contactId)}
+                onClick={() => {
+                  if (passwordChangeForm.current !== correctPassword) {
+                    setPasswordChangeStatus({ type: 'error', message: 'Current password is incorrect' })
+                    return
+                  }
+                  if (passwordChangeForm.new !== passwordChangeForm.confirm) {
+                    setPasswordChangeStatus({ type: 'error', message: 'New passwords do not match' })
+                    return
+                  }
+                  if (passwordChangeForm.new.length < 6) {
+                    setPasswordChangeStatus({ type: 'error', message: 'New password must be at least 6 characters' })
+                    return
+                  }
+                  // In a real app, you would save this to localStorage or a database
+                  // For now, we'll just show success and update the correctPassword variable
+                  localStorage.setItem('deletePassword', passwordChangeForm.new)
+                  setPasswordChangeStatus({ type: 'success', message: 'Password changed successfully!' })
+                  setTimeout(() => {
+                    setShowPasswordChange(false)
+                    setPasswordChangeForm({ current: '', new: '', confirm: '' })
+                    setPasswordChangeStatus(null)
+                  }, 2000)
+                }}
+                disabled={!passwordChangeForm.current || !passwordChangeForm.new || !passwordChangeForm.confirm || passwordChangeForm.new !== passwordChangeForm.confirm}
                 style={{
                   flex: 1,
                   padding: '12px 20px',
-                  background: '#dc2626',
+                  background: passwordChangeForm.current && passwordChangeForm.new && passwordChangeForm.confirm && passwordChangeForm.new === passwordChangeForm.confirm ? '#2563eb' : '#d1d5db',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
-                  cursor: 'pointer',
+                  cursor: passwordChangeForm.current && passwordChangeForm.new && passwordChangeForm.confirm && passwordChangeForm.new === passwordChangeForm.confirm ? 'pointer' : 'not-allowed',
                   fontWeight: '600',
                   fontSize: '14px',
                   transition: 'all 0.2s',
+                  opacity: passwordChangeForm.current && passwordChangeForm.new && passwordChangeForm.confirm && passwordChangeForm.new === passwordChangeForm.confirm ? 1 : 0.5,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#b91c1c'
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.3)'
+                  if (passwordChangeForm.current && passwordChangeForm.new && passwordChangeForm.confirm && passwordChangeForm.new === passwordChangeForm.confirm) {
+                    e.currentTarget.style.background = '#1d4ed8'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.3)'
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#dc2626'
-                  e.currentTarget.style.boxShadow = 'none'
+                  if (passwordChangeForm.current && passwordChangeForm.new && passwordChangeForm.confirm && passwordChangeForm.new === passwordChangeForm.confirm) {
+                    e.currentTarget.style.background = '#2563eb'
+                    e.currentTarget.style.boxShadow = 'none'
+                  }
                 }}
               >
-                Delete
+                Update Password
               </button>
             </div>
           </div>
@@ -1242,7 +1614,7 @@ function ContactsContent() {
                     <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: '#6b7280', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {contact.designation || contact.company || '—'}
                     </p>
-                    <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#6b7280', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#6b7280', flexWrap: 'wrap', alignItems: 'center' }}>
                       {contact.email && (
                         <a
                           href={`mailto:${contact.email}`}
@@ -1264,6 +1636,11 @@ function ContactsContent() {
                       )}
                       {contact.location && (
                         <span style={{ color: '#6b7280', whiteSpace: 'nowrap' }}>📍 {contact.location}</span>
+                      )}
+                      {contact.createdAt && (
+                        <span style={{ color: '#9ca3af', whiteSpace: 'nowrap', fontSize: '11px', fontWeight: '500' }}>
+                          📅 {new Date(contact.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </span>
                       )}
                     </div>
                   </div>
