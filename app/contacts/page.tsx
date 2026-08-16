@@ -64,7 +64,8 @@ function ContactsContent() {
     industry: '',
     dateFrom: '',
     dateTo: '',
-    assignedTo: ''
+    assignedTo: '',
+    tags: [] as string[]
   })
 
   // Column Visibility
@@ -461,16 +462,27 @@ function ContactsContent() {
     }
   }
 
-  // Export to Excel
-  function exportToExcel() {
-    if (selectedContacts.size === 0) {
-      showToast('warning', 'Please select at least one contact to export')
-      return
-    }
-
+  // Export to Excel (selected or all filtered)
+  function exportToExcel(exportAll: boolean = false) {
     try {
       const XLSX = require('xlsx')
-      const contactsToExport = paginatedContacts.filter(c => selectedContacts.has(c.id))
+      let contactsToExport = []
+
+      if (exportAll) {
+        // Export all filtered contacts
+        contactsToExport = sortedContacts
+        if (contactsToExport.length === 0) {
+          showToast('warning', 'No contacts to export with current filters')
+          return
+        }
+      } else {
+        // Export selected contacts
+        if (selectedContacts.size === 0) {
+          showToast('warning', 'Please select contacts to export or use "Export All Filtered"')
+          return
+        }
+        contactsToExport = sortedContacts.filter(c => selectedContacts.has(c.id))
+      }
 
       const data = contactsToExport.map(contact => ({
         'Name': contact.name,
@@ -727,8 +739,50 @@ function ContactsContent() {
         if (contactDate > filterDate) return false
       }
 
+      // Filter by tags
+      if (advancedFilters.tags.length > 0 && contact.remarks) {
+        const contactTags = contact.remarks.split(',').map(t => t.trim())
+        const hasAnyTag = advancedFilters.tags.some(tag => contactTags.includes(tag))
+        if (!hasAnyTag) return false
+      } else if (advancedFilters.tags.length > 0) {
+        return false
+      }
+
       return true
     })
+  }
+
+  // Bulk assign
+  const [showBulkAssignModal, setShowBulkAssignModal] = useState(false)
+  const [bulkAssignValue, setBulkAssignValue] = useState('')
+
+  async function confirmBulkAssign() {
+    if (selectedContacts.size === 0 || !bulkAssignValue.trim()) return
+
+    try {
+      let updated = 0
+      for (const id of selectedContacts) {
+        try {
+          const res = await fetch(`/api/contacts/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ assigned_to: bulkAssignValue })
+          })
+          if (res.ok) updated++
+        } catch (error) {
+          console.error(`Failed to assign contact ${id}:`, error)
+        }
+      }
+
+      setShowBulkAssignModal(false)
+      setBulkAssignValue('')
+      setSelectedContacts(new Set())
+      fetchContacts()
+      showToast('success', `Assigned ${updated} contact(s) to ${bulkAssignValue}`)
+    } catch (error) {
+      console.error('Bulk assign error:', error)
+      showToast('error', 'Error assigning contacts')
+    }
   }
 
   // Bulk status update
@@ -2032,6 +2086,36 @@ function ContactsContent() {
             />
           </div>
           <div>
+            <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '6px' }}>Filter by Tags</label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {availableTags.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => {
+                    const newTags = advancedFilters.tags.includes(tag)
+                      ? advancedFilters.tags.filter(t => t !== tag)
+                      : [...advancedFilters.tags, tag]
+                    setAdvancedFilters({ ...advancedFilters, tags: newTags })
+                    setCurrentPage(1)
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    background: advancedFilters.tags.includes(tag) ? '#dbeafe' : '#f3f4f6',
+                    color: advancedFilters.tags.includes(tag) ? '#0369a1' : '#6b7280',
+                    border: `1px solid ${advancedFilters.tags.includes(tag) ? '#bfdbfe' : '#e5e7eb'}`,
+                    borderRadius: '16px',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {advancedFilters.tags.includes(tag) ? '✓ ' : ''}{tag}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
             <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '6px' }}>Column Visibility</label>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               {Object.entries(visibleColumns).map(([col, visible]) => (
@@ -2338,9 +2422,9 @@ function ContactsContent() {
         </div>
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* Bulk Status Update */}
+          {/* Bulk Status Update & Assign */}
           {selectedContacts.size > 0 && (
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
               <select
                 value={bulkStatusValue}
                 onChange={(e) => setBulkStatusValue(e.target.value)}
@@ -2387,6 +2471,55 @@ function ContactsContent() {
                 }}
               >
                 📋 Update Status
+              </button>
+
+              <input
+                type="text"
+                placeholder="Team member name..."
+                value={bulkAssignValue}
+                onChange={(e) => setBulkAssignValue(e.target.value)}
+                style={{
+                  padding: '10px 12px',
+                  background: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  minWidth: '140px'
+                }}
+              />
+              <button
+                onClick={confirmBulkAssign}
+                disabled={!bulkAssignValue.trim()}
+                style={{
+                  padding: '10px 16px',
+                  background: bulkAssignValue.trim() ? '#f59e0b' : '#d1d5db',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: bulkAssignValue.trim() ? 'pointer' : 'not-allowed',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  opacity: bulkAssignValue.trim() ? 1 : 0.5
+                }}
+                onMouseEnter={(e) => {
+                  if (bulkAssignValue.trim()) {
+                    e.currentTarget.style.background = '#d97706'
+                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(245, 158, 11, 0.3)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (bulkAssignValue.trim()) {
+                    e.currentTarget.style.background = '#f59e0b'
+                    e.currentTarget.style.boxShadow = 'none'
+                  }
+                }}
+              >
+                👥 Assign
               </button>
             </div>
           )}
@@ -2455,9 +2588,9 @@ function ContactsContent() {
             />
           </label>
 
-          {/* Export Button */}
+          {/* Export Buttons */}
           <button
-            onClick={exportToExcel}
+            onClick={() => exportToExcel(false)}
             disabled={selectedContacts.size === 0}
             style={{
               padding: '10px 16px',
@@ -2486,8 +2619,38 @@ function ContactsContent() {
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
+            title="Export selected contacts"
           >
-            📊 Export Excel
+            📊 Export Selected
+          </button>
+
+          <button
+            onClick={() => exportToExcel(true)}
+            style={{
+              padding: '10px 16px',
+              background: '#059669',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: '600',
+              transition: 'all 0.2s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#047857'
+              e.currentTarget.style.boxShadow = '0 4px 8px rgba(5, 150, 105, 0.3)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#059669'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+            title="Export all contacts matching current filters"
+          >
+            📥 Export All Filtered
           </button>
 
           {/* Bulk Delete Button */}
