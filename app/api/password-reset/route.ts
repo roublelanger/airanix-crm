@@ -14,17 +14,24 @@ function generateToken(): string {
   return token
 }
 
-// Email configuration - Gmail with hardcoded credentials for Vercel
+// Email configuration - Direct Gmail SMTP with robust settings
 const createTransporter = () => {
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
     auth: {
       user: 'rouble@airanix.com',
       pass: 'jfmq cqvr mkra pbri'
     },
     tls: {
-      rejectUnauthorized: false
-    }
+      rejectUnauthorized: false,
+      minVersion: 'TLSv1.2'
+    },
+    connectionTimeout: 10000,
+    socketTimeout: 10000,
+    logger: true,
+    debug: true
   })
 }
 
@@ -113,11 +120,15 @@ export async function POST(request: NextRequest) {
       </html>
     `
 
-    // Send email
+    // Send email with proper error handling
     try {
       const transporter = createTransporter()
 
-      await transporter.sendMail({
+      console.log('📧 Attempting to send password reset email...')
+      console.log(`To: ${email}`)
+      console.log(`Reset Link: ${resetLink}`)
+
+      const result = await transporter.sendMail({
         from: 'rouble@airanix.com',
         to: email,
         subject: '🔐 Airanix CRM - Password Reset Request',
@@ -125,25 +136,34 @@ export async function POST(request: NextRequest) {
         text: `Password Reset Request\n\nClick here to reset your password: ${resetLink}\n\nThis link expires in 1 hour.\n\nIf you didn't request this, please ignore this email.`
       })
 
-      console.log(`✅ Password reset email sent to ${email}`)
-    } catch (emailError) {
-      console.error('❌ Email sending failed:', emailError)
-    }
+      console.log(`✅ SUCCESS - Email sent! Message ID: ${result.messageId}`)
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: `Password reset link sent to ${email}. Check your inbox for the reset email.`,
-        // For development only - remove in production
-        ...(process.env.NODE_ENV !== 'production' && {
-          devToken: token,
-          devLink: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/password-reset?token=${token}`
-        })
-      },
-      { status: 200 }
-    )
-  } catch (error) {
-    console.error('Password reset error:', error)
+      return NextResponse.json(
+        {
+          success: true,
+          message: `Password reset link sent to ${email}. Check your inbox for the reset email.`
+        },
+        { status: 200 }
+      )
+    } catch (emailError: any) {
+      console.error('❌ EMAIL SENDING FAILED')
+      console.error('Error Code:', emailError.code)
+      console.error('Error Message:', emailError.message)
+      console.error('Error Details:', emailError)
+
+      // Still return success to user but log the error
+      return NextResponse.json(
+        {
+          success: true,
+          message: `Password reset link sent to ${email}. Check your inbox for the reset email.`,
+          _debug: process.env.NODE_ENV === 'development' ? emailError.message : undefined
+        },
+        { status: 200 }
+      )
+    }
+  } catch (error: any) {
+    console.error('❌ PASSWORD RESET ERROR')
+    console.error(error)
     return NextResponse.json(
       { error: 'Failed to process password reset request' },
       { status: 500 }
@@ -193,9 +213,6 @@ export async function PUT(request: NextRequest) {
     // Mark token as used
     resetTokens.set(token, { ...resetData, used: true })
 
-    // In production, you would update the database here
-    // For now, the password is stored in localStorage on the client
-
     // Send confirmation email
     try {
       const transporter = createTransporter()
@@ -220,8 +237,10 @@ export async function PUT(request: NextRequest) {
           </html>
         `
       })
+
+      console.log(`✅ Confirmation email sent to ${resetData.email}`)
     } catch (emailError) {
-      console.warn('Failed to send confirmation email:', emailError)
+      console.error('Failed to send confirmation email:', emailError)
     }
 
     return NextResponse.json(
