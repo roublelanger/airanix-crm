@@ -14,18 +14,16 @@ function generateToken(): string {
   return token
 }
 
-// Email configuration - Using Ethereal Email (reliable, no setup needed)
-const createTransporter = async () => {
-  // Create Ethereal test account
-  const testAccount = await nodemailer.createTestAccount()
-
+// Email configuration - Gmail with hardcoded credentials for Vercel
+const createTransporter = () => {
   return nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    secure: false,
+    service: 'gmail',
     auth: {
-      user: testAccount.user,
-      pass: testAccount.pass
+      user: 'rouble@airanix.com',
+      pass: 'jfmq cqvr mkra pbri'
+    },
+    tls: {
+      rejectUnauthorized: false
     }
   })
 }
@@ -117,10 +115,10 @@ export async function POST(request: NextRequest) {
 
     // Send email
     try {
-      const transporter = await createTransporter()
+      const transporter = createTransporter()
 
-      const mailResult = await transporter.sendMail({
-        from: 'noreply@airanix.com',
+      await transporter.sendMail({
+        from: 'rouble@airanix.com',
         to: email,
         subject: '🔐 Airanix CRM - Password Reset Request',
         html: emailHTML,
@@ -128,15 +126,8 @@ export async function POST(request: NextRequest) {
       })
 
       console.log(`✅ Password reset email sent to ${email}`)
-      console.log(`📧 Preview URL: ${nodemailer.getTestMessageUrl(mailResult)}`)
     } catch (emailError) {
       console.error('❌ Email sending failed:', emailError)
-      console.warn('⚠️ Token generated (fallback):', {
-        token,
-        email,
-        resetLink,
-        expiresAt: expiresAt.toISOString()
-      })
     }
 
     return NextResponse.json(
@@ -207,10 +198,10 @@ export async function PUT(request: NextRequest) {
 
     // Send confirmation email
     try {
-      const transporter = await createTransporter()
+      const transporter = createTransporter()
 
       await transporter.sendMail({
-        from: 'noreply@airanix.com',
+        from: 'rouble@airanix.com',
         to: resetData.email,
         subject: '✅ Airanix CRM - Password Reset Successful',
         html: `
