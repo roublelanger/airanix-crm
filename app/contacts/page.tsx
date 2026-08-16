@@ -445,13 +445,17 @@ function ContactsContent() {
     }
   }
 
-  // Confirm bulk import
+  // Confirm bulk import with duplicate detection
   async function confirmBulkImport() {
     if (importData.length === 0) return
 
     try {
+      const XLSX = require('xlsx')
       let imported = 0
-      let skipped = 0
+      let duplicates = 0
+      const rejectedRecords: any[] = []
+      const existingEmails = new Set(contacts.map(c => c.email?.toLowerCase().trim()))
+      const existingNames = new Set(contacts.map(c => c.name?.toLowerCase().trim()))
 
       for (const row of importData) {
         const contactData = {
@@ -468,11 +472,39 @@ function ContactsContent() {
           remarks: row['Remarks'] || row['remarks'] || ''
         }
 
+        // Validation: Name and Email required
         if (!contactData.name || !contactData.email) {
-          skipped++
+          rejectedRecords.push({
+            ...row,
+            'Reject Reason': 'Missing Name or Email'
+          })
+          duplicates++
           continue
         }
 
+        // Check for duplicate email
+        const emailLower = contactData.email.toLowerCase().trim()
+        if (existingEmails.has(emailLower)) {
+          rejectedRecords.push({
+            ...row,
+            'Reject Reason': 'Duplicate Email'
+          })
+          duplicates++
+          continue
+        }
+
+        // Check for duplicate name
+        const nameLower = contactData.name.toLowerCase().trim()
+        if (existingNames.has(nameLower)) {
+          rejectedRecords.push({
+            ...row,
+            'Reject Reason': 'Duplicate Name'
+          })
+          duplicates++
+          continue
+        }
+
+        // If not duplicate, import it
         try {
           const res = await fetch('/api/contacts', {
             method: 'POST',
@@ -482,18 +514,66 @@ function ContactsContent() {
 
           if (res.ok) {
             imported++
+            existingEmails.add(emailLower)
+            existingNames.add(nameLower)
           } else {
-            skipped++
+            rejectedRecords.push({
+              ...row,
+              'Reject Reason': 'Failed to Create'
+            })
+            duplicates++
           }
-        } catch {
-          skipped++
+        } catch (error) {
+          rejectedRecords.push({
+            ...row,
+            'Reject Reason': 'Error During Import'
+          })
+          duplicates++
         }
+      }
+
+      // Generate rejected records file if there are any
+      if (rejectedRecords.length > 0) {
+        const worksheet = XLSX.utils.json_to_sheet(rejectedRecords)
+        const workbook = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Rejected Records')
+
+        worksheet['!cols'] = [
+          { wch: 20 }, // Name
+          { wch: 25 }, // Email
+          { wch: 15 }, // Phone
+          { wch: 20 }, // Company
+          { wch: 20 }, // Designation
+          { wch: 15 }, // Location
+          { wch: 15 }, // Industry
+          { wch: 12 }, // Status
+          { wch: 15 }, // Assigned To
+          { wch: 15 }, // Platform
+          { wch: 30 }, // Remarks
+          { wch: 25 }  // Reject Reason
+        ]
+
+        const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' })
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `Rejected_Contacts_${new Date().toISOString().split('T')[0]}.xlsx`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
       }
 
       setShowImportModal(false)
       setImportData([])
       fetchContacts()
-      showToast('success', `Imported ${imported} contact(s). Skipped: ${skipped}`)
+
+      if (duplicates > 0) {
+        showToast('success', `✓ Imported: ${imported} | ✗ Rejected: ${duplicates} (check downloaded file)`)
+      } else {
+        showToast('success', `Successfully imported ${imported} contact(s)!`)
+      }
     } catch (error) {
       console.error('Bulk import error:', error)
       showToast('error', 'Error importing contacts')
