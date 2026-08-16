@@ -60,6 +60,35 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const body = await request.json()
+
+    const updateData: any = {}
+    if (body.status !== undefined) updateData.status = body.status.toUpperCase()
+    if (body.assigned_to !== undefined) updateData.assigned_to = body.assigned_to
+
+    updateData.updatedAt = new Date().toISOString()
+
+    if (Object.keys(updateData).length === 1) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
+    }
+
+    const { data, error } = await supabase
+      .from('contacts')
+      .update(updateData)
+      .eq('id', params.id)
+      .select('id,name,email,phone,company,status,location,designation,industry,remarks,assigned_to,createdAt,updatedAt')
+
+    if (error) throw error
+
+    return NextResponse.json(data[0], { status: 200 })
+  } catch (error: any) {
+    console.error('Error patching contact:', error)
+    return NextResponse.json({ error: error.message || 'Failed to update contact' }, { status: 500 })
+  }
+}
+
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const { error } = await supabase

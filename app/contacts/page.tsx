@@ -58,6 +58,30 @@ function ContactsContent() {
   const [importData, setImportData] = useState<any[]>([])
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
 
+  // Advanced Filters
+  const [advancedFilters, setAdvancedFilters] = useState({
+    status: '',
+    industry: '',
+    dateFrom: '',
+    dateTo: '',
+    assignedTo: ''
+  })
+
+  // Column Visibility
+  const [visibleColumns, setVisibleColumns] = useState({
+    company: true,
+    designation: true,
+    phone: true,
+    email: true
+  })
+
+  // Bulk Status Update
+  const [showBulkStatusModal, setShowBulkStatusModal] = useState(false)
+  const [bulkStatusValue, setBulkStatusValue] = useState('NEW')
+
+  // Statistics
+  const [stats, setStats] = useState({ total: 0, byStatus: {} as Record<string, number> })
+
   // Load stored password from localStorage on mount
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('deletePassword') : null
@@ -580,6 +604,88 @@ function ContactsContent() {
     }
   }
 
+  // Load column preferences from localStorage
+  useEffect(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('contactColumnPrefs') : null
+    if (saved) {
+      try {
+        setVisibleColumns(JSON.parse(saved))
+      } catch {
+        // Use defaults if parse fails
+      }
+    }
+  }, [])
+
+  // Save column preferences
+  function saveColumnPreferences(newPrefs: typeof visibleColumns) {
+    setVisibleColumns(newPrefs)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('contactColumnPrefs', JSON.stringify(newPrefs))
+    }
+  }
+
+  // Calculate statistics
+  useEffect(() => {
+    const byStatus: Record<string, number> = {}
+    contacts.forEach(contact => {
+      const status = contact.status || 'NEW'
+      byStatus[status] = (byStatus[status] || 0) + 1
+    })
+    setStats({ total: contacts.length, byStatus })
+  }, [contacts])
+
+  // Apply advanced filters
+  function applyAdvancedFilters(contactsList: Contact[]) {
+    return contactsList.filter(contact => {
+      if (advancedFilters.status && contact.status !== advancedFilters.status) return false
+      if (advancedFilters.industry && contact.industry !== advancedFilters.industry) return false
+      if (advancedFilters.assignedTo && contact.assigned_to !== advancedFilters.assignedTo) return false
+
+      if (advancedFilters.dateFrom && contact.createdAt) {
+        const contactDate = new Date(contact.createdAt)
+        const filterDate = new Date(advancedFilters.dateFrom)
+        if (contactDate < filterDate) return false
+      }
+
+      if (advancedFilters.dateTo && contact.createdAt) {
+        const contactDate = new Date(contact.createdAt)
+        const filterDate = new Date(advancedFilters.dateTo)
+        if (contactDate > filterDate) return false
+      }
+
+      return true
+    })
+  }
+
+  // Bulk status update
+  async function confirmBulkStatusUpdate() {
+    if (selectedContacts.size === 0) return
+
+    try {
+      let updated = 0
+      for (const id of selectedContacts) {
+        try {
+          const res = await fetch(`/api/contacts/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: bulkStatusValue })
+          })
+          if (res.ok) updated++
+        } catch (error) {
+          console.error(`Failed to update contact ${id}:`, error)
+        }
+      }
+
+      setShowBulkStatusModal(false)
+      setSelectedContacts(new Set())
+      fetchContacts()
+      showToast('success', `Updated ${updated} contact(s) to ${bulkStatusValue}`)
+    } catch (error) {
+      console.error('Bulk status update error:', error)
+      showToast('error', 'Error updating contacts')
+    }
+  }
+
   // Bulk delete
   async function confirmBulkDelete() {
     if (selectedContacts.size === 0) return
@@ -666,8 +772,11 @@ function ContactsContent() {
     )
   })
 
+  // Apply advanced filters
+  const advancedFilteredContacts = applyAdvancedFilters(searchedContacts)
+
   // Group contacts by company
-  const groupedContacts = searchedContacts.reduce((acc: Record<string, Contact[]>, contact) => {
+  const groupedContacts = advancedFilteredContacts.reduce((acc: Record<string, Contact[]>, contact) => {
     const company = contact.company || 'Unassigned'
     if (!acc[company]) acc[company] = []
     acc[company].push(contact)
@@ -1763,6 +1872,110 @@ function ContactsContent() {
         </div>
       )}
 
+      {/* Statistics Dashboard */}
+      <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+        <div style={{ background: '#f0f9ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#0369a1' }}>{stats.total}</div>
+          <div style={{ fontSize: '12px', color: '#0c4a6e', fontWeight: '600', marginTop: '4px' }}>Total Contacts</div>
+        </div>
+        {Object.entries(stats.byStatus).map(([status, count]) => (
+          <div key={status} style={{ background: status === 'NEW' ? '#dbeafe' : status === 'LEAD' ? '#fef3c7' : status === 'ACTIVE' ? '#d1fae5' : '#fecaca', border: `1px solid ${status === 'NEW' ? '#bfdbfe' : status === 'LEAD' ? '#fcd34d' : status === 'ACTIVE' ? '#6ee7b7' : '#fca5a5'}`, borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: status === 'NEW' ? '#0369a1' : status === 'LEAD' ? '#92400e' : status === 'ACTIVE' ? '#047857' : '#991b1b' }}>{count}</div>
+            <div style={{ fontSize: '12px', color: status === 'NEW' ? '#0c4a6e' : status === 'LEAD' ? '#78350f' : status === 'ACTIVE' ? '#065f46' : '#7c2515', fontWeight: '600', marginTop: '4px' }}>{status}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Advanced Filters */}
+      <div style={{ marginBottom: '24px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#111827' }}>🔍 Advanced Filters</h3>
+          {(advancedFilters.status || advancedFilters.industry || advancedFilters.dateFrom || advancedFilters.dateTo || advancedFilters.assignedTo) && (
+            <button
+              onClick={() => {
+                setAdvancedFilters({ status: '', industry: '', dateFrom: '', dateTo: '', assignedTo: '' })
+                setCurrentPage(1)
+              }}
+              style={{ fontSize: '12px', color: '#2563eb', cursor: 'pointer', background: 'none', border: 'none', fontWeight: '600' }}
+            >
+              Clear All
+            </button>
+          )}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '6px' }}>Status</label>
+            <select
+              value={advancedFilters.status}
+              onChange={(e) => {
+                setAdvancedFilters({ ...advancedFilters, status: e.target.value })
+                setCurrentPage(1)
+              }}
+              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px' }}
+            >
+              <option value="">All Statuses</option>
+              <option value="NEW">NEW</option>
+              <option value="LEAD">LEAD</option>
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="CLOSED">CLOSED</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '6px' }}>Industry</label>
+            <input
+              type="text"
+              placeholder="Filter by industry..."
+              value={advancedFilters.industry}
+              onChange={(e) => {
+                setAdvancedFilters({ ...advancedFilters, industry: e.target.value })
+                setCurrentPage(1)
+              }}
+              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '6px' }}>Date From</label>
+            <input
+              type="date"
+              value={advancedFilters.dateFrom}
+              onChange={(e) => {
+                setAdvancedFilters({ ...advancedFilters, dateFrom: e.target.value })
+                setCurrentPage(1)
+              }}
+              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '6px' }}>Date To</label>
+            <input
+              type="date"
+              value={advancedFilters.dateTo}
+              onChange={(e) => {
+                setAdvancedFilters({ ...advancedFilters, dateTo: e.target.value })
+                setCurrentPage(1)
+              }}
+              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '6px' }}>Column Visibility</label>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              {Object.entries(visibleColumns).map(([col, visible]) => (
+                <label key={col} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={visible}
+                    onChange={(e) => saveColumnPreferences({ ...visibleColumns, [col]: e.target.checked })}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <span style={{ textTransform: 'capitalize' }}>{col}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Filters */}
       <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <input
@@ -2051,6 +2264,59 @@ function ContactsContent() {
         </div>
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Bulk Status Update */}
+          {selectedContacts.size > 0 && (
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <select
+                value={bulkStatusValue}
+                onChange={(e) => setBulkStatusValue(e.target.value)}
+                style={{
+                  padding: '10px 12px',
+                  background: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  minWidth: '120px'
+                }}
+              >
+                <option value="NEW">NEW</option>
+                <option value="LEAD">LEAD</option>
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="CLOSED">CLOSED</option>
+              </select>
+              <button
+                onClick={() => setShowBulkStatusModal(true)}
+                style={{
+                  padding: '10px 16px',
+                  background: '#8b5cf6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#7c3aed'
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(139, 92, 246, 0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#8b5cf6'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                📋 Update Status
+              </button>
+            </div>
+          )}
+
           {/* Download Template Button */}
           <a
             href="/api/contacts/template"
@@ -2226,10 +2492,10 @@ function ContactsContent() {
                   />
                 </th>
                 <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Name</th>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Company</th>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Designation</th>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Phone</th>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Email</th>
+                {visibleColumns.company && <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Company</th>}
+                {visibleColumns.designation && <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Designation</th>}
+                {visibleColumns.phone && <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Phone</th>}
+                {visibleColumns.email && <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Email</th>}
                 <th style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Actions</th>
               </tr>
             </thead>
@@ -2295,30 +2561,38 @@ function ContactsContent() {
                       </div>
                     </div>
                   </td>
-                  <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {contact.company || '—'}
-                  </td>
-                  <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {contact.designation || '—'}
-                  </td>
-                  <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {contact.phone ? (
-                      <a href={`tel:${contact.phone}`} onClick={(e) => e.stopPropagation()} style={{ color: '#2563eb', textDecoration: 'none', transition: 'all 0.2s' }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}>
-                        {contact.phone}
-                      </a>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                  <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {contact.email ? (
-                      <a href={`mailto:${contact.email}`} onClick={(e) => e.stopPropagation()} style={{ color: '#2563eb', textDecoration: 'none', transition: 'all 0.2s' }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}>
-                        {contact.email}
-                      </a>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
+                  {visibleColumns.company && (
+                    <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {contact.company || '—'}
+                    </td>
+                  )}
+                  {visibleColumns.designation && (
+                    <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {contact.designation || '—'}
+                    </td>
+                  )}
+                  {visibleColumns.phone && (
+                    <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {contact.phone ? (
+                        <a href={`tel:${contact.phone}`} onClick={(e) => e.stopPropagation()} style={{ color: '#2563eb', textDecoration: 'none', transition: 'all 0.2s' }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}>
+                          {contact.phone}
+                        </a>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                  )}
+                  {visibleColumns.email && (
+                    <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {contact.email ? (
+                        <a href={`mailto:${contact.email}`} onClick={(e) => e.stopPropagation()} style={{ color: '#2563eb', textDecoration: 'none', transition: 'all 0.2s' }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}>
+                          {contact.email}
+                        </a>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                  )}
                   <td style={{ padding: '14px 20px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                       <button
@@ -2475,6 +2749,99 @@ function ContactsContent() {
                 }}
               >
                 ✓ Import {importData.length} Contact{importData.length !== 1 ? 's' : ''}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Status Update Modal */}
+      {showBulkStatusModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            maxWidth: '400px',
+            boxShadow: '0 20px 25px rgba(0,0,0,0.15)',
+          }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: '0 0 16px 0' }}>
+              Update Status
+            </h2>
+            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 24px 0' }}>
+              Update {selectedContacts.size} contact{selectedContacts.size !== 1 ? 's' : ''} to:
+            </p>
+
+            <select
+              value={bulkStatusValue}
+              onChange={(e) => setBulkStatusValue(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                marginBottom: '24px',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="NEW">NEW</option>
+              <option value="LEAD">LEAD</option>
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="CLOSED">CLOSED</option>
+            </select>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowBulkStatusModal(false)}
+                style={{
+                  padding: '10px 24px',
+                  background: '#e5e7eb',
+                  color: '#374151',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#d1d5db')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#e5e7eb')}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmBulkStatusUpdate}
+                style={{
+                  padding: '10px 24px',
+                  background: '#8b5cf6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#7c3aed'
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(139, 92, 246, 0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#8b5cf6'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                ✓ Update Status
               </button>
             </div>
           </div>
