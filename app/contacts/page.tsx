@@ -875,14 +875,16 @@ function ContactsContent() {
 
       const data = await res.json()
 
-      if (res.ok) {
-        showToast('success', `Email sent to ${data.sent} recipient(s)`)
+      if (res.ok && data.sent > 0) {
+        showToast('success', `✉️ Email sent to ${data.sent} recipient(s)`)
         setShowEmailModal(false)
         setEmailSubject('')
         setEmailBody('')
         setSelectedContacts(new Set())
+      } else if (data.sent > 0) {
+        showToast('warning', `Sent to ${data.sent} (${data.failed} failed)`)
       } else {
-        showToast('error', data.error || 'Failed to send emails')
+        showToast('error', data.error || 'Failed to send emails. Check browser console for details.')
       }
     } catch (error) {
       console.error('Email send error:', error)

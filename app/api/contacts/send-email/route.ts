@@ -34,9 +34,14 @@ export async function POST(request: NextRequest) {
 
     const transporter = createTransporter()
     let sent = 0
+    const errors: string[] = []
+
+    console.log(`📧 Starting bulk email send to ${recipients.length} recipients`)
 
     for (const recipient of recipients) {
       try {
+        console.log(`Sending email to ${recipient.email}...`)
+
         const personalizedBody = body
           .replace(/{{name}}/g, recipient.name)
           .replace(/{{email}}/g, recipient.email)
@@ -66,7 +71,7 @@ ${personalizedBody}
           </html>
         `
 
-        await transporter.sendMail({
+        const result = await transporter.sendMail({
           from: 'rouble@airanix.com',
           to: recipient.email,
           subject: subject,
@@ -74,17 +79,30 @@ ${personalizedBody}
           text: personalizedBody
         })
 
+        console.log(`✅ Email sent to ${recipient.email} (Message ID: ${result.messageId})`)
         sent++
       } catch (emailError: any) {
-        console.error(`Failed to send email to ${recipient.email}:`, emailError.message)
+        const errorMsg = `Failed to send to ${recipient.email}: ${emailError.message}`
+        console.error(`❌ ${errorMsg}`)
+        errors.push(errorMsg)
       }
+    }
+
+    console.log(`📧 Email send complete: ${sent} sent, ${errors.length} failed`)
+
+    if (sent === 0) {
+      return NextResponse.json(
+        { error: `Failed to send any emails. Errors: ${errors.join('; ')}` },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json(
       {
         success: true,
         sent: sent,
-        message: `Email sent to ${sent} recipient${sent !== 1 ? 's' : ''}`
+        failed: errors.length,
+        message: `Email sent to ${sent} recipient${sent !== 1 ? 's' : ''}${errors.length > 0 ? ` (${errors.length} failed)` : ''}`
       },
       { status: 200 }
     )
