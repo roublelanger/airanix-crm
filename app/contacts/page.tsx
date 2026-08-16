@@ -2342,9 +2342,52 @@ function ContactsContent() {
               This action cannot be undone. All selected contacts will be permanently deleted from your CRM.
             </p>
 
+            {/* Password Input */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#374151', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>
+                🔐 Enter Delete Password
+              </label>
+              <input
+                type="password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Enter password to confirm deletion"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: deletePassword === storedPassword ? '2px solid #10b981' : '1px solid #cbd5e1',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.2s',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#2563eb'
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.borderColor = deletePassword === storedPassword ? '#10b981' : '#cbd5e1'
+                }}
+              />
+              {deletePassword && deletePassword !== storedPassword && (
+                <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#dc2626', fontWeight: '500' }}>❌ Incorrect password</p>
+              )}
+              {deletePassword === storedPassword && (
+                <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#10b981', fontWeight: '500' }}>✅ Password correct</p>
+              )}
+            </div>
+
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <button
-                onClick={() => setShowBulkDeleteConfirm(false)}
+                onClick={() => {
+                  setShowBulkDeleteConfirm(false)
+                  setDeletePassword('')
+                }}
                 style={{
                   padding: '10px 24px',
                   background: '#e5e7eb',
@@ -2362,25 +2405,38 @@ function ContactsContent() {
                 Cancel
               </button>
               <button
-                onClick={confirmBulkDelete}
+                onClick={() => {
+                  if (deletePassword === storedPassword) {
+                    confirmBulkDelete()
+                  } else {
+                    showToast('error', 'Incorrect password')
+                  }
+                }}
+                disabled={deletePassword !== storedPassword}
                 style={{
                   padding: '10px 24px',
-                  background: '#dc2626',
+                  background: deletePassword === storedPassword ? '#dc2626' : '#d1d5db',
                   color: 'white',
                   border: 'none',
                   borderRadius: '6px',
-                  cursor: 'pointer',
+                  cursor: deletePassword === storedPassword ? 'pointer' : 'not-allowed',
                   fontWeight: '600',
                   fontSize: '14px',
                   flex: 1,
+                  opacity: deletePassword === storedPassword ? 1 : 0.5,
+                  transition: 'all 0.2s',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#b91c1c'
-                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)'
+                  if (deletePassword === storedPassword) {
+                    e.currentTarget.style.background = '#b91c1c'
+                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)'
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#dc2626'
-                  e.currentTarget.style.boxShadow = 'none'
+                  if (deletePassword === storedPassword) {
+                    e.currentTarget.style.background = '#dc2626'
+                    e.currentTarget.style.boxShadow = 'none'
+                  }
                 }}
               >
                 🗑️ Yes, Delete All
