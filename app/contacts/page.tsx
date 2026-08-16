@@ -394,7 +394,7 @@ function ContactsContent() {
           {/* Buttons */}
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
             <button onClick={resetForm} style={{ padding: '10px 20px', background: '#f3f4f6', color: '#333', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }}>Cancel</button>
-            <button onClick={handleSaveContact} style={{ padding: '10px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }}>Save Contact</button>
+            <button onClick={() => handleSaveContact()} style={{ padding: '10px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }}>Save Contact</button>
           </div>
         </div>
       )}
