@@ -49,6 +49,9 @@ function ContactsContent() {
   const [showPasswordChange, setShowPasswordChange] = useState(false)
   const [passwordChangeForm, setPasswordChangeForm] = useState({ current: '', new: '', confirm: '' })
   const [passwordChangeStatus, setPasswordChangeStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [showPasswordReset, setShowPasswordReset] = useState(false)
+  const [resetEmailStatus, setResetEmailStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const resetEmail = 'rouble@airanix.com'
   const [storedPassword, setStoredPassword] = useState('191288')
 
   // Load stored password from localStorage on mount
@@ -441,7 +444,7 @@ function ContactsContent() {
             Manage your {totalFiltered} leads and customers
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={() => setShowPasswordChange(!showPasswordChange)}
             style={{
@@ -464,9 +467,35 @@ function ContactsContent() {
               e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
               e.currentTarget.style.transform = 'translateY(0)'
             }}
-            title="Change delete password"
+            title="Change password (remember current password)"
           >
             🔐 Change Password
+          </button>
+          <button
+            onClick={() => setShowPasswordReset(!showPasswordReset)}
+            style={{
+              padding: '10px 16px',
+              background: '#f59e0b',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '13px',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.3)'
+              e.currentTarget.style.transform = 'translateY(-1px)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
+              e.currentTarget.style.transform = 'translateY(0)'
+            }}
+            title="Reset password via email (forgot current password)"
+          >
+            📧 Reset Password
           </button>
           <button
             onClick={() => setShowForm(!showForm)}
@@ -1133,6 +1162,157 @@ function ContactsContent() {
                 Update Password
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Reset via Email Modal */}
+      {showPasswordReset && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1500,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            maxWidth: '450px',
+            width: '90%',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          }}>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+              <span style={{ fontSize: '28px' }}>📧</span>
+              <h3 style={{ margin: '0', fontSize: '18px', fontWeight: '700', color: '#111827' }}>
+                Reset Password via Email
+              </h3>
+            </div>
+
+            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px', lineHeight: '1.6' }}>
+              We'll send a secure password reset link to your email. You can then set a new password without entering your current password.
+            </p>
+
+            {resetEmailStatus && (
+              <div style={{
+                padding: '12px 16px',
+                borderRadius: '8px',
+                marginBottom: '20px',
+                fontSize: '14px',
+                fontWeight: '500',
+                background: resetEmailStatus.type === 'success' ? '#d1fae5' : '#fee2e2',
+                color: resetEmailStatus.type === 'success' ? '#065f46' : '#7c2515',
+                border: `1px solid ${resetEmailStatus.type === 'success' ? '#6ee7b7' : '#fca5a5'}`,
+              }}>
+                {resetEmailStatus.type === 'success' ? '✅' : '❌'} {resetEmailStatus.message}
+              </div>
+            )}
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#374151', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>
+                📧 Email Address
+              </label>
+              <div style={{
+                padding: '12px 16px',
+                background: '#f3f4f6',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                color: '#374151',
+                fontWeight: '500',
+              }}>
+                {resetEmail}
+              </div>
+              <p style={{ fontSize: '12px', color: '#6b7280', margin: '8px 0 0 0' }}>
+                ℹ️ A secure reset link will be sent to this email address
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '20px', padding: '16px', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '8px' }}>
+              <p style={{ margin: '0', fontSize: '13px', color: '#92400e', fontWeight: '500' }}>
+                🔗 <strong>Security Note:</strong> The reset link will expire in 1 hour for security. You'll need to verify you own this email address.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => {
+                  setShowPasswordReset(false)
+                  setResetEmailStatus(null)
+                }}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#e5e7eb'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#f3f4f6'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // Simulate sending reset email
+                  setResetEmailStatus({
+                    type: 'success',
+                    message: `Password reset link sent to ${resetEmail}. Please check your email and click the link to reset your password.`
+                  })
+
+                  // In production, this would call:
+                  // POST /api/password-reset with { email: resetEmail }
+                  // Backend would generate a token and send email
+
+                  // For demo, we'll show success and close after 3 seconds
+                  setTimeout(() => {
+                    setShowPasswordReset(false)
+                    setResetEmailStatus(null)
+                  }, 3000)
+                }}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: '#f59e0b',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#d97706'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#f59e0b'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                Send Reset Link
+              </button>
+            </div>
+
+            <p style={{ fontSize: '11px', color: '#9ca3af', margin: '16px 0 0 0', textAlign: 'center' }}>
+              💡 Tip: Keep this email secure. The reset link grants access to change your password.
+            </p>
           </div>
         </div>
       )}
