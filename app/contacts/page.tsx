@@ -2068,7 +2068,7 @@ function ContactsContent() {
           {(advancedFilters.status || advancedFilters.industry || advancedFilters.dateFrom || advancedFilters.dateTo || advancedFilters.assignedTo) && (
             <button
               onClick={() => {
-                setAdvancedFilters({ status: '', industry: '', dateFrom: '', dateTo: '', assignedTo: '' })
+                setAdvancedFilters({ status: '', industry: '', dateFrom: '', dateTo: '', assignedTo: '', tags: [] })
                 setCurrentPage(1)
               }}
               style={{ fontSize: '12px', color: '#2563eb', cursor: 'pointer', background: 'none', border: 'none', fontWeight: '600' }}
