@@ -1820,83 +1820,105 @@ function ContactsContent() {
       </div>
 
       {/* Sort & Pagination Controls */}
-      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <label style={{ fontSize: '13px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Sort By:</label>
-            <select
-              value={sortBy}
-              onChange={(e) => {
-                setSortBy(e.target.value as 'name' | 'date' | 'status' | 'company')
-                setCurrentPage(1)
-              }}
-              style={{
-                padding: '8px 12px',
-                border: '1px solid #e5e7eb',
-                borderRadius: '6px',
-                fontSize: '13px',
-                color: '#374151',
-                backgroundColor: 'white',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <option value="name">📝 Name</option>
-              <option value="date">📅 Date Added</option>
-              <option value="status">🏷️ Status</option>
-              <option value="company">🏢 Company</option>
-            </select>
-            <button
-              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-              style={{
-                padding: '8px 12px',
-                border: '1px solid #e5e7eb',
-                borderRadius: '6px',
-                background: 'white',
-                color: '#374151',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: '600',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#f3f4f6'
-                e.currentTarget.style.borderColor = '#d1d5db'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'white'
-                e.currentTarget.style.borderColor = '#e5e7eb'
-              }}
-            >
-              {sortOrder === 'asc' ? '↑ ASC' : '↓ DESC'}
-            </button>
-          </div>
+      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}>
+        {/* Sort Controls */}
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <label style={{ fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: '65px' }}>Sort By:</label>
+          <select
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value as 'name' | 'date' | 'status' | 'company')
+              setCurrentPage(1)
+            }}
+            style={{
+              padding: '9px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              fontSize: '13px',
+              color: '#374151',
+              backgroundColor: 'white',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+              minWidth: '140px',
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = '#2563eb'
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = '#d1d5db'
+              e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
+            }}
+          >
+            <option value="name">📝 Name</option>
+            <option value="date">📅 Date Added</option>
+            <option value="status">🏷️ Status</option>
+            <option value="company">🏢 Company</option>
+          </select>
+          <button
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            style={{
+              padding: '9px 14px',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              background: 'white',
+              color: '#374151',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: '600',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+              minWidth: '80px',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#f3f4f6'
+              e.currentTarget.style.borderColor = '#9ca3af'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'white'
+              e.currentTarget.style.borderColor = '#d1d5db'
+            }}
+          >
+            {sortOrder === 'asc' ? '↑ ASC' : '↓ DESC'}
+          </button>
+        </div>
 
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', paddingLeft: '16px', borderLeft: '1px solid #e5e7eb' }}>
-            <label style={{ fontSize: '13px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Per Page:</label>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value))
-                setCurrentPage(1)
-              }}
-              style={{
-                padding: '8px 12px',
-                border: '1px solid #e5e7eb',
-                borderRadius: '6px',
-                fontSize: '13px',
-                color: '#374151',
-                backgroundColor: 'white',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <option value="15">15 contacts</option>
-              <option value="30">30 contacts</option>
-              <option value="50">50 contacts</option>
-              <option value="100">100 contacts</option>
-            </select>
-          </div>
+        {/* Per Page Controls */}
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <label style={{ fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: '70px' }}>Per Page:</label>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value))
+              setCurrentPage(1)
+            }}
+            style={{
+              padding: '9px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              fontSize: '13px',
+              color: '#374151',
+              backgroundColor: 'white',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+              minWidth: '140px',
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = '#2563eb'
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = '#d1d5db'
+              e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
+            }}
+          >
+            <option value="15">15 contacts</option>
+            <option value="30">30 contacts</option>
+            <option value="50">50 contacts</option>
+            <option value="100">100 contacts</option>
+          </select>
         </div>
 
         {totalContacts > 0 && (
