@@ -1,18 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
+import jwt from 'jsonwebtoken'
 
-// In-memory token storage (in production, use database)
-const resetTokens = new Map<string, { email: string; expiresAt: Date; used: boolean }>()
-
-// Generate a secure random token
-function generateToken(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  let token = ''
-  for (let i = 0; i < 32; i++) {
-    token += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return token
-}
+// Secret key for JWT (should be in env vars in production)
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-this-in-production'
 
 // Email configuration - Direct Gmail SMTP with robust settings
 const createTransporter = () => {
@@ -47,12 +38,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate reset token
-    const token = generateToken()
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour expiry
-
-    // Store token
-    resetTokens.set(token, { email, expiresAt, used: false })
+    // Generate JWT token with 1 hour expiry
+    const token = jwt.sign(
+      { email, purpose: 'password-reset' },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    )
 
     // Build reset link - use request origin for correct URL
     const baseUrl = request.headers.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'https://airanix-crm-pcnt.vercel.app'
@@ -177,28 +168,34 @@ export async function PUT(request: NextRequest) {
   try {
     const { token, newPassword } = await request.json()
 
-    // Validate token
-    const resetData = resetTokens.get(token)
-    if (!resetData) {
+    if (!token || !newPassword) {
+      return NextResponse.json(
+        { error: 'Missing token or password' },
+        { status: 400 }
+      )
+    }
+
+    // Verify JWT token
+    let decoded: any
+    try {
+      decoded = jwt.verify(token, JWT_SECRET)
+    } catch (error: any) {
+      if (error.name === 'TokenExpiredError') {
+        return NextResponse.json(
+          { error: 'Password reset link has expired. Please request a new one.' },
+          { status: 400 }
+        )
+      }
       return NextResponse.json(
         { error: 'Invalid or expired reset token' },
         { status: 400 }
       )
     }
 
-    // Check if token is expired
-    if (new Date() > resetData.expiresAt) {
-      resetTokens.delete(token)
+    // Validate token has correct purpose
+    if (decoded.purpose !== 'password-reset') {
       return NextResponse.json(
-        { error: 'Password reset link has expired' },
-        { status: 400 }
-      )
-    }
-
-    // Check if token was already used
-    if (resetData.used) {
-      return NextResponse.json(
-        { error: 'Password reset link has already been used' },
+        { error: 'Invalid token' },
         { status: 400 }
       )
     }
@@ -211,16 +208,13 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Mark token as used
-    resetTokens.set(token, { ...resetData, used: true })
-
     // Send confirmation email
     try {
       const transporter = createTransporter()
 
       await transporter.sendMail({
         from: 'rouble@airanix.com',
-        to: resetData.email,
+        to: decoded.email,
         subject: '✅ Airanix CRM - Password Reset Successful',
         html: `
           <!DOCTYPE html>
@@ -239,7 +233,7 @@ export async function PUT(request: NextRequest) {
         `
       })
 
-      console.log(`✅ Confirmation email sent to ${resetData.email}`)
+      console.log(`✅ Confirmation email sent to ${decoded.email}`)
     } catch (emailError) {
       console.error('Failed to send confirmation email:', emailError)
     }

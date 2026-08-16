@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.0",
+    "jsonwebtoken": "^9.0.3",
     "next": "14.2.29",
     "nodemailer": "^9.0.5",
     "react": "18.3.1",
@@ -16,6 +17,7 @@
     "uuid": "^14.0.1"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "20.9.0",
     "@types/react": "18.2.37",
     "@types/uuid": "^10.0.0",
