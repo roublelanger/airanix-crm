@@ -2262,7 +2262,7 @@ function ContactsContent() {
                     />
                   </td>
                   <td style={{ padding: '14px 20px', fontSize: '14px', fontWeight: '600', color: '#111827' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                       <div
                         style={{
                           width: '40px',
@@ -2285,7 +2285,14 @@ function ContactsContent() {
                           .join('')
                           .toUpperCase()}
                       </div>
-                      {contact.name}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <span style={{ fontWeight: '600', color: '#111827' }}>{contact.name}</span>
+                        {contact.createdAt && (
+                          <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '400' }}>
+                            📅 {new Date(contact.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
