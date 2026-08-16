@@ -104,7 +104,7 @@ export default function Dashboard() {
               <p style={{ fontSize: '48px', fontWeight: '900', color: '#0f172a', margin: '0 0 12px 0', lineHeight: '1' }}>
                 {metrics.totalContacts}
               </p>
-              <p style={{ fontSize: '14px', color: '#64748b', margin: '0', fontWeight: '500' }}>Active contacts in your system</p>
+              <p style={{ fontSize: '14px', color: '#64748b', margin: '0', fontWeight: '500' }}>All contacts in your CRM</p>
             </div>
 
             {/* New Leads Card */}

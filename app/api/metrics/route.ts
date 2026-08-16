@@ -16,22 +16,33 @@ export async function GET() {
     const deals = dealsRes.data || []
 
     // Calculate metrics
+    const totalContacts = contacts.length  // ALL contacts
+    const leadContacts = contacts.filter(c => c.status === 'LEAD').length
+    const newContacts = contacts.filter(c => c.status === 'NEW').length
     const activeContacts = contacts.filter(c => c.status === 'ACTIVE').length
-    const newLeads = contacts.filter(c => c.status === 'LEAD').length
-    const activeDeals = deals.filter(d => d.status && !['CLOSED', 'LOST', 'WON'].includes(d.status)).length
-    const wonDeals = deals.filter(d => d.status === 'WON').length
+
+    // New Leads = LEAD status only (not NEW + LEAD)
+    const newLeads = leadContacts
+
+    // Active Deals = deals that are not completed/lost
+    const activeDeals = deals.filter(d => d.status && !['CLOSED', 'LOST', 'WON'].includes(d.status.toUpperCase())).length
+
+    // Conversions = WON deals
+    const wonDeals = deals.filter(d => d.status && d.status.toUpperCase() === 'WON').length
 
     console.log('Dashboard Metrics:', {
+      totalContacts,
+      leadContacts,
+      newContacts,
       activeContacts,
       newLeads,
       activeDeals,
       wonDeals,
-      totalContacts: contacts.length,
-      totalDeals: deals.length
+      dealsTotal: deals.length
     })
 
     return Response.json({
-      totalContacts: activeContacts,
+      totalContacts,
       activeDeal: activeDeals,
       newLeads,
       conversions: wonDeals
