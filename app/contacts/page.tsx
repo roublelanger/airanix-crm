@@ -87,11 +87,10 @@ function ContactsContent() {
       return
     }
 
-    // Check for duplicate contact (by email and name)
+    // Check for duplicate contact (by name only)
     if (!ignoreDuplicate && !editingId) {
       const existingContact = contacts.find(
-        c => c.email?.toLowerCase() === formData.email.toLowerCase() &&
-             c.name?.toLowerCase() === formData.name.toLowerCase()
+        c => c.name?.toLowerCase() === formData.name.toLowerCase()
       )
 
       if (existingContact) {
