@@ -20,6 +20,13 @@ interface Contact {
   updatedAt?: string
 }
 
+interface Toast {
+  id: string
+  type: 'success' | 'error' | 'info' | 'warning'
+  message: string
+  duration?: number
+}
+
 function ContactsContent() {
   const searchParams = useSearchParams()
   const [contacts, setContacts] = useState<Contact[]>([])
@@ -30,6 +37,8 @@ function ContactsContent() {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [duplicateWarning, setDuplicateWarning] = useState<{ show: boolean; existingContact: Contact | null; pendingSave: boolean }>({ show: false, existingContact: null, pendingSave: false })
+  const [toasts, setToasts] = useState<Toast[]>([])
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; contactId: string; contactName: string } | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -51,6 +60,23 @@ function ContactsContent() {
   useEffect(() => {
     fetchContacts()
   }, [])
+
+  // Toast auto-dismiss effect
+  useEffect(() => {
+    if (toasts.length === 0) return
+    const timers = toasts.map((toast) => {
+      const duration = toast.duration || (toast.type === 'error' ? 5000 : 3000)
+      return setTimeout(() => {
+        setToasts(prev => prev.filter(t => t.id !== toast.id))
+      }, duration)
+    })
+    return () => timers.forEach(timer => clearTimeout(timer))
+  }, [toasts])
+
+  function showToast(type: 'success' | 'error' | 'info' | 'warning', message: string, duration?: number) {
+    const id = `toast-${Date.now()}-${Math.random()}`
+    setToasts(prev => [...prev, { id, type, message, duration }])
+  }
 
   async function fetchContacts() {
     try {
@@ -83,7 +109,7 @@ function ContactsContent() {
 
   async function handleSaveContact(ignoreDuplicate: boolean = false) {
     if (!formData.name || !formData.email) {
-      alert('Name and Email are required')
+      showToast('error', 'Name and Email are required fields')
       return
     }
 
@@ -129,7 +155,7 @@ function ContactsContent() {
 
       if (!res.ok) {
         const data = await res.json()
-        alert(`Error: ${data.error || 'Failed to save contact'}`)
+        showToast('error', data.error || 'Failed to save contact')
         return
       }
 
@@ -159,29 +185,30 @@ function ContactsContent() {
 
       resetForm()
       fetchContacts()
-      alert('Contact saved successfully!')
+      showToast('success', 'Contact saved successfully!')
     } catch (error) {
       console.error('Error saving contact:', error)
-      alert(`Error: ${error instanceof Error ? error.message : 'Failed to save contact'}`)
+      showToast('error', error instanceof Error ? error.message : 'Failed to save contact')
     }
   }
 
-  async function handleDeleteContact(id: string, name: string) {
-    if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
-      return
-    }
+  function handleDeleteContact(id: string, name: string) {
+    setDeleteConfirm({ show: true, contactId: id, contactName: name })
+  }
 
+  async function confirmDelete(id: string) {
+    setDeleteConfirm(null)
     try {
       const res = await fetch(`/api/contacts/${id}`, { method: 'DELETE' })
       if (!res.ok) {
-        alert('Failed to delete contact')
+        showToast('error', 'Failed to delete contact')
         return
       }
       fetchContacts()
-      alert('Contact deleted successfully')
+      showToast('success', 'Contact deleted successfully')
     } catch (error) {
       console.error('Error deleting contact:', error)
-      alert('Error deleting contact')
+      showToast('error', 'Error deleting contact')
     }
   }
 
@@ -395,6 +422,163 @@ function ContactsContent() {
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
             <button onClick={resetForm} style={{ padding: '10px 20px', background: '#f3f4f6', color: '#333', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }}>Cancel</button>
             <button onClick={() => handleSaveContact()} style={{ padding: '10px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }}>Save Contact</button>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notifications */}
+      <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 2000, maxWidth: '400px' }}>
+        {toasts.map(toast => (
+          <div
+            key={toast.id}
+            style={{
+              marginBottom: '12px',
+              padding: '14px 16px',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              display: 'flex',
+              gap: '12px',
+              alignItems: 'flex-start',
+              animation: 'slideIn 0.3s ease-out',
+              background:
+                toast.type === 'success'
+                  ? '#d1fae5'
+                  : toast.type === 'error'
+                  ? '#fee2e2'
+                  : toast.type === 'warning'
+                  ? '#fef3c7'
+                  : '#dbeafe',
+              color:
+                toast.type === 'success'
+                  ? '#065f46'
+                  : toast.type === 'error'
+                  ? '#7c2515'
+                  : toast.type === 'warning'
+                  ? '#92400e'
+                  : '#0c4a6e',
+              border: `1px solid ${
+                toast.type === 'success'
+                  ? '#6ee7b7'
+                  : toast.type === 'error'
+                  ? '#fca5a5'
+                  : toast.type === 'warning'
+                  ? '#fcd34d'
+                  : '#7dd3fc'
+              }`,
+            }}
+          >
+            <span style={{ fontSize: '18px', flexShrink: 0 }}>
+              {toast.type === 'success'
+                ? '✅'
+                : toast.type === 'error'
+                ? '❌'
+                : toast.type === 'warning'
+                ? '⚠️'
+                : 'ℹ️'}
+            </span>
+            <span style={{ fontSize: '14px', fontWeight: '500', flex: 1 }}>{toast.message}</span>
+            <button
+              onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'inherit',
+                cursor: 'pointer',
+                fontSize: '16px',
+                padding: '0',
+                flexShrink: 0,
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1500,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            maxWidth: '400px',
+            width: '90%',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          }}>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '28px' }}>🗑️</span>
+              <h3 style={{ margin: '0', fontSize: '18px', fontWeight: '700', color: '#111827' }}>
+                Delete Contact
+              </h3>
+            </div>
+            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px', lineHeight: '1.6' }}>
+              Are you sure you want to delete <strong>{deleteConfirm.contactName}</strong>?
+            </p>
+            <p style={{ fontSize: '12px', color: '#991b1b', marginBottom: '24px', fontWeight: '500' }}>
+              This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#e5e7eb'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#f3f4f6'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => confirmDelete(deleteConfirm.contactId)}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: '#dc2626',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#b91c1c'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#dc2626'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -844,7 +1028,19 @@ function ContactsContent() {
 export default function ContactsPage() {
   return (
     <>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(400px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
       <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Loading contacts...</div>}>
         <ContactsContent />
       </Suspense>
