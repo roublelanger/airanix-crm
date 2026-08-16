@@ -7,19 +7,34 @@ const supabase = createClient(
 
 export async function GET() {
   try {
-    // Fetch all contacts directly to get accurate count
+    // Fetch all contacts with status
     const contactsRes = await supabase.from('contacts').select('id, status')
-    const dealsRes = await supabase.from('deals').select('id', { count: 'exact', head: true })
-
     const contacts = contactsRes.data || []
-    const totalContacts = contacts.length
+
+    // Fetch all deals with status
+    const dealsRes = await supabase.from('deals').select('id, status')
+    const deals = dealsRes.data || []
+
+    // Calculate metrics
+    const activeContacts = contacts.filter(c => c.status === 'ACTIVE').length
     const newLeads = contacts.filter(c => c.status === 'LEAD').length
+    const activeDeals = deals.filter(d => d.status && !['CLOSED', 'LOST', 'WON'].includes(d.status)).length
+    const wonDeals = deals.filter(d => d.status === 'WON').length
+
+    console.log('Dashboard Metrics:', {
+      activeContacts,
+      newLeads,
+      activeDeals,
+      wonDeals,
+      totalContacts: contacts.length,
+      totalDeals: deals.length
+    })
 
     return Response.json({
-      totalContacts,
-      activeDeal: dealsRes.count || 0,
+      totalContacts: activeContacts,
+      activeDeal: activeDeals,
       newLeads,
-      conversions: 0
+      conversions: wonDeals
     })
   } catch (error) {
     console.error('Error fetching metrics:', error)

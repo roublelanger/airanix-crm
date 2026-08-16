@@ -203,7 +203,7 @@ export default function Dashboard() {
               <p style={{ fontSize: '48px', fontWeight: '900', color: '#047857', margin: '0 0 12px 0', lineHeight: '1' }}>
                 {metrics.conversions}
               </p>
-              <p style={{ fontSize: '14px', color: '#047857', margin: '0', fontWeight: '500' }}>Closed deals this period</p>
+              <p style={{ fontSize: '14px', color: '#047857', margin: '0', fontWeight: '500' }}>Successfully closed deals</p>
             </div>
           </div>
         </div>
