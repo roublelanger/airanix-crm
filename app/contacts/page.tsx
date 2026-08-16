@@ -39,6 +39,7 @@ function ContactsContent() {
   const [duplicateWarning, setDuplicateWarning] = useState<{ show: boolean; existingContact: Contact | null; pendingSave: boolean }>({ show: false, existingContact: null, pendingSave: false })
   const [toasts, setToasts] = useState<Toast[]>([])
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; contactId: string; contactName: string } | null>(null)
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -78,6 +79,70 @@ function ContactsContent() {
     setToasts(prev => [...prev, { id, type, message, duration }])
   }
 
+  // Validation utilities
+  function validateEmail(email: string): string | null {
+    if (!email) return null // empty is checked separately
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) return 'Invalid email format'
+    return null
+  }
+
+  function validatePhone(phone: string): string | null {
+    if (!phone) return null // optional field
+    // Basic validation: at least 7 digits, can contain +, -, (), spaces
+    const phoneRegex = /^[\d+\-() ]{7,}$/
+    if (!phoneRegex.test(phone)) return 'Phone must contain at least 7 digits'
+    if (phone.replace(/\D/g, '').length > 15) return 'Phone number too long'
+    return null
+  }
+
+  function validateField(fieldName: string, value: string): string | null {
+    switch (fieldName) {
+      case 'name':
+        if (!value) return 'Name is required'
+        if (value.length < 2) return 'Name must be at least 2 characters'
+        if (value.length > 100) return 'Name must be under 100 characters'
+        return null
+      case 'email':
+        if (!value) return 'Email is required'
+        return validateEmail(value)
+      case 'phone':
+        return validatePhone(value)
+      case 'company':
+        if (value && value.length > 100) return 'Company name too long'
+        return null
+      case 'designation':
+        if (value && value.length > 100) return 'Designation too long'
+        return null
+      case 'industry':
+        if (value && value.length > 100) return 'Industry too long'
+        return null
+      case 'location':
+        if (value && value.length > 100) return 'Location too long'
+        return null
+      case 'remarks':
+        if (value && value.length > 500) return 'Remarks must be under 500 characters'
+        return null
+      default:
+        return null
+    }
+  }
+
+  function handleFieldChange(fieldName: string, value: string) {
+    setFormData(prev => ({ ...prev, [fieldName]: value }))
+    // Real-time validation
+    const error = validateField(fieldName, value)
+    setFormErrors(prev => {
+      const updated = { ...prev }
+      if (error) {
+        updated[fieldName] = error
+      } else {
+        delete updated[fieldName]
+      }
+      return updated
+    })
+  }
+
   async function fetchContacts() {
     try {
       const res = await fetch('/api/contacts')
@@ -108,8 +173,19 @@ function ContactsContent() {
   }
 
   async function handleSaveContact(ignoreDuplicate: boolean = false) {
-    if (!formData.name || !formData.email) {
-      showToast('error', 'Name and Email are required fields')
+    // Validate all fields before save
+    const errors: Record<string, string> = {}
+    const nameError = validateField('name', formData.name)
+    const emailError = validateField('email', formData.email)
+    const phoneError = validateField('phone', formData.phone)
+
+    if (nameError) errors['name'] = nameError
+    if (emailError) errors['email'] = emailError
+    if (phoneError) errors['phone'] = phoneError
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      showToast('error', 'Please fix validation errors before saving')
       return
     }
 
@@ -253,6 +329,7 @@ function ContactsContent() {
       followupType: 'meeting',
       followupNotes: ''
     })
+    setFormErrors({})
     setEditingId(null)
     setShowForm(false)
   }
@@ -349,10 +426,22 @@ function ContactsContent() {
           <fieldset style={{ border: 'none', padding: 0, margin: '0 0 28px 0' }}>
             <legend style={{ fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>👤 Contact Information</legend>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-              <input type="text" placeholder="Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} style={{ padding: '11px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
-              <input type="email" placeholder="Email *" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} style={{ padding: '11px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
-              <input type="tel" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} style={{ padding: '11px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
-              <input type="text" placeholder="Location" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} style={{ padding: '11px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
+              <div>
+                <input type="text" placeholder="Name *" value={formData.name} onChange={(e) => handleFieldChange('name', e.target.value)} style={{ padding: '11px 12px', border: formErrors.name ? '1px solid #dc2626' : '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s', width: '100%', boxSizing: 'border-box' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = formErrors.name ? '#dc2626' : '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
+                {formErrors.name && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#dc2626', fontWeight: '500' }}>⚠️ {formErrors.name}</p>}
+              </div>
+              <div>
+                <input type="email" placeholder="Email *" value={formData.email} onChange={(e) => handleFieldChange('email', e.target.value)} style={{ padding: '11px 12px', border: formErrors.email ? '1px solid #dc2626' : '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s', width: '100%', boxSizing: 'border-box' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = formErrors.email ? '#dc2626' : '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
+                {formErrors.email && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#dc2626', fontWeight: '500' }}>⚠️ {formErrors.email}</p>}
+              </div>
+              <div>
+                <input type="tel" placeholder="Phone" value={formData.phone} onChange={(e) => handleFieldChange('phone', e.target.value)} style={{ padding: '11px 12px', border: formErrors.phone ? '1px solid #dc2626' : '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s', width: '100%', boxSizing: 'border-box' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = formErrors.phone ? '#dc2626' : '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
+                {formErrors.phone && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#dc2626', fontWeight: '500' }}>⚠️ {formErrors.phone}</p>}
+              </div>
+              <div>
+                <input type="text" placeholder="Location" value={formData.location} onChange={(e) => handleFieldChange('location', e.target.value)} style={{ padding: '11px 12px', border: formErrors.location ? '1px solid #dc2626' : '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s', width: '100%', boxSizing: 'border-box' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = formErrors.location ? '#dc2626' : '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
+                {formErrors.location && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#dc2626', fontWeight: '500' }}>⚠️ {formErrors.location}</p>}
+              </div>
             </div>
           </fieldset>
 
@@ -360,10 +449,22 @@ function ContactsContent() {
           <fieldset style={{ border: 'none', padding: 0, margin: '0 0 28px 0' }}>
             <legend style={{ fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🏢 Company & Professional Details</legend>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-              <input type="text" placeholder="Company" value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} style={{ padding: '11px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
-              <input type="text" placeholder="Designation" value={formData.designation} onChange={(e) => setFormData({ ...formData, designation: e.target.value })} style={{ padding: '11px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
-              <input type="text" placeholder="Industry" value={formData.industry} onChange={(e) => setFormData({ ...formData, industry: e.target.value })} style={{ padding: '11px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
-              <input type="text" placeholder="Assigned To" value={formData.assigned_to} onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })} style={{ padding: '11px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
+              <div>
+                <input type="text" placeholder="Company" value={formData.company} onChange={(e) => handleFieldChange('company', e.target.value)} style={{ padding: '11px 12px', border: formErrors.company ? '1px solid #dc2626' : '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s', width: '100%', boxSizing: 'border-box' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = formErrors.company ? '#dc2626' : '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
+                {formErrors.company && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#dc2626', fontWeight: '500' }}>⚠️ {formErrors.company}</p>}
+              </div>
+              <div>
+                <input type="text" placeholder="Designation" value={formData.designation} onChange={(e) => handleFieldChange('designation', e.target.value)} style={{ padding: '11px 12px', border: formErrors.designation ? '1px solid #dc2626' : '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s', width: '100%', boxSizing: 'border-box' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = formErrors.designation ? '#dc2626' : '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
+                {formErrors.designation && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#dc2626', fontWeight: '500' }}>⚠️ {formErrors.designation}</p>}
+              </div>
+              <div>
+                <input type="text" placeholder="Industry" value={formData.industry} onChange={(e) => handleFieldChange('industry', e.target.value)} style={{ padding: '11px 12px', border: formErrors.industry ? '1px solid #dc2626' : '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s', width: '100%', boxSizing: 'border-box' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = formErrors.industry ? '#dc2626' : '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
+                {formErrors.industry && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#dc2626', fontWeight: '500' }}>⚠️ {formErrors.industry}</p>}
+              </div>
+              <div>
+                <input type="text" placeholder="Assigned To" value={formData.assigned_to} onChange={(e) => handleFieldChange('assigned_to', e.target.value)} style={{ padding: '11px 12px', border: formErrors.assigned_to ? '1px solid #dc2626' : '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', backgroundColor: 'white', transition: 'all 0.2s', width: '100%', boxSizing: 'border-box' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = formErrors.assigned_to ? '#dc2626' : '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }} />
+                {formErrors.assigned_to && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#dc2626', fontWeight: '500' }}>⚠️ {formErrors.assigned_to}</p>}
+              </div>
             </div>
           </fieldset>
 
@@ -399,7 +500,16 @@ function ContactsContent() {
               <option value="COLD">Cold</option>
               <option value="CLOSED">Closed</option>
             </select>
-            <textarea value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} placeholder="Remarks and notes" style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%', minHeight: '80px', fontFamily: 'system-ui', boxSizing: 'border-box', fontSize: '14px', marginBottom: '16px' }} />
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280' }}>Remarks and notes</label>
+                <span style={{ fontSize: '12px', color: formData.remarks.length > 450 ? '#ea580c' : '#9ca3af' }}>
+                  {formData.remarks.length}/500
+                </span>
+              </div>
+              <textarea value={formData.remarks} onChange={(e) => handleFieldChange('remarks', e.target.value)} placeholder="Remarks and notes" style={{ padding: '10px', border: formErrors.remarks ? '1px solid #dc2626' : '1px solid #ddd', borderRadius: '6px', width: '100%', minHeight: '80px', fontFamily: 'system-ui', boxSizing: 'border-box', fontSize: '14px', marginBottom: formErrors.remarks ? '4px' : '16px', transition: 'all 0.2s' }} />
+              {formErrors.remarks && <p style={{ margin: '4px 0 16px 0', fontSize: '12px', color: '#dc2626', fontWeight: '500' }}>⚠️ {formErrors.remarks}</p>}
+            </div>
           </fieldset>
 
           {/* Follow-up */}
