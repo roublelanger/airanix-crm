@@ -1740,200 +1740,152 @@ function ContactsContent() {
           <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>Add your first contact to get started</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {paginatedContacts.map(contact => (
-                <div
+        <div style={{ overflowX: 'auto', border: '1px solid #e5e7eb', borderRadius: '10px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <table style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            backgroundColor: 'white',
+          }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
+                <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Name</th>
+                <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Company</th>
+                <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Designation</th>
+                <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Phone</th>
+                <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Email</th>
+                <th style={{ padding: '16px 20px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedContacts.map((contact, idx) => (
+                <tr
                   key={contact.id}
-                  onClick={() => (window.location.href = `/contacts/${contact.id}`)}
                   style={{
-                    background: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '10px',
-                    padding: '16px 20px',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                    borderBottom: '1px solid #e5e7eb',
+                    backgroundColor: idx % 2 === 0 ? 'white' : '#fafbfc',
                     transition: 'all 0.2s ease',
                     cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: '16px',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)'
-                    e.currentTarget.style.borderColor = '#2563eb'
-                    e.currentTarget.style.backgroundColor = '#f0f9ff'
-                    e.currentTarget.style.transform = 'translateX(4px)'
+                    (e.currentTarget as HTMLElement).style.backgroundColor = '#f0f9ff'
+                    ;(e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 1px #bfdbfe'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
-                    e.currentTarget.style.borderColor = '#e5e7eb'
-                    e.currentTarget.style.backgroundColor = 'white'
-                    e.currentTarget.style.transform = 'translateX(0)'
+                    (e.currentTarget as HTMLElement).style.backgroundColor = idx % 2 === 0 ? 'white' : '#fafbfc'
+                    ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
                   }}
+                  onClick={() => (window.location.href = `/contacts/${contact.id}`)}
                 >
-                  {/* Thumbnail Avatar with Initials */}
-                  <div
-                    style={{
-                      width: '56px',
-                      height: '56px',
-                      borderRadius: '10px',
-                      background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontWeight: '700',
-                      fontSize: '20px',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {contact.name
-                      .split(' ')
-                      .slice(0, 2)
-                      .map((n) => n[0])
-                      .join('')
-                      .toUpperCase()}
-                  </div>
-
-                  {/* Main Info - Flex 1 */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <h3 style={{ margin: '0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>
-                        {contact.name}
-                      </h3>
-                      <span
+                  <td style={{ padding: '14px 20px', fontSize: '14px', fontWeight: '600', color: '#111827' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div
                         style={{
-                          background:
-                            contact.status === 'NEW'
-                              ? '#dbeafe'
-                              : contact.status === 'LEAD'
-                                ? '#fef3c7'
-                                : contact.status === 'ACTIVE'
-                                  ? '#d1fae5'
-                                  : contact.status === 'CLOSED'
-                                    ? '#fecaca'
-                                    : '#e5e7eb',
-                          color:
-                            contact.status === 'NEW'
-                              ? '#0369a1'
-                              : contact.status === 'LEAD'
-                                ? '#92400e'
-                                : contact.status === 'ACTIVE'
-                                  ? '#047857'
-                                  : contact.status === 'CLOSED'
-                                    ? '#991b1b'
-                                    : '#374151',
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          fontSize: '10px',
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '8px',
+                          background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'white',
                           fontWeight: '700',
-                          textTransform: 'uppercase',
-                          whiteSpace: 'nowrap',
+                          fontSize: '14px',
+                          flexShrink: 0,
                         }}
                       >
-                        {contact.status || 'NEW'}
-                      </span>
+                        {contact.name
+                          .split(' ')
+                          .slice(0, 2)
+                          .map((n) => n[0])
+                          .join('')
+                          .toUpperCase()}
+                      </div>
+                      {contact.name}
                     </div>
-                    <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: '#6b7280', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {contact.designation || contact.company || '—'}
-                    </p>
-                    <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#6b7280', flexWrap: 'wrap', alignItems: 'center' }}>
-                      {contact.email && (
-                        <a
-                          href={`mailto:${contact.email}`}
-                          style={{
-                            color: '#2563eb',
-                            textDecoration: 'none',
-                            transition: 'all 0.2s',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            maxWidth: '180px',
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                          onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {contact.email}
-                        </a>
-                      )}
-                      {contact.location && (
-                        <span style={{ color: '#6b7280', whiteSpace: 'nowrap' }}>📍 {contact.location}</span>
-                      )}
-                      {contact.createdAt && (
-                        <span style={{ color: '#9ca3af', whiteSpace: 'nowrap', fontSize: '11px', fontWeight: '500' }}>
-                          📅 {new Date(contact.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
-                        </span>
-                      )}
+                  </td>
+                  <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {contact.company || '—'}
+                  </td>
+                  <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {contact.designation || '—'}
+                  </td>
+                  <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {contact.phone ? (
+                      <a href={`tel:${contact.phone}`} onClick={(e) => e.stopPropagation()} style={{ color: '#2563eb', textDecoration: 'none', transition: 'all 0.2s' }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}>
+                        {contact.phone}
+                      </a>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {contact.email ? (
+                      <a href={`mailto:${contact.email}`} onClick={(e) => e.stopPropagation()} style={{ color: '#2563eb', textDecoration: 'none', transition: 'all 0.2s' }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}>
+                        {contact.email}
+                      </a>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td style={{ padding: '14px 20px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                      <button
+                        onClick={() => handleEditContact(contact)}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#2563eb',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#1d4ed8'
+                          e.currentTarget.style.boxShadow = '0 4px 8px rgba(37, 99, 235, 0.3)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#2563eb'
+                          e.currentTarget.style.boxShadow = 'none'
+                        }}
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDeleteContact(contact.id, contact.name)}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#fee2e2',
+                          color: '#dc2626',
+                          border: '1px solid #fecaca',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#fecaca'
+                          e.currentTarget.style.color = '#991b1b'
+                          e.currentTarget.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#fee2e2'
+                          e.currentTarget.style.color = '#dc2626'
+                          e.currentTarget.style.boxShadow = 'none'
+                        }}
+                        title="Delete this contact"
+                      >
+                        🗑️
+                      </button>
                     </div>
-                  </div>
-
-                  {/* Actions - Right Side */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: '8px',
-                      flexShrink: 0,
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      onClick={() => handleEditContact(contact)}
-                      style={{
-                        padding: '8px 12px',
-                        background: '#2563eb',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        transition: 'all 0.2s ease',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(37, 99, 235, 0.3)'
-                        e.currentTarget.style.transform = 'translateY(-1px)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
-                        e.currentTarget.style.transform = 'translateY(0)'
-                      }}
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteContact(contact.id, contact.name)}
-                      style={{
-                        padding: '8px 12px',
-                        background: '#fee2e2',
-                        color: '#dc2626',
-                        border: '1px solid #fecaca',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#fecaca'
-                        e.currentTarget.style.color = '#991b1b'
-                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)'
-                        e.currentTarget.style.transform = 'translateY(-1px)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#fee2e2'
-                        e.currentTarget.style.color = '#dc2626'
-                        e.currentTarget.style.boxShadow = 'none'
-                        e.currentTarget.style.transform = 'translateY(0)'
-                      }}
-                      title="Delete this contact (this action cannot be undone)"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
+                  </td>
+                </tr>
               ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
