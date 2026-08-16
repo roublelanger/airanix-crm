@@ -315,6 +315,8 @@ function ContactsContent() {
 
   function handleDeleteContact(id: string, name: string) {
     setDeleteConfirm({ show: true, contactId: id, contactName: name })
+    setDeletePassword('')  // Clear password field when delete modal opens
+    setShowDeletePassword(false)  // Reset to initial confirmation step
   }
 
   async function confirmDelete(id: string) {
@@ -773,14 +775,18 @@ function ContactsContent() {
                     value={deletePassword}
                     onChange={(e) => setDeletePassword(e.target.value)}
                     onKeyPress={(e) => {
-                      if (e.key === 'Enter' && deletePassword === correctPassword) {
+                      if (e.key === 'Enter' && deletePassword === storedPassword) {
                         confirmDelete(deleteConfirm.contactId)
                       }
                     }}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: deletePassword === correctPassword && deletePassword ? '1px solid #10b981' : '1px solid #cbd5e1',
+                      border: deletePassword === storedPassword && deletePassword ? '1px solid #10b981' : '1px solid #cbd5e1',
                       borderRadius: '8px',
                       fontSize: '14px',
                       boxSizing: 'border-box',
@@ -794,10 +800,10 @@ function ContactsContent() {
                       e.currentTarget.style.boxShadow = 'none'
                     }}
                   />
-                  {deletePassword && deletePassword !== correctPassword && (
+                  {deletePassword && deletePassword !== storedPassword && (
                     <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#dc2626', fontWeight: '500' }}>❌ Incorrect password</p>
                   )}
-                  {deletePassword === correctPassword && (
+                  {deletePassword === storedPassword && (
                     <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#10b981', fontWeight: '500' }}>✅ Password correct</p>
                   )}
                 </div>
@@ -862,28 +868,28 @@ function ContactsContent() {
               )}
               <button
                 onClick={() => confirmDelete(deleteConfirm.contactId)}
-                disabled={!showDeletePassword || deletePassword !== correctPassword}
+                disabled={!showDeletePassword || deletePassword !== storedPassword}
                 style={{
                   flex: 1,
                   padding: '12px 20px',
-                  background: showDeletePassword && deletePassword === correctPassword ? '#dc2626' : '#d1d5db',
+                  background: showDeletePassword && deletePassword === storedPassword ? '#dc2626' : '#d1d5db',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
-                  cursor: showDeletePassword && deletePassword === correctPassword ? 'pointer' : 'not-allowed',
+                  cursor: showDeletePassword && deletePassword === storedPassword ? 'pointer' : 'not-allowed',
                   fontWeight: '600',
                   fontSize: '14px',
                   transition: 'all 0.2s',
-                  opacity: showDeletePassword && deletePassword === correctPassword ? 1 : 0.5,
+                  opacity: showDeletePassword && deletePassword === storedPassword ? 1 : 0.5,
                 }}
                 onMouseEnter={(e) => {
-                  if (showDeletePassword && deletePassword === correctPassword) {
+                  if (showDeletePassword && deletePassword === storedPassword) {
                     e.currentTarget.style.background = '#b91c1c'
                     e.currentTarget.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.3)'
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (showDeletePassword && deletePassword === correctPassword) {
+                  if (showDeletePassword && deletePassword === storedPassword) {
                     e.currentTarget.style.background = '#dc2626'
                     e.currentTarget.style.boxShadow = 'none'
                   }
@@ -949,6 +955,10 @@ function ContactsContent() {
                 placeholder="Enter current password"
                 value={passwordChangeForm.current}
                 onChange={(e) => setPasswordChangeForm({ ...passwordChangeForm, current: e.target.value })}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
                 style={{
                   width: '100%',
                   padding: '10px 12px',
@@ -978,6 +988,10 @@ function ContactsContent() {
                 placeholder="Enter new password"
                 value={passwordChangeForm.new}
                 onChange={(e) => setPasswordChangeForm({ ...passwordChangeForm, new: e.target.value })}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
                 style={{
                   width: '100%',
                   padding: '10px 12px',
@@ -1007,6 +1021,10 @@ function ContactsContent() {
                 placeholder="Confirm new password"
                 value={passwordChangeForm.confirm}
                 onChange={(e) => setPasswordChangeForm({ ...passwordChangeForm, confirm: e.target.value })}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
                 style={{
                   width: '100%',
                   padding: '10px 12px',
@@ -1063,7 +1081,7 @@ function ContactsContent() {
               </button>
               <button
                 onClick={() => {
-                  if (passwordChangeForm.current !== correctPassword) {
+                  if (passwordChangeForm.current !== storedPassword) {
                     setPasswordChangeStatus({ type: 'error', message: 'Current password is incorrect' })
                     return
                   }
@@ -1075,9 +1093,9 @@ function ContactsContent() {
                     setPasswordChangeStatus({ type: 'error', message: 'New password must be at least 6 characters' })
                     return
                   }
-                  // In a real app, you would save this to localStorage or a database
-                  // For now, we'll just show success and update the correctPassword variable
+                  // Update password in localStorage and state
                   localStorage.setItem('deletePassword', passwordChangeForm.new)
+                  setStoredPassword(passwordChangeForm.new)  // Update state immediately
                   setPasswordChangeStatus({ type: 'success', message: 'Password changed successfully!' })
                   setTimeout(() => {
                     setShowPasswordChange(false)
