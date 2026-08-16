@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
     // Store token
     resetTokens.set(token, { email, expiresAt, used: false })
 
-    // Build reset link
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    // Build reset link - use request origin for correct URL
+    const baseUrl = request.headers.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'https://airanix-crm-pcnt.vercel.app'
     const resetLink = `${baseUrl}/password-reset?token=${token}`
 
     // Email HTML template
@@ -141,7 +141,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: true,
-          message: `Password reset link sent to ${email}. Check your inbox for the reset email.`
+          message: `Password reset link sent to ${email}. Check your inbox for the reset email.`,
+          _resetLink: resetLink
         },
         { status: 200 }
       )
