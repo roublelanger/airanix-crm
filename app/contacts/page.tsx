@@ -53,6 +53,10 @@ function ContactsContent() {
   const [resetEmailStatus, setResetEmailStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const resetEmail = 'rouble@airanix.com'
   const [storedPassword, setStoredPassword] = useState('191288')
+  const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set())
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [importData, setImportData] = useState<any[]>([])
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
 
   // Load stored password from localStorage on mount
   useEffect(() => {
@@ -335,6 +339,193 @@ function ContactsContent() {
     } catch (error) {
       console.error('Error deleting contact:', error)
       showToast('error', 'Error deleting contact')
+    }
+  }
+
+  // Checkbox handlers
+  function toggleContactSelection(contactId: string) {
+    setSelectedContacts(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(contactId)) {
+        newSet.delete(contactId)
+      } else {
+        newSet.add(contactId)
+      }
+      return newSet
+    })
+  }
+
+  function toggleSelectAll() {
+    if (selectedContacts.size === paginatedContacts.length && selectedContacts.size > 0) {
+      setSelectedContacts(new Set())
+    } else {
+      setSelectedContacts(new Set(paginatedContacts.map(c => c.id)))
+    }
+  }
+
+  // Export to Excel
+  function exportToExcel() {
+    if (selectedContacts.size === 0) {
+      showToast('warning', 'Please select at least one contact to export')
+      return
+    }
+
+    try {
+      const XLSX = require('xlsx')
+      const contactsToExport = paginatedContacts.filter(c => selectedContacts.has(c.id))
+
+      const data = contactsToExport.map(contact => ({
+        'Name': contact.name,
+        'Email': contact.email || '',
+        'Phone': contact.phone || '',
+        'Company': contact.company || '',
+        'Designation': contact.designation || '',
+        'Location': contact.location || '',
+        'Industry': contact.industry || '',
+        'Status': contact.status || 'NEW',
+        'Assigned To': contact.assigned_to || '',
+        'Platform': contact.platform || '',
+        'Remarks': contact.remarks || '',
+        'Date Added': contact.createdAt ? new Date(contact.createdAt).toLocaleDateString() : ''
+      }))
+
+      const worksheet = XLSX.utils.json_to_sheet(data)
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Contacts')
+
+      // Set column widths
+      worksheet['!cols'] = [
+        { wch: 20 }, // Name
+        { wch: 25 }, // Email
+        { wch: 15 }, // Phone
+        { wch: 20 }, // Company
+        { wch: 20 }, // Designation
+        { wch: 15 }, // Location
+        { wch: 15 }, // Industry
+        { wch: 12 }, // Status
+        { wch: 15 }, // Assigned To
+        { wch: 15 }, // Platform
+        { wch: 30 }, // Remarks
+        { wch: 15 }  // Date Added
+      ]
+
+      XLSX.writeFile(workbook, `Contacts_Export_${new Date().toISOString().split('T')[0]}.xlsx`)
+      showToast('success', `Exported ${selectedContacts.size} contact(s) to Excel`)
+      setSelectedContacts(new Set())
+    } catch (error) {
+      console.error('Export error:', error)
+      showToast('error', 'Failed to export contacts')
+    }
+  }
+
+  // Import handler
+  async function handleImportFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      const XLSX = require('xlsx')
+      const reader = new FileReader()
+
+      reader.onload = (e: any) => {
+        const data = e.target.result
+        const workbook = XLSX.read(data, { type: 'binary' })
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+        const jsonData = XLSX.utils.sheet_to_json(worksheet)
+
+        setImportData(jsonData)
+        setShowImportModal(true)
+        showToast('info', `Loaded ${jsonData.length} records from file`)
+      }
+
+      reader.readAsBinaryString(file)
+    } catch (error) {
+      console.error('Import error:', error)
+      showToast('error', 'Failed to read file. Please ensure it\'s a valid Excel or CSV file.')
+    }
+  }
+
+  // Confirm bulk import
+  async function confirmBulkImport() {
+    if (importData.length === 0) return
+
+    try {
+      let imported = 0
+      let skipped = 0
+
+      for (const row of importData) {
+        const contactData = {
+          name: row['Name'] || row['name'] || '',
+          email: row['Email'] || row['email'] || '',
+          phone: row['Phone'] || row['phone'] || '',
+          company: row['Company'] || row['company'] || '',
+          designation: row['Designation'] || row['designation'] || '',
+          location: row['Location'] || row['location'] || '',
+          industry: row['Industry'] || row['industry'] || '',
+          status: row['Status'] || row['status'] || 'NEW',
+          assigned_to: row['Assigned To'] || row['assigned_to'] || '',
+          platform: row['Platform'] || row['platform'] || '',
+          remarks: row['Remarks'] || row['remarks'] || ''
+        }
+
+        if (!contactData.name || !contactData.email) {
+          skipped++
+          continue
+        }
+
+        try {
+          const res = await fetch('/api/contacts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(contactData)
+          })
+
+          if (res.ok) {
+            imported++
+          } else {
+            skipped++
+          }
+        } catch {
+          skipped++
+        }
+      }
+
+      setShowImportModal(false)
+      setImportData([])
+      fetchContacts()
+      showToast('success', `Imported ${imported} contact(s). Skipped: ${skipped}`)
+    } catch (error) {
+      console.error('Bulk import error:', error)
+      showToast('error', 'Error importing contacts')
+    }
+  }
+
+  // Bulk delete
+  async function confirmBulkDelete() {
+    if (selectedContacts.size === 0) return
+
+    try {
+      let deleted = 0
+      const contactIdsToDelete = Array.from(selectedContacts)
+
+      for (const id of contactIdsToDelete) {
+        try {
+          const res = await fetch(`/api/contacts/${id}`, { method: 'DELETE' })
+          if (res.ok) {
+            deleted++
+          }
+        } catch (error) {
+          console.error(`Failed to delete contact ${id}:`, error)
+        }
+      }
+
+      setShowBulkDeleteConfirm(false)
+      setSelectedContacts(new Set())
+      fetchContacts()
+      showToast('success', `Deleted ${deleted} contact(s)`)
+    } catch (error) {
+      console.error('Bulk delete error:', error)
+      showToast('error', 'Error deleting contacts')
     }
   }
 
@@ -1719,6 +1910,121 @@ function ContactsContent() {
         </div>
       )}
 
+      {/* Action Toolbar - Import/Export/Bulk Delete */}
+      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap', padding: '16px', backgroundColor: '#f0f9ff', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+          {selectedContacts.size > 0 && (
+            <span style={{ fontSize: '14px', fontWeight: '600', color: '#0369a1' }}>
+              ✓ {selectedContacts.size} contact{selectedContacts.size !== 1 ? 's' : ''} selected
+            </span>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Import Button */}
+          <label style={{
+            padding: '10px 16px',
+            background: '#10b981',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: '600',
+            transition: 'all 0.2s ease',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#059669'
+            e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.3)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = '#10b981'
+            e.currentTarget.style.boxShadow = 'none'
+          }}>
+            📥 Import Excel
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleImportFile}
+              style={{ display: 'none' }}
+            />
+          </label>
+
+          {/* Export Button */}
+          <button
+            onClick={exportToExcel}
+            disabled={selectedContacts.size === 0}
+            style={{
+              padding: '10px 16px',
+              background: selectedContacts.size > 0 ? '#2563eb' : '#d1d5db',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: selectedContacts.size > 0 ? 'pointer' : 'not-allowed',
+              fontSize: '13px',
+              fontWeight: '600',
+              transition: 'all 0.2s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              opacity: selectedContacts.size > 0 ? 1 : 0.5
+            }}
+            onMouseEnter={(e) => {
+              if (selectedContacts.size > 0) {
+                e.currentTarget.style.background = '#1d4ed8'
+                e.currentTarget.style.boxShadow = '0 4px 8px rgba(37, 99, 235, 0.3)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (selectedContacts.size > 0) {
+                e.currentTarget.style.background = '#2563eb'
+                e.currentTarget.style.boxShadow = 'none'
+              }
+            }}
+          >
+            📊 Export Excel
+          </button>
+
+          {/* Bulk Delete Button */}
+          <button
+            onClick={() => setShowBulkDeleteConfirm(true)}
+            disabled={selectedContacts.size === 0}
+            style={{
+              padding: '10px 16px',
+              background: selectedContacts.size > 0 ? '#dc2626' : '#d1d5db',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: selectedContacts.size > 0 ? 'pointer' : 'not-allowed',
+              fontSize: '13px',
+              fontWeight: '600',
+              transition: 'all 0.2s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              opacity: selectedContacts.size > 0 ? 1 : 0.5
+            }}
+            onMouseEnter={(e) => {
+              if (selectedContacts.size > 0) {
+                e.currentTarget.style.background = '#b91c1c'
+                e.currentTarget.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (selectedContacts.size > 0) {
+                e.currentTarget.style.background = '#dc2626'
+                e.currentTarget.style.boxShadow = 'none'
+              }
+            }}
+          >
+            🗑️ Delete Selected
+          </button>
+        </div>
+      </div>
+
       {/* Content */}
       {loading ? (
         <div style={{ padding: '60px 40px', textAlign: 'center' }}>
@@ -1748,6 +2054,15 @@ function ContactsContent() {
           }}>
             <thead>
               <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
+                <th style={{ padding: '16px 12px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: '#374151', width: '50px' }}>
+                  <input
+                    type="checkbox"
+                    checked={paginatedContacts.length > 0 && selectedContacts.size === paginatedContacts.length}
+                    onChange={toggleSelectAll}
+                    style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                    title="Select all contacts on this page"
+                  />
+                </th>
                 <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Name</th>
                 <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Company</th>
                 <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#374151', textTransform: 'uppercase' }}>Designation</th>
@@ -1776,6 +2091,14 @@ function ContactsContent() {
                   }}
                   onClick={() => (window.location.href = `/contacts/${contact.id}`)}
                 >
+                  <td style={{ padding: '14px 12px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selectedContacts.has(contact.id)}
+                      onChange={() => toggleContactSelection(contact.id)}
+                      style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                    />
+                  </td>
                   <td style={{ padding: '14px 20px', fontSize: '14px', fontWeight: '600', color: '#111827' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div
@@ -1886,6 +2209,184 @@ function ContactsContent() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Import Modal */}
+      {showImportModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            maxWidth: '600px',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            boxShadow: '0 20px 25px rgba(0,0,0,0.15)',
+          }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: '0 0 16px 0' }}>📥 Import Contacts</h2>
+            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 24px 0' }}>
+              Found <strong>{importData.length}</strong> contact{importData.length !== 1 ? 's' : ''} to import
+            </p>
+
+            {importData.length > 0 && (
+              <div style={{ maxHeight: '400px', overflowY: 'auto', marginBottom: '24px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
+                <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#f3f4f6', borderBottom: '1px solid #e5e7eb' }}>
+                      <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '600' }}>Name</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '600' }}>Email</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '600' }}>Company</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {importData.slice(0, 10).map((row, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb', background: idx % 2 === 0 ? 'white' : '#fafbfc' }}>
+                        <td style={{ padding: '8px 12px' }}>{row['Name'] || row['name'] || '—'}</td>
+                        <td style={{ padding: '8px 12px' }}>{row['Email'] || row['email'] || '—'}</td>
+                        <td style={{ padding: '8px 12px' }}>{row['Company'] || row['company'] || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowImportModal(false)
+                  setImportData([])
+                }}
+                style={{
+                  padding: '10px 20px',
+                  background: '#e5e7eb',
+                  color: '#374151',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#d1d5db')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#e5e7eb')}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmBulkImport}
+                style={{
+                  padding: '10px 20px',
+                  background: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#059669'
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#10b981'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                ✓ Import {importData.length} Contact{importData.length !== 1 ? 's' : ''}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Modal */}
+      {showBulkDeleteConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            maxWidth: '500px',
+            boxShadow: '0 20px 25px rgba(0,0,0,0.15)',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+            <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#991b1b', margin: '0 0 8px 0' }}>
+              Delete {selectedContacts.size} Contact{selectedContacts.size !== 1 ? 's' : ''}?
+            </h2>
+            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 24px 0', lineHeight: '1.6' }}>
+              This action cannot be undone. All selected contacts will be permanently deleted from your CRM.
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={() => setShowBulkDeleteConfirm(false)}
+                style={{
+                  padding: '10px 24px',
+                  background: '#e5e7eb',
+                  color: '#374151',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  flex: 1,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#d1d5db')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#e5e7eb')}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmBulkDelete}
+                style={{
+                  padding: '10px 24px',
+                  background: '#dc2626',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  flex: 1,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#b91c1c'
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#dc2626'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                🗑️ Yes, Delete All
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
