@@ -778,7 +778,6 @@ function ContactsContent() {
         }
       }
 
-      setShowBulkAssignModal(false)
       setBulkAssignValue('')
       setSelectedContacts(new Set())
       fetchContacts()
