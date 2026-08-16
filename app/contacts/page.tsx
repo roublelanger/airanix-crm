@@ -26,6 +26,7 @@ function ContactsContent() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [filters, setFilters] = useState({ company: searchParams.get('company') || '' })
+  const [searchQuery, setSearchQuery] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
@@ -55,7 +56,17 @@ function ContactsContent() {
       const res = await fetch('/api/contacts')
       const data = await res.json()
       if (Array.isArray(data)) {
-        setContacts(data)
+        // Deduplicate contacts by email and name combination
+        const seen = new Map<string, Contact>()
+        const deduplicated = data.filter(contact => {
+          const key = `${contact.email?.toLowerCase() || ''}:${contact.name?.toLowerCase() || ''}`
+          if (seen.has(key)) {
+            return false
+          }
+          seen.set(key, contact)
+          return true
+        })
+        setContacts(deduplicated)
       } else {
         console.error('API returned non-array:', data)
         setContacts([])
@@ -202,8 +213,19 @@ function ContactsContent() {
     setShowForm(false)
   }
 
+  // Filter by search query
+  const searchedContacts = contacts.filter(contact => {
+    const query = searchQuery.toLowerCase()
+    return (
+      contact.name?.toLowerCase().includes(query) ||
+      contact.email?.toLowerCase().includes(query) ||
+      contact.company?.toLowerCase().includes(query) ||
+      contact.location?.toLowerCase().includes(query)
+    )
+  })
+
   // Group contacts by company
-  const groupedContacts = contacts.reduce((acc: Record<string, Contact[]>, contact) => {
+  const groupedContacts = searchedContacts.reduce((acc: Record<string, Contact[]>, contact) => {
     const company = contact.company || 'Unassigned'
     if (!acc[company]) acc[company] = []
     acc[company].push(contact)
@@ -361,7 +383,31 @@ function ContactsContent() {
       )}
 
       {/* Filters */}
-      <div style={{ marginBottom: '32px' }}>
+      <div style={{ marginBottom: '32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <input
+          type="text"
+          placeholder="🔍 Search by name, email, company, or location..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            padding: '11px 14px',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            fontSize: '14px',
+            color: '#374151',
+            backgroundColor: 'white',
+            transition: 'all 0.2s ease',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = '#2563eb'
+            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = '#e5e7eb'
+            e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
+          }}
+        />
         <select
           value={filters.company}
           onChange={(e) => setFilters({ company: e.target.value })}
@@ -430,8 +476,8 @@ function ContactsContent() {
               </p>
             </div>
 
-            {/* Contacts Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '16px' }}>
+            {/* Contacts Grid - Vertical Layout */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {groupedContacts[company].map(contact => (
                 <div
                   key={contact.id}
@@ -439,87 +485,107 @@ function ContactsContent() {
                   style={{
                     background: 'white',
                     border: '1px solid #e5e7eb',
-                    borderRadius: '12px',
-                    padding: '20px',
+                    borderRadius: '10px',
+                    padding: '16px 20px',
                     boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
                     transition: 'all 0.2s ease',
                     cursor: 'pointer',
                     display: 'flex',
-                    flexDirection: 'column',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: '16px',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)'
-                    e.currentTarget.style.borderColor = '#d1d5db'
-                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.borderColor = '#2563eb'
+                    e.currentTarget.style.backgroundColor = '#f0f9ff'
+                    e.currentTarget.style.transform = 'translateX(4px)'
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'
                     e.currentTarget.style.borderColor = '#e5e7eb'
-                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.backgroundColor = 'white'
+                    e.currentTarget.style.transform = 'translateX(0)'
                   }}
                 >
-                  {/* Contact Header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
-                    <div>
-                      <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '700', color: '#111827' }}>
-                        {contact.name}
-                      </h3>
-                      {contact.designation && (
-                        <p style={{ margin: '0', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
-                          {contact.designation}
-                        </p>
-                      )}
-                    </div>
-                    <span
-                      style={{
-                        background:
-                          contact.status === 'NEW'
-                            ? '#dbeafe'
-                            : contact.status === 'LEAD'
-                              ? '#fef3c7'
-                              : contact.status === 'ACTIVE'
-                                ? '#d1fae5'
-                                : contact.status === 'CLOSED'
-                                  ? '#fecaca'
-                                  : '#e5e7eb',
-                        color:
-                          contact.status === 'NEW'
-                            ? '#0369a1'
-                            : contact.status === 'LEAD'
-                              ? '#92400e'
-                              : contact.status === 'ACTIVE'
-                                ? '#047857'
-                                : contact.status === 'CLOSED'
-                                  ? '#991b1b'
-                                  : '#374151',
-                        padding: '5px 11px',
-                        borderRadius: '6px',
-                        fontSize: '11px',
-                        fontWeight: '700',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.3px',
-                        whiteSpace: 'nowrap',
-                        marginLeft: '8px',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {contact.status || 'NEW'}
-                    </span>
+                  {/* Thumbnail Avatar with Initials */}
+                  <div
+                    style={{
+                      width: '56px',
+                      height: '56px',
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontWeight: '700',
+                      fontSize: '20px',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {contact.name
+                      .split(' ')
+                      .slice(0, 2)
+                      .map((n) => n[0])
+                      .join('')
+                      .toUpperCase()}
                   </div>
 
-                  {/* Contact Details */}
-                  <div style={{ flex: 1, fontSize: '13px', lineHeight: '1.8', marginBottom: '16px', color: '#475569' }}>
-                    {contact.email && (
-                      <div style={{ marginBottom: '10px' }}>
-                        <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '12px' }}>📧</span>
+                  {/* Main Info - Flex 1 */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <h3 style={{ margin: '0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>
+                        {contact.name}
+                      </h3>
+                      <span
+                        style={{
+                          background:
+                            contact.status === 'NEW'
+                              ? '#dbeafe'
+                              : contact.status === 'LEAD'
+                                ? '#fef3c7'
+                                : contact.status === 'ACTIVE'
+                                  ? '#d1fae5'
+                                  : contact.status === 'CLOSED'
+                                    ? '#fecaca'
+                                    : '#e5e7eb',
+                          color:
+                            contact.status === 'NEW'
+                              ? '#0369a1'
+                              : contact.status === 'LEAD'
+                                ? '#92400e'
+                                : contact.status === 'ACTIVE'
+                                  ? '#047857'
+                                  : contact.status === 'CLOSED'
+                                    ? '#991b1b'
+                                    : '#374151',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '10px',
+                          fontWeight: '700',
+                          textTransform: 'uppercase',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {contact.status || 'NEW'}
+                      </span>
+                    </div>
+                    <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: '#6b7280', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {contact.designation || contact.company || '—'}
+                    </p>
+                    <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#6b7280', flexWrap: 'wrap' }}>
+                      {contact.email && (
                         <a
                           href={`mailto:${contact.email}`}
                           style={{
                             color: '#2563eb',
                             textDecoration: 'none',
-                            marginLeft: '8px',
-                            fontSize: '13px',
                             transition: 'all 0.2s',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: '180px',
                           }}
                           onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
                           onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
@@ -527,89 +593,32 @@ function ContactsContent() {
                         >
                           {contact.email}
                         </a>
-                      </div>
-                    )}
-                    {contact.phone && (
-                      <div style={{ marginBottom: '10px' }}>
-                        <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '12px' }}>📱</span>
-                        <a
-                          href={`tel:${contact.phone}`}
-                          style={{
-                            color: '#2563eb',
-                            textDecoration: 'none',
-                            marginLeft: '8px',
-                            fontSize: '13px',
-                            transition: 'all 0.2s',
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                          onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {contact.phone}
-                        </a>
-                      </div>
-                    )}
-                    {contact.location && (
-                      <div style={{ marginBottom: '10px' }}>
-                        <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '12px' }}>📍</span>
-                        <span style={{ marginLeft: '8px', fontSize: '13px', color: '#111827', fontWeight: '500' }}>{contact.location}</span>
-                      </div>
-                    )}
-                    {contact.platform && (
-                      <div style={{ marginBottom: '10px' }}>
-                        <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '12px' }}>☁️</span>
-                        <span style={{ marginLeft: '8px', fontSize: '13px', color: '#2563eb', fontWeight: '500', display: 'inline-block', background: '#eff6ff', padding: '2px 8px', borderRadius: '4px' }}>{contact.platform}</span>
-                      </div>
-                    )}
-                    {contact.industry && (
-                      <div style={{ marginBottom: '10px' }}>
-                        <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '12px' }}>🏭</span>
-                        <span style={{ marginLeft: '8px', fontSize: '13px', color: '#6b7280' }}>{contact.industry}</span>
-                      </div>
-                    )}
-                    {contact.assigned_to && (
-                      <div style={{ marginBottom: '10px' }}>
-                        <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '12px' }}>👤</span>
-                        <span style={{ marginLeft: '8px', fontSize: '13px', color: '#6b7280' }}>{contact.assigned_to}</span>
-                      </div>
-                    )}
-                    {contact.remarks && (
-                      <div
-                        style={{
-                          marginTop: '12px',
-                          paddingTop: '12px',
-                          borderTop: '1px solid #e5e7eb',
-                        }}
-                      >
-                        <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '12px' }}>📝</span>
-                        <span style={{ marginLeft: '8px', color: '#6b7280', fontSize: '12px', display: 'block', marginTop: '4px' }}>
-                          {contact.remarks}
-                        </span>
-                      </div>
-                    )}
+                      )}
+                      {contact.location && (
+                        <span style={{ color: '#6b7280', whiteSpace: 'nowrap' }}>📍 {contact.location}</span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Actions */}
+                  {/* Actions - Right Side */}
                   <div
                     style={{
                       display: 'flex',
-                      gap: '10px',
-                      paddingTop: '14px',
-                      borderTop: '1px solid #e5e7eb',
+                      gap: '8px',
+                      flexShrink: 0,
                     }}
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
                       onClick={() => handleEditContact(contact)}
                       style={{
-                        flex: 1,
                         padding: '8px 12px',
                         background: '#2563eb',
                         color: 'white',
                         border: 'none',
                         borderRadius: '6px',
                         cursor: 'pointer',
-                        fontSize: '13px',
+                        fontSize: '12px',
                         fontWeight: '600',
                         transition: 'all 0.2s ease',
                         boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
@@ -628,14 +637,13 @@ function ContactsContent() {
                     <button
                       onClick={() => handleDeleteContact(contact.id, contact.name)}
                       style={{
-                        flex: 1,
                         padding: '8px 12px',
                         background: '#fee2e2',
                         color: '#dc2626',
                         border: '1px solid #fecaca',
                         borderRadius: '6px',
                         cursor: 'pointer',
-                        fontSize: '13px',
+                        fontSize: '12px',
                         fontWeight: '600',
                         transition: 'all 0.2s ease',
                       }}
@@ -653,7 +661,7 @@ function ContactsContent() {
                       }}
                       title="Delete this contact (this action cannot be undone)"
                     >
-                      🗑️ Delete
+                      🗑️
                     </button>
                   </div>
                 </div>
