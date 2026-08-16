@@ -29,6 +29,7 @@ function ContactsContent() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [duplicateWarning, setDuplicateWarning] = useState<{ show: boolean; existingContact: Contact | null; pendingSave: boolean }>({ show: false, existingContact: null, pendingSave: false })
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -80,10 +81,27 @@ function ContactsContent() {
     }
   }
 
-  async function handleSaveContact() {
+  async function handleSaveContact(ignoreDuplicate: boolean = false) {
     if (!formData.name || !formData.email) {
       alert('Name and Email are required')
       return
+    }
+
+    // Check for duplicate contact (by email and name)
+    if (!ignoreDuplicate && !editingId) {
+      const existingContact = contacts.find(
+        c => c.email?.toLowerCase() === formData.email.toLowerCase() &&
+             c.name?.toLowerCase() === formData.name.toLowerCase()
+      )
+
+      if (existingContact) {
+        setDuplicateWarning({
+          show: true,
+          existingContact,
+          pendingSave: true
+        })
+        return
+      }
     }
 
     try {
@@ -378,6 +396,156 @@ function ContactsContent() {
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
             <button onClick={resetForm} style={{ padding: '10px 20px', background: '#f3f4f6', color: '#333', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }}>Cancel</button>
             <button onClick={handleSaveContact} style={{ padding: '10px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }}>Save Contact</button>
+          </div>
+        </div>
+      )}
+
+      {/* Duplicate Warning Dialog */}
+      {duplicateWarning.show && duplicateWarning.existingContact && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            padding: '32px',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+            border: '2px solid #fbbf24',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '32px' }}>⚠️</span>
+              <h2 style={{ margin: '0', fontSize: '20px', fontWeight: '800', color: '#111827' }}>
+                Duplicate Contact Found
+              </h2>
+            </div>
+
+            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px', lineHeight: '1.6' }}>
+              A contact with this name and email already exists in your database. You can:
+            </p>
+
+            <div style={{
+              background: '#fef3c7',
+              border: '1px solid #fcd34d',
+              borderRadius: '10px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: '700', color: '#92400e', textTransform: 'uppercase' }}>
+                Existing Contact:
+              </p>
+              <p style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>
+                {duplicateWarning.existingContact.name}
+              </p>
+              <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: '#6b7280' }}>
+                📧 {duplicateWarning.existingContact.email}
+              </p>
+              {duplicateWarning.existingContact.designation && (
+                <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: '#6b7280' }}>
+                  💼 {duplicateWarning.existingContact.designation}
+                </p>
+              )}
+              {duplicateWarning.existingContact.company && (
+                <p style={{ margin: '0', fontSize: '13px', color: '#6b7280' }}>
+                  🏢 {duplicateWarning.existingContact.company}
+                </p>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setDuplicateWarning({ show: false, existingContact: null, pendingSave: false })}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: '#f3f4f6',
+                  color: '#333',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#e5e7eb'
+                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#f3f4f6'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={() => {
+                  window.location.href = `/contacts/${duplicateWarning.existingContact?.id}`
+                }}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: '#2563eb',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.3)'
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                View Existing Contact
+              </button>
+
+              <button
+                onClick={() => {
+                  setDuplicateWarning({ show: false, existingContact: null, pendingSave: false })
+                  handleSaveContact(true)
+                }}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: '#fbbf24',
+                  color: '#111827',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(251, 191, 36, 0.3)'
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                Add Anyway
+              </button>
+            </div>
           </div>
         </div>
       )}
