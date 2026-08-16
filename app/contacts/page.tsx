@@ -80,6 +80,13 @@ function ContactsContent() {
   const [showBulkStatusModal, setShowBulkStatusModal] = useState(false)
   const [bulkStatusValue, setBulkStatusValue] = useState('NEW')
 
+  // Bulk Email
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [emailSubject, setEmailSubject] = useState('')
+  const [emailBody, setEmailBody] = useState('')
+  const [sendingEmails, setSendingEmails] = useState(false)
+  const [bulkAssignValue, setBulkAssignValue] = useState('')
+
   // Statistics
   const [stats, setStats] = useState({ total: 0, byStatus: {} as Record<string, number> })
 
@@ -752,10 +759,7 @@ function ContactsContent() {
     })
   }
 
-  // Bulk assign
-  const [showBulkAssignModal, setShowBulkAssignModal] = useState(false)
-  const [bulkAssignValue, setBulkAssignValue] = useState('')
-
+  // Bulk assign function
   async function confirmBulkAssign() {
     if (selectedContacts.size === 0 || !bulkAssignValue.trim()) return
 
@@ -840,6 +844,50 @@ function ContactsContent() {
     } catch (error) {
       console.error('Bulk delete error:', error)
       showToast('error', 'Error deleting contacts')
+    }
+  }
+
+  // Bulk email send
+  async function sendBulkEmails() {
+    if (!emailSubject.trim() || !emailBody.trim() || selectedContacts.size === 0) {
+      showToast('error', 'Please fill in subject, body and select contacts')
+      return
+    }
+
+    setSendingEmails(true)
+    try {
+      const selectedContactsList = sortedContacts.filter(c => selectedContacts.has(c.id))
+
+      const res = await fetch('/api/contacts/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: emailSubject,
+          body: emailBody,
+          recipients: selectedContactsList.map(c => ({
+            id: c.id,
+            name: c.name,
+            email: c.email
+          }))
+        })
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        showToast('success', `Email sent to ${data.sent} recipient(s)`)
+        setShowEmailModal(false)
+        setEmailSubject('')
+        setEmailBody('')
+        setSelectedContacts(new Set())
+      } else {
+        showToast('error', data.error || 'Failed to send emails')
+      }
+    } catch (error) {
+      console.error('Email send error:', error)
+      showToast('error', 'Error sending emails')
+    } finally {
+      setSendingEmails(false)
     }
   }
 
@@ -2521,6 +2569,34 @@ function ContactsContent() {
               >
                 👥 Assign
               </button>
+
+              <button
+                onClick={() => setShowEmailModal(true)}
+                style={{
+                  padding: '10px 16px',
+                  background: '#ec4899',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#db2777'
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(236, 72, 153, 0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#ec4899'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                ✉️ Send Email
+              </button>
             </div>
           )}
 
@@ -3477,6 +3553,175 @@ function ContactsContent() {
                 }}
               >
                 🗑️ Yes, Delete All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Email Modal */}
+      {showEmailModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            maxWidth: '600px',
+            width: '90%',
+            boxShadow: '0 20px 25px rgba(0,0,0,0.15)',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+          }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: '0 0 8px 0' }}>
+              ✉️ Send Email
+            </h2>
+            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 24px 0' }}>
+              Send email to {selectedContacts.size} contact{selectedContacts.size !== 1 ? 's' : ''}
+            </p>
+
+            {/* Subject Input */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#374151', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>
+                📋 Email Subject
+              </label>
+              <input
+                type="text"
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                placeholder="e.g., Important Update"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.2s',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#2563eb'
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.borderColor = '#d1d5db'
+                }}
+              />
+            </div>
+
+            {/* Email Body */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#374151', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>
+                💬 Email Body
+              </label>
+              <textarea
+                value={emailBody}
+                onChange={(e) => setEmailBody(e.target.value)}
+                placeholder="Paste or type your email body here..."
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  minHeight: '200px',
+                  fontFamily: 'inherit',
+                  resize: 'vertical',
+                  transition: 'all 0.2s',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#2563eb'
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.borderColor = '#d1d5db'
+                }}
+              />
+            </div>
+
+            {/* Info Box */}
+            <div style={{
+              background: '#eff6ff',
+              border: '1px solid #bfdbfe',
+              borderRadius: '8px',
+              padding: '12px 16px',
+              marginBottom: '24px',
+              fontSize: '13px',
+              color: '#0369a1',
+            }}>
+              ℹ️ Email will be sent to {selectedContacts.size} recipient{selectedContacts.size !== 1 ? 's' : ''} from <strong>rouble@airanix.com</strong>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowEmailModal(false)
+                  setEmailSubject('')
+                  setEmailBody('')
+                }}
+                disabled={sendingEmails}
+                style={{
+                  padding: '10px 24px',
+                  background: '#e5e7eb',
+                  color: '#374151',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: sendingEmails ? 'not-allowed' : 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  opacity: sendingEmails ? 0.5 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (!sendingEmails) e.currentTarget.style.background = '#d1d5db'
+                }}
+                onMouseLeave={(e) => {
+                  if (!sendingEmails) e.currentTarget.style.background = '#e5e7eb'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={sendBulkEmails}
+                disabled={sendingEmails || !emailSubject.trim() || !emailBody.trim()}
+                style={{
+                  padding: '10px 24px',
+                  background: (sendingEmails || !emailSubject.trim() || !emailBody.trim()) ? '#d1d5db' : '#ec4899',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: (sendingEmails || !emailSubject.trim() || !emailBody.trim()) ? 'not-allowed' : 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  opacity: (sendingEmails || !emailSubject.trim() || !emailBody.trim()) ? 0.5 : 1,
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  if (!sendingEmails && emailSubject.trim() && emailBody.trim()) {
+                    e.currentTarget.style.background = '#db2777'
+                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(236, 72, 153, 0.3)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!sendingEmails && emailSubject.trim() && emailBody.trim()) {
+                    e.currentTarget.style.background = '#ec4899'
+                    e.currentTarget.style.boxShadow = 'none'
+                  }
+                }}
+              >
+                {sendingEmails ? '⏳ Sending...' : '✉️ Send Email'}
               </button>
             </div>
           </div>
