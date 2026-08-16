@@ -40,6 +40,10 @@ function ContactsContent() {
   const [toasts, setToasts] = useState<Toast[]>([])
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; contactId: string; contactName: string } | null>(null)
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const [sortBy, setSortBy] = useState<'name' | 'date' | 'status' | 'company'>('name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 15
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -141,6 +145,33 @@ function ContactsContent() {
       }
       return updated
     })
+  }
+
+  function sortContacts(contactsToSort: Contact[]): Contact[] {
+    const sorted = [...contactsToSort].sort((a, b) => {
+      let compareValue = 0
+
+      switch (sortBy) {
+        case 'name':
+          compareValue = (a.name || '').localeCompare(b.name || '')
+          break
+        case 'date':
+          const dateA = new Date(a.createdAt || 0).getTime()
+          const dateB = new Date(b.createdAt || 0).getTime()
+          compareValue = dateA - dateB
+          break
+        case 'status':
+          compareValue = (a.status || '').localeCompare(b.status || '')
+          break
+        case 'company':
+          compareValue = (a.company || '').localeCompare(b.company || '')
+          break
+      }
+
+      return sortOrder === 'asc' ? compareValue : -compareValue
+    })
+
+    return sorted
   }
 
   async function fetchContacts() {
@@ -356,6 +387,29 @@ function ContactsContent() {
   const filteredCompanies = Object.keys(groupedContacts).filter(
     company => !filters.company || company === filters.company
   )
+
+  // Get all filtered contacts (for pagination)
+  const allFilteredContacts = filteredCompanies.flatMap(company => groupedContacts[company])
+  const sortedContacts = sortContacts(allFilteredContacts)
+
+  // Calculate pagination
+  const totalContacts = sortedContacts.length
+  const totalPages = Math.ceil(totalContacts / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedContacts = sortedContacts.slice(startIndex, endIndex)
+
+  // Reset to page 1 if current page exceeds max pages
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1)
+    }
+  }, [currentPage, totalPages])
+
+  // Reset pagination when search/filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, filters.company])
 
   const totalFiltered = filteredCompanies.reduce((sum, company) => sum + groupedContacts[company].length, 0)
 
@@ -844,7 +898,7 @@ function ContactsContent() {
       )}
 
       {/* Filters */}
-      <div style={{ marginBottom: '32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <input
           type="text"
           placeholder="🔍 Search by name, email, company, or location..."
@@ -899,6 +953,177 @@ function ContactsContent() {
         </select>
       </div>
 
+      {/* Sort & Pagination Controls */}
+      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <label style={{ fontSize: '13px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Sort By:</label>
+          <select
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value as 'name' | 'date' | 'status' | 'company')
+              setCurrentPage(1)
+            }}
+            style={{
+              padding: '8px 12px',
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              fontSize: '13px',
+              color: '#374151',
+              backgroundColor: 'white',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <option value="name">📝 Name</option>
+            <option value="date">📅 Date Added</option>
+            <option value="status">🏷️ Status</option>
+            <option value="company">🏢 Company</option>
+          </select>
+          <button
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            style={{
+              padding: '8px 12px',
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              background: 'white',
+              color: '#374151',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: '600',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#f3f4f6'
+              e.currentTarget.style.borderColor = '#d1d5db'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'white'
+              e.currentTarget.style.borderColor = '#e5e7eb'
+            }}
+          >
+            {sortOrder === 'asc' ? '↑ ASC' : '↓ DESC'}
+          </button>
+        </div>
+
+        {totalContacts > 0 && (
+          <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
+            Showing <strong>{startIndex + 1}–{Math.min(endIndex, totalContacts)}</strong> of <strong>{totalContacts}</strong>
+          </div>
+        )}
+      </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+            style={{
+              padding: '8px 12px',
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              background: currentPage === 1 ? '#f3f4f6' : 'white',
+              color: currentPage === 1 ? '#9ca3af' : '#374151',
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+              fontSize: '13px',
+              fontWeight: '600',
+              transition: 'all 0.2s ease',
+              opacity: currentPage === 1 ? 0.5 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (currentPage > 1) {
+                e.currentTarget.style.background = '#f3f4f6'
+                e.currentTarget.style.borderColor = '#d1d5db'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (currentPage > 1) {
+                e.currentTarget.style.background = 'white'
+                e.currentTarget.style.borderColor = '#e5e7eb'
+              }
+            }}
+          >
+            ← Prev
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(page => {
+              const diff = Math.abs(page - currentPage)
+              return diff === 0 || diff === 1 || page === 1 || page === totalPages
+            })
+            .map((page, idx, arr) => {
+              const prevPage = arr[idx - 1]
+              return [
+                prevPage && page - prevPage > 1 ? (
+                  <span key={`ellipsis-${page}`} style={{ color: '#9ca3af', fontSize: '13px' }}>...</span>
+                ) : null,
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  style={{
+                    padding: '6px 10px',
+                    border: page === currentPage ? 'none' : '1px solid #e5e7eb',
+                    borderRadius: '6px',
+                    background: page === currentPage ? '#2563eb' : 'white',
+                    color: page === currentPage ? 'white' : '#374151',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    minWidth: '32px',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (page !== currentPage) {
+                      e.currentTarget.style.background = '#f3f4f6'
+                      e.currentTarget.style.borderColor = '#d1d5db'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (page !== currentPage) {
+                      e.currentTarget.style.background = 'white'
+                      e.currentTarget.style.borderColor = '#e5e7eb'
+                    }
+                  }}
+                >
+                  {page}
+                </button>,
+              ]
+            })
+            .flat()}
+
+          <button
+            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+            style={{
+              padding: '8px 12px',
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              background: currentPage === totalPages ? '#f3f4f6' : 'white',
+              color: currentPage === totalPages ? '#9ca3af' : '#374151',
+              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+              fontSize: '13px',
+              fontWeight: '600',
+              transition: 'all 0.2s ease',
+              opacity: currentPage === totalPages ? 0.5 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (currentPage < totalPages) {
+                e.currentTarget.style.background = '#f3f4f6'
+                e.currentTarget.style.borderColor = '#d1d5db'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (currentPage < totalPages) {
+                e.currentTarget.style.background = 'white'
+                e.currentTarget.style.borderColor = '#e5e7eb'
+              }
+            }}
+          >
+            Next →
+          </button>
+        </div>
+      )}
+
       {/* Content */}
       {loading ? (
         <div style={{ padding: '60px 40px', textAlign: 'center' }}>
@@ -920,26 +1145,8 @@ function ContactsContent() {
           <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>Add your first contact to get started</p>
         </div>
       ) : (
-        filteredCompanies.map(company => (
-          <div key={company} style={{ marginBottom: '40px' }}>
-            {/* Company Header */}
-            <div style={{
-              background: 'linear-gradient(135deg, #f8fafc 0%, #f0f4f8 100%)',
-              padding: '20px 24px',
-              borderRadius: '12px',
-              marginBottom: '20px',
-              borderLeft: '4px solid #2563eb',
-              border: '1px solid #e5e7eb',
-            }}>
-              <h2 style={{ margin: '0', fontSize: '18px', fontWeight: '700', color: '#111827' }}>🏢 {company}</h2>
-              <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
-                {groupedContacts[company].length} contact{groupedContacts[company].length !== 1 ? 's' : ''}
-              </p>
-            </div>
-
-            {/* Contacts Grid - Vertical Layout */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {groupedContacts[company].map(contact => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {paginatedContacts.map(contact => (
                 <div
                   key={contact.id}
                   onClick={() => (window.location.href = `/contacts/${contact.id}`)}
@@ -1127,9 +1334,7 @@ function ContactsContent() {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        ))
+        </div>
       )}
     </div>
   )
