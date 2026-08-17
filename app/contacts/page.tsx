@@ -574,18 +574,26 @@ function ContactsContent() {
       const existingNames = new Set(contacts.map(c => c.name?.toLowerCase().trim()))
 
       for (const row of importData) {
+        // Helper function to find column value by multiple possible names
+        const getColumnValue = (possibleNames: string[]) => {
+          for (const name of possibleNames) {
+            if (row[name]) return row[name]
+          }
+          return ''
+        }
+
         const contactData = {
-          name: row['Name'] || row['name'] || '',
-          email: row['Email'] || row['email'] || '',
-          phone: row['Phone'] || row['phone'] || '',
-          company: row['Company'] || row['company'] || '',
-          designation: row['Designation'] || row['designation'] || '',
-          location: row['Location'] || row['location'] || '',
-          industry: row['Industry'] || row['industry'] || '',
-          status: row['Status'] || row['status'] || 'NEW',
-          assigned_to: row['Assigned To'] || row['assigned_to'] || '',
-          platform: row['Platform'] || row['platform'] || '',
-          remarks: row['Remarks'] || row['remarks'] || ''
+          name: getColumnValue(['Name', 'name', 'Contact Name', 'contact name', 'CONTACT NAME']),
+          email: getColumnValue(['Email', 'email', 'EMAIL']),
+          phone: getColumnValue(['Phone', 'phone', 'PHONE', 'Mobile', 'mobile', 'MOBILE']),
+          company: getColumnValue(['Company', 'company', 'COMPANY']),
+          designation: getColumnValue(['Designation', 'designation', 'DESIGNATION', 'Title', 'title', 'TITLE', 'Job Title', 'job title', 'JOB TITLE']),
+          location: getColumnValue(['Location', 'location', 'LOCATION', 'City', 'city', 'CITY']),
+          industry: getColumnValue(['Industry', 'industry', 'INDUSTRY', 'Sector', 'sector', 'SECTOR']),
+          status: getColumnValue(['Status', 'status', 'STATUS']) || 'NEW',
+          assigned_to: getColumnValue(['Assigned To', 'assigned_to', 'ASSIGNED_TO', 'Assigned to', 'assigned to']),
+          platform: getColumnValue(['Platform', 'platform', 'PLATFORM', 'Source', 'source', 'SOURCE']),
+          remarks: getColumnValue(['Remarks', 'remarks', 'REMARKS', 'Notes', 'notes', 'NOTES', 'Comments', 'comments'])
         }
 
         // Validation: Name and Email required
