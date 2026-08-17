@@ -15,7 +15,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [userProfile, setUserProfile] = useState(null)
+  const [userProfile, setUserProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -27,18 +27,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return
         }
 
-        const { data: { session } } = await supabase.auth.getSession()
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+        if (sessionError) {
+          console.error('Session error:', sessionError)
+          setLoading(false)
+          return
+        }
+
         if (session?.user) {
           setUser(session.user)
+
           try {
-            const { data } = await supabase
+            const { data, error: profileError } = await supabase
               .from('crm_users')
               .select('*')
               .eq('id', session.user.id)
               .single()
-            setUserProfile(data)
+
+            if (profileError) {
+              console.warn('Profile not found, using user email:', profileError)
+              // Create a minimal profile from auth user
+              setUserProfile({
+                id: session.user.id,
+                email: session.user.email,
+                name: session.user.user_metadata?.name || 'User',
+                role: 'sales'
+              })
+            } else {
+              setUserProfile(data)
+            }
           } catch (err) {
             console.error('Error fetching user profile:', err)
+            setUserProfile({
+              id: session.user.id,
+              email: session.user.email,
+              name: session.user.user_metadata?.name || 'User',
+              role: 'sales'
+            })
           }
         }
       } catch (error) {
@@ -51,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkSession()
 
     if (!supabase) {
+      setLoading(false)
       return () => {}
     }
 
@@ -61,15 +88,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(session.user)
             try {
               if (supabase) {
-                const { data } = await supabase
+                const { data, error: profileError } = await supabase
                   .from('crm_users')
                   .select('*')
                   .eq('id', session.user.id)
                   .single()
-                setUserProfile(data)
+
+                if (profileError) {
+                  console.warn('Profile not found:', profileError)
+                  setUserProfile({
+                    id: session.user.id,
+                    email: session.user.email,
+                    name: session.user.user_metadata?.name || 'User',
+                    role: 'sales'
+                  })
+                } else {
+                  setUserProfile(data)
+                }
               }
             } catch (err) {
               console.error('Error fetching user profile:', err)
+              setUserProfile({
+                id: session.user.id,
+                email: session.user.email,
+                name: session.user.user_metadata?.name || 'User',
+                role: 'sales'
+              })
             }
           } else {
             setUser(null)
@@ -78,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       )
 
-      return () => subscription.unsubscribe()
+      return () => subscription?.unsubscribe()
     } catch (error) {
       console.error('Error setting up auth listener:', error)
       return () => {}
