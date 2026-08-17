@@ -70,6 +70,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
           position: 'fixed',
           height: '100vh',
           overflowY: 'auto',
+          overflowX: 'hidden',
           boxShadow: 'none',
           border: 'none',
           zIndex: 10,
@@ -115,7 +116,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
           </div>
 
           {/* Navigation Section */}
-          <nav style={{ padding: '8px 0 16px 0', flex: 1, overflowY: 'auto', background: '#1e293b', margin: '0', border: 'none' }}>
+          <nav style={{ padding: '8px 0 16px 0', flex: 1, overflowY: 'auto', overflowX: 'hidden', background: '#1e293b', margin: '0', border: 'none', width: '100%' }}>
             <a href="/" className="nav-link" style={{ color: '#1f2937', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>🏠 Home</a>
             <a href="/dashboard" className="nav-link" style={{ color: '#1f2937', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>📈 Dashboard</a>
             <a href="/contacts" className="nav-link" style={{ color: '#1f2937', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>👥 Contacts</a>
