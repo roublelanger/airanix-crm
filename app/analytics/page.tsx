@@ -101,8 +101,8 @@ export default function AnalyticsPage() {
   }, {})
 
   const contactSourcesData = Object.entries(contactSourcesMap)
-    .map(([source, count]) => ({ name: source, value: count }))
-    .sort((a, b) => b.value - a.value)
+    .map(([source, count]) => ({ name: source, value: count as number }))
+    .sort((a, b) => (b.value as number) - (a.value as number))
     .slice(0, 6)
 
   // Deals by stage
