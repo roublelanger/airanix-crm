@@ -170,8 +170,8 @@ export default function MobileHeader() {
                 e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
               }}
             >
-              <span style={{ fontSize: '22px', minWidth: '28px' }}>{link.label.split(' ')[0]}</span>
-              <span style={{ fontWeight: '600' }}>{link.label.substring(2)}</span>
+              <span style={{ fontSize: '22px', minWidth: '28px', color: '#000000' }}>{link.label.split(' ')[0]}</span>
+              <span style={{ fontWeight: '700', color: '#000000', flex: 1 }}>{link.label.substring(2)}</span>
             </a>
           ))}
         </div>
