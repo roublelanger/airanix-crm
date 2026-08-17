@@ -140,37 +140,38 @@ export default function MobileHeader() {
               href={link.href}
               onClick={() => setMenuOpen(false)}
               style={{
-                padding: '14px 16px',
-                margin: '8px 12px',
-                color: '#ffffff',
+                padding: '16px 20px',
+                margin: '10px 12px',
+                color: '#000000',
                 textDecoration: 'none',
-                fontSize: '15px',
-                fontWeight: '600',
-                borderRadius: '8px',
-                background: 'rgba(0,191,255,0.2)',
-                borderLeft: '4px solid #00bfff',
-                transition: 'all 0.25s ease',
+                fontSize: '16px',
+                fontWeight: '700',
+                borderRadius: '10px',
+                background: '#e0f2ff',
+                borderLeft: '5px solid #0284c7',
+                transition: 'all 0.3s ease',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '14px',
+                gap: '16px',
                 cursor: 'pointer',
-                animation: `slideIn 0.3s ease-out ${index * 0.05}s both`
+                animation: `slideIn 0.3s ease-out ${index * 0.05}s both`,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(0,191,255,0.35)';
+                e.currentTarget.style.background = '#0284c7';
                 e.currentTarget.style.color = '#ffffff';
-                e.currentTarget.style.paddingLeft = '20px';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,191,255,0.2)';
+                e.currentTarget.style.paddingLeft = '24px';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(2,132,199,0.4)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(0,191,255,0.2)';
-                e.currentTarget.style.color = '#ffffff';
-                e.currentTarget.style.paddingLeft = '16px';
-                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.background = '#e0f2ff';
+                e.currentTarget.style.color = '#000000';
+                e.currentTarget.style.paddingLeft = '20px';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
               }}
             >
-              <span style={{ fontSize: '20px', minWidth: '24px' }}>{link.label.split(' ')[0]}</span>
-              <span>{link.label.substring(2)}</span>
+              <span style={{ fontSize: '22px', minWidth: '28px' }}>{link.label.split(' ')[0]}</span>
+              <span style={{ fontWeight: '600' }}>{link.label.substring(2)}</span>
             </a>
           ))}
         </div>
