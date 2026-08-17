@@ -87,19 +87,19 @@ export default function ActivitiesPage() {
   }
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px 24px 24px', minHeight: '100vh', background: '#ffffff' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
         <div>
-          <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px 0' }}>📞 Activity Log</h1>
-          <p style={{ color: '#666', margin: 0 }}>Track all your calls, emails, and meetings</p>
+          <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px 0', color: '#000000' }}>📞 Activity Log</h1>
+          <p style={{ color: '#666666', margin: 0 }}>Track all your calls, emails, and meetings</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
           style={{
             padding: '10px 20px',
-            background: '#2563eb',
+            background: '#000000',
             color: 'white',
-            border: 'none',
+            border: '2px solid #000000',
             borderRadius: '6px',
             cursor: 'pointer',
             fontWeight: '500'

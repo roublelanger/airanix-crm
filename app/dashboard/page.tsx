@@ -27,7 +27,7 @@ export default function Dashboard() {
 
   return (
     <div style={{
-      background: '#f8fafc',
+      background: '#ffffff',
       minHeight: '100vh',
       padding: '40px 24px'
     }}>
@@ -76,8 +76,8 @@ export default function Dashboard() {
           }}>
             {/* Total Contacts Card */}
             <div style={{
-              background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-              border: '1px solid #e2e8f0',
+              background: '#ffffff',
+              border: '2px solid #000000',
               borderRadius: '16px',
               padding: '32px',
               cursor: 'pointer',
@@ -109,8 +109,8 @@ export default function Dashboard() {
 
             {/* New Leads Card */}
             <div style={{
-              background: 'linear-gradient(135deg, #fef3c7 0%, #fef08a 100%)',
-              border: '1px solid #fde047',
+              background: '#f5f5f5',
+              border: '2px solid #000000',
               borderRadius: '16px',
               padding: '32px',
               cursor: 'pointer',
@@ -131,7 +131,7 @@ export default function Dashboard() {
               e.currentTarget.style.borderColor = '#fde047'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px' }}>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.8px' }}>New Leads</span>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: '#000000', textTransform: 'uppercase', letterSpacing: '0.8px' }}>New Leads</span>
                 <span style={{ fontSize: '32px' }}>🎯</span>
               </div>
               <p style={{ fontSize: '48px', fontWeight: '900', color: '#92400e', margin: '0 0 12px 0', lineHeight: '1' }}>
@@ -142,8 +142,8 @@ export default function Dashboard() {
 
             {/* Active Deals Card */}
             <div style={{
-              background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
-              border: '1px solid #93c5fd',
+              background: '#f5f5f5',
+              border: '2px solid #000000',
               borderRadius: '16px',
               padding: '32px',
               cursor: 'pointer',
@@ -175,8 +175,8 @@ export default function Dashboard() {
 
             {/* Conversions Card */}
             <div style={{
-              background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
-              border: '1px solid #6ee7b7',
+              background: '#f5f5f5',
+              border: '2px solid #000000',
               borderRadius: '16px',
               padding: '32px',
               cursor: 'pointer',
