@@ -202,7 +202,6 @@ export default function Home() {
           <div style={{
             fontSize: '48px',
             marginBottom: '16px',
-            display: 'inline-block',
             width: '72px',
             height: '72px',
             background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
@@ -257,7 +256,6 @@ export default function Home() {
           <div style={{
             fontSize: '48px',
             marginBottom: '16px',
-            display: 'inline-block',
             width: '72px',
             height: '72px',
             background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
@@ -312,7 +310,6 @@ export default function Home() {
           <div style={{
             fontSize: '48px',
             marginBottom: '16px',
-            display: 'inline-block',
             width: '72px',
             height: '72px',
             background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
