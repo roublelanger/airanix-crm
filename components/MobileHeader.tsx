@@ -118,15 +118,15 @@ export default function MobileHeader() {
           left: 0,
           right: 0,
           bottom: 0,
-          background: '#2d4e68',
-          color: 'white',
+          background: '#ffffff',
+          color: '#000000',
           zIndex: 99,
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
           paddingTop: '8px',
           animation: 'slideIn 0.3s ease-out',
-          borderTop: '1px solid rgba(0,191,255,0.12)'
+          borderTop: '1px solid #e5e7eb'
         }}>
           <style>{`
             @keyframes slideIn {
