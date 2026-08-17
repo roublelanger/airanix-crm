@@ -66,13 +66,17 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
           background: '#1e293b',
           color: 'white',
           padding: '0',
+          margin: '0',
           position: 'fixed',
           height: '100vh',
           overflowY: 'auto',
-          boxShadow: '2px 0 8px rgba(0,0,0,0.15)',
+          boxShadow: 'none',
+          border: 'none',
           zIndex: 10,
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          top: '0',
+          left: '0'
         }}>
           {/* Header Section */}
           <div style={{
