@@ -140,36 +140,36 @@ export default function MobileHeader() {
               href={link.href}
               onClick={() => setMenuOpen(false)}
               style={{
-                padding: '12px 16px',
-                margin: '6px 12px',
-                color: '#c5d9eb',
+                padding: '14px 16px',
+                margin: '8px 12px',
+                color: '#ffffff',
                 textDecoration: 'none',
-                fontSize: '14px',
-                fontWeight: '500',
+                fontSize: '15px',
+                fontWeight: '600',
                 borderRadius: '8px',
-                background: 'rgba(100, 160, 200, 0.15)',
-                borderLeft: '3px solid rgba(0,191,255,0.3)',
+                background: 'rgba(0,191,255,0.2)',
+                borderLeft: '4px solid #00bfff',
                 transition: 'all 0.25s ease',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
+                gap: '14px',
                 cursor: 'pointer',
                 animation: `slideIn 0.3s ease-out ${index * 0.05}s both`
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(0,191,255,0.25)';
+                e.currentTarget.style.background = 'rgba(0,191,255,0.35)';
                 e.currentTarget.style.color = '#ffffff';
                 e.currentTarget.style.paddingLeft = '20px';
-                e.currentTarget.style.borderLeftColor = '#00bfff';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,191,255,0.2)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(100, 160, 200, 0.15)';
-                e.currentTarget.style.color = '#c5d9eb';
+                e.currentTarget.style.background = 'rgba(0,191,255,0.2)';
+                e.currentTarget.style.color = '#ffffff';
                 e.currentTarget.style.paddingLeft = '16px';
-                e.currentTarget.style.borderLeftColor = 'rgba(0,191,255,0.3)';
+                e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              <span style={{ fontSize: '18px' }}>{link.label.split(' ')[0]}</span>
+              <span style={{ fontSize: '20px', minWidth: '24px' }}>{link.label.split(' ')[0]}</span>
               <span>{link.label.substring(2)}</span>
             </a>
           ))}
