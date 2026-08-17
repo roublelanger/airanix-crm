@@ -11,11 +11,22 @@ export async function GET() {
     // Fetch all contacts with status - using same SELECT_FIELDS as contacts API
     const contactsRes = await supabase
       .from('contacts')
-      .select('id, status')
+      .select('id, status, email, name')
       .order('company', { ascending: true })
       .order('name', { ascending: true })
 
-    const contacts = contactsRes.data || []
+    let contacts = contactsRes.data || []
+
+    // IMPORTANT: Deduplicate exactly like contacts page does (email:name combination)
+    const seen = new Map<string, boolean>()
+    contacts = contacts.filter(contact => {
+      const key = `${(contact.email || '').toLowerCase()}:${(contact.name || '').toLowerCase()}`
+      if (seen.has(key)) {
+        return false
+      }
+      seen.set(key, true)
+      return true
+    })
 
     // Fetch all deals with status
     const dealsRes = await supabase
@@ -37,7 +48,7 @@ export async function GET() {
 
     // Debug: Log exact counts
     console.log('=== METRICS API DEBUG ===')
-    console.log(`Total contacts fetched: ${contacts.length}`)
+    console.log(`Total contacts after deduplication: ${contacts.length}`)
     console.log(`New Leads (LEAD status): ${newLeads}`)
     console.log(`Active Deals: ${activeDeals}`)
     console.log(`Won Deals (Conversions): ${wonDeals}`)
@@ -48,6 +59,7 @@ export async function GET() {
       statusBreakdown[c.status || 'UNKNOWN'] = (statusBreakdown[c.status || 'UNKNOWN'] || 0) + 1
     })
     console.log('Status breakdown:', statusBreakdown)
+    console.log('✓ Metrics match contacts page (deduplication applied)')
     console.log('======================')
 
     return Response.json({
