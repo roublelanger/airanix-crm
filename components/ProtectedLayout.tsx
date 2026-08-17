@@ -122,25 +122,6 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
             <a href="/settings" className="nav-link" style={{ color: '#1f2937', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>⚙️ Settings</a>
           </nav>
 
-          {/* User Section at Bottom */}
-          <div style={{
-            padding: '12px',
-            borderTop: '2px solid #3b82f6',
-            background: '#1e293b'
-          }}>
-            <div style={{
-              background: '#ffffff',
-              color: '#000000',
-              padding: '12px 16px',
-              borderRadius: '8px',
-              marginBottom: '12px',
-              fontSize: '12px'
-            }}>
-              <div style={{ fontWeight: '600', marginBottom: '4px' }}>{user.email}</div>
-              <div style={{ fontSize: '11px', color: '#666666' }}>Logged in</div>
-            </div>
-            <LogoutButton />
-          </div>
         </nav>
       )}
 
@@ -156,54 +137,5 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         {children}
       </main>
     </div>
-  )
-}
-
-function LogoutButton() {
-  const { logout } = useAuth()
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-
-  const handleLogout = async () => {
-    setLoading(true)
-    try {
-      await logout()
-      router.push('/login')
-    } catch (error) {
-      console.error('Logout error:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <button
-      onClick={handleLogout}
-      disabled={loading}
-      style={{
-        width: '100%',
-        padding: '10px 16px',
-        background: '#fee2e2',
-        color: '#dc2626',
-        border: '1px solid #fecaca',
-        borderRadius: '6px',
-        cursor: loading ? 'not-allowed' : 'pointer',
-        fontWeight: '600',
-        fontSize: '12px',
-        transition: 'all 0.3s ease'
-      }}
-      onMouseEnter={(e) => {
-        if (!loading) {
-          e.currentTarget.style.background = '#fecaca'
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!loading) {
-          e.currentTarget.style.background = '#fee2e2'
-        }
-      }}
-    >
-      {loading ? '⏳ Logging out...' : '🚪 Logout'}
-    </button>
   )
 }
