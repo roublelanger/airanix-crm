@@ -10,15 +10,17 @@ export default function Home() {
     <div style={{
       maxWidth: '1200px',
       margin: '0 auto',
-      padding: '40px 24px'
+      padding: '24px 16px',
+      width: '100%',
+      boxSizing: 'border-box'
     }}>
       {/* Welcome Section */}
       <div style={{
         background: 'linear-gradient(135deg, #ffffff 0%, #f9fafb 100%)',
         border: '2px solid #e5e7eb',
         borderRadius: '16px',
-        padding: '48px 40px',
-        marginBottom: '48px',
+        padding: '32px 20px',
+        marginBottom: '32px',
         textAlign: 'center',
         boxShadow: '0 10px 30px rgba(0,0,0,0.08)'
       }}>
@@ -30,7 +32,7 @@ export default function Home() {
           ⚡
         </div>
         <h1 style={{
-          fontSize: '48px',
+          fontSize: 'clamp(28px, 6vw, 48px)',
           fontWeight: '900',
           color: '#000000',
           margin: '0 0 16px 0',
@@ -172,16 +174,16 @@ export default function Home() {
       {/* Quick Stats - Modern Cards */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '24px',
-        marginBottom: '40px'
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: '16px',
+        marginBottom: '32px'
       }}>
         {/* Manage Contacts Card */}
         <div style={{
           background: 'linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%)',
           border: '2px solid #dbeafe',
           borderRadius: '16px',
-          padding: '32px 28px',
+          padding: '24px 20px',
           textAlign: 'center',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           cursor: 'pointer',
@@ -235,7 +237,7 @@ export default function Home() {
           background: 'linear-gradient(135deg, #fef3c7 0%, #ffffff 100%)',
           border: '2px solid #fcd34d',
           borderRadius: '16px',
-          padding: '32px 28px',
+          padding: '24px 20px',
           textAlign: 'center',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           cursor: 'pointer',
@@ -289,7 +291,7 @@ export default function Home() {
           background: 'linear-gradient(135deg, #fce7f3 0%, #ffffff 100%)',
           border: '2px solid #fbcfe8',
           borderRadius: '16px',
-          padding: '32px 28px',
+          padding: '24px 20px',
           textAlign: 'center',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           cursor: 'pointer',
