@@ -3,13 +3,34 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(req: NextRequest) {
   try {
-    const { data: users, error } = await supabaseServer
+    // Fetch all users from auth.users
+    const { data: authUsers, error: authError } = await supabaseServer.auth.admin.listUsers()
+
+    if (authError) throw authError
+
+    // Get all crm_users to supplement with names and roles
+    const { data: crmUsers, error: crmError } = await supabaseServer
       .from('crm_users')
       .select('*')
-      .order('created_at', { ascending: false })
 
-    if (error) throw error
-    return NextResponse.json(users)
+    if (crmError) throw crmError
+
+    // Create a map of crm_users by id for quick lookup
+    const crmUserMap = new Map(crmUsers?.map(u => [u.id, u]) || [])
+
+    // Merge auth users with crm user data
+    const mergedUsers = authUsers.map(authUser => {
+      const crmUser = crmUserMap.get(authUser.id)
+      return {
+        id: authUser.id,
+        email: authUser.email || '',
+        name: crmUser?.name || authUser.email?.split('@')[0] || 'Unknown',
+        role: crmUser?.role || 'sales',
+        created_at: authUser.created_at || new Date().toISOString()
+      }
+    })
+
+    return NextResponse.json(mergedUsers)
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }

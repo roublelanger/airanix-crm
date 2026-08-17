@@ -41,13 +41,12 @@ export default function AdminPanel() {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('crm_users')
-        .select('*')
-        .order('created_at', { ascending: false })
+      const res = await fetch('/api/admin/users')
+      const data = await res.json()
 
-      if (error) throw error
-      setUsers(data || [])
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch users')
+
+      setUsers(Array.isArray(data) ? data : [])
     } catch (err: any) {
       setError(err.message)
     } finally {
