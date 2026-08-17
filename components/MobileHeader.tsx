@@ -134,50 +134,43 @@ export default function MobileHeader() {
               to { transform: translateY(0); opacity: 1; }
             }
           `}</style>
-          {navLinks.map((link, index) => {
-            const labelParts = link.label.split(' ')
-            const emoji = labelParts[0]
-            const text = labelParts.slice(1).join(' ')
-
-            return (
+          {navLinks.map((link, index) => (
             <a
               key={link.href}
               href={link.href}
               onClick={() => setMenuOpen(false)}
               style={{
-                padding: '14px 16px',
-                margin: '8px 12px',
-                color: '#000000',
+                padding: '16px 18px',
+                margin: '10px 14px',
+                color: '#1f2937',
                 textDecoration: 'none',
                 fontSize: '16px',
-                fontWeight: '700',
-                borderRadius: '10px',
-                background: '#e8f4f8',
+                fontWeight: '600',
+                borderRadius: '8px',
+                background: '#dbeafe',
                 borderLeft: '4px solid #0284c7',
                 transition: 'all 0.3s ease',
                 display: 'block',
+                width: 'calc(100% - 28px)',
+                boxSizing: 'border-box',
                 cursor: 'pointer',
                 animation: `slideIn 0.3s ease-out ${index * 0.05}s both`,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = '#0284c7';
                 e.currentTarget.style.color = '#ffffff';
-                e.currentTarget.style.transform = 'translateX(8px)';
+                e.currentTarget.style.transform = 'translateX(6px)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#e8f4f8';
-                e.currentTarget.style.color = '#000000';
+                e.currentTarget.style.background = '#dbeafe';
+                e.currentTarget.style.color = '#1f2937';
                 e.currentTarget.style.transform = 'translateX(0)';
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '24px' }}>{emoji}</span>
-                <span style={{ color: '#000000', fontWeight: '700' }}>{text}</span>
-              </div>
+              {link.label}
             </a>
-          )
-          })}
+          ))}
         </div>
       )}
     </>
