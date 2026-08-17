@@ -8,6 +8,34 @@ export async function DELETE(
   try {
     const { id } = params
 
+    // Check if user exists and get their role
+    const { data: userToDelete, error: userError } = await supabaseServer
+      .from('crm_users')
+      .select('role')
+      .eq('id', id)
+      .single()
+
+    if (userError || !userToDelete) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // If deleting an admin, check if there are other admins
+    if (userToDelete.role === 'admin') {
+      const { data: admins, error: adminError } = await supabaseServer
+        .from('crm_users')
+        .select('id')
+        .eq('role', 'admin')
+
+      if (adminError) throw adminError
+
+      if (!admins || admins.length <= 1) {
+        return NextResponse.json(
+          { error: 'Cannot delete the last admin user. Please create another admin first.' },
+          { status: 403 }
+        )
+      }
+    }
+
     await supabaseServer.auth.admin.deleteUser(id)
 
     await supabaseServer

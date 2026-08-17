@@ -88,14 +88,28 @@ export default function AdminPanel() {
   }
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return
+    const userToDelete = users.find(u => u.id === userId)
+    const adminCount = users.filter(u => u.role === 'admin').length
+
+    if (userToDelete?.role === 'admin' && adminCount === 1) {
+      setError('⛔ Cannot delete the last admin user! Please create another admin first.')
+      return
+    }
+
+    const confirmMsg = userToDelete?.role === 'admin'
+      ? '⚠️ WARNING: You are about to delete an ADMIN user. This action cannot be undone. Continue?'
+      : 'Are you sure you want to delete this user? This action cannot be undone.'
+
+    if (!confirm(confirmMsg)) return
 
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: 'DELETE'
       })
 
-      if (!res.ok) throw new Error('Failed to delete user')
+      const data = await res.json()
+
+      if (!res.ok) throw new Error(data.error || 'Failed to delete user')
 
       setSuccess('User deleted successfully')
       fetchUsers()
@@ -445,7 +459,21 @@ export default function AdminPanel() {
                     fontSize: '14px',
                     color: '#000000'
                   }}>
-                    {userItem.name}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {userItem.name}
+                      {userItem.role === 'admin' && (
+                        <span style={{
+                          background: '#fee2e2',
+                          color: '#dc2626',
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: '700'
+                        }}>
+                          👑 ADMIN
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td style={{
                     padding: '16px',
@@ -500,23 +528,23 @@ export default function AdminPanel() {
                       >
                         🔑 Reset Password
                       </button>
-                      {userItem.email !== 'admin@airanix.com' && (
-                        <button
-                          onClick={() => handleDeleteUser(userItem.id)}
-                          style={{
-                            padding: '6px 12px',
-                            background: '#fee2e2',
-                            color: '#dc2626',
-                            border: '1px solid #fecaca',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '600'
-                          }}
-                        >
-                          🗑️ Delete
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleDeleteUser(userItem.id)}
+                        disabled={userItem.role === 'admin' && users.filter(u => u.role === 'admin').length === 1}
+                        style={{
+                          padding: '6px 12px',
+                          background: userItem.role === 'admin' && users.filter(u => u.role === 'admin').length === 1 ? '#d3d3d3' : '#fee2e2',
+                          color: userItem.role === 'admin' && users.filter(u => u.role === 'admin').length === 1 ? '#999999' : '#dc2626',
+                          border: '1px solid #fecaca',
+                          borderRadius: '4px',
+                          cursor: userItem.role === 'admin' && users.filter(u => u.role === 'admin').length === 1 ? 'not-allowed' : 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600'
+                        }}
+                        title={userItem.role === 'admin' && users.filter(u => u.role === 'admin').length === 1 ? 'Cannot delete the last admin user' : 'Delete user'}
+                      >
+                        🗑️ Delete
+                      </button>
                     </div>
                   </td>
                 </tr>
