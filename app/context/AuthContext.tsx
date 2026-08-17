@@ -21,15 +21,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkSession = async () => {
       try {
+        if (!supabase) {
+          console.warn('Supabase client not initialized')
+          setLoading(false)
+          return
+        }
+
         const { data: { session } } = await supabase.auth.getSession()
         if (session?.user) {
           setUser(session.user)
-          const { data } = await supabase
-            .from('crm_users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
-          setUserProfile(data)
+          try {
+            const { data } = await supabase
+              .from('crm_users')
+              .select('*')
+              .eq('id', session.user.id)
+              .single()
+            setUserProfile(data)
+          } catch (err) {
+            console.error('Error fetching user profile:', err)
+          }
         }
       } catch (error) {
         console.error('Error checking session:', error)
@@ -40,28 +50,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     checkSession()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          setUser(session.user)
-          const { data } = await supabase
-            .from('crm_users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
-          setUserProfile(data)
-        } else {
-          setUser(null)
-          setUserProfile(null)
-        }
-      }
-    )
+    if (!supabase) {
+      return () => {}
+    }
 
-    return () => subscription.unsubscribe()
+    try {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          if (session?.user) {
+            setUser(session.user)
+            try {
+              if (supabase) {
+                const { data } = await supabase
+                  .from('crm_users')
+                  .select('*')
+                  .eq('id', session.user.id)
+                  .single()
+                setUserProfile(data)
+              }
+            } catch (err) {
+              console.error('Error fetching user profile:', err)
+            }
+          } else {
+            setUser(null)
+            setUserProfile(null)
+          }
+        }
+      )
+
+      return () => subscription.unsubscribe()
+    } catch (error) {
+      console.error('Error setting up auth listener:', error)
+      return () => {}
+    }
   }, [])
 
   const logout = async () => {
-    await supabase.auth.signOut()
+    if (supabase) {
+      await supabase.auth.signOut()
+    }
     setUser(null)
     setUserProfile(null)
   }
