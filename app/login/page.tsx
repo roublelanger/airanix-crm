@@ -6,32 +6,36 @@ import { supabase } from '@/lib/supabase'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const router = useRouter()
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccess('')
 
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
+      if (!supabase) {
+        throw new Error('Supabase client not initialized')
+      }
+
+      const { error: authError } = await supabase.auth.signInWithOtp({
         email,
-        password
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          shouldCreateUser: true
+        }
       })
 
       if (authError) throw authError
 
-      if (rememberMe && data.session) {
-        localStorage.setItem('rememberMe', 'true')
-      }
-
-      router.push('/')
+      setSuccess('✅ Magic link sent! Check your email to login.')
+      setEmail('')
     } catch (err: any) {
-      setError(err.message || 'Failed to login')
+      setError(err.message || 'Failed to send login link')
     } finally {
       setLoading(false)
     }
@@ -43,55 +47,60 @@ export default function LoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#ffffff',
+      background: 'linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%)',
       padding: '20px'
     }}>
       <div style={{
         width: '100%',
-        maxWidth: '400px',
-        padding: '40px',
+        maxWidth: '420px',
+        padding: '48px 40px',
         background: '#ffffff',
-        border: '2px solid #000000',
-        borderRadius: '12px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+        border: '2px solid #dbeafe',
+        borderRadius: '16px',
+        boxShadow: '0 10px 30px rgba(59, 130, 246, 0.15)'
       }}>
         {/* Logo */}
         <div style={{
           textAlign: 'center',
-          marginBottom: '32px'
+          marginBottom: '36px'
         }}>
           <div style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '8px',
-            background: '#000000',
+            width: '64px',
+            height: '64px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 16px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+            boxShadow: '0 8px 16px rgba(59, 130, 246, 0.3)'
           }}>
-            <span style={{ fontSize: '32px', color: '#ffffff' }}>⚡</span>
+            <span style={{ fontSize: '36px', color: '#ffffff' }}>⚡</span>
           </div>
           <h1 style={{
-            fontSize: '28px',
+            fontSize: '32px',
             fontWeight: '900',
             color: '#000000',
-            margin: '0 0 8px 0'
+            margin: '0 0 8px 0',
+            background: 'linear-gradient(135deg, #000000 0%, #333333 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
           }}>
             Airanix CRM
           </h1>
           <p style={{
             fontSize: '14px',
             color: '#666666',
-            margin: '0'
+            margin: '0',
+            fontWeight: '500'
           }}>
-            Professional CRM System
+            Professional Contact Management
           </p>
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleLogin} style={{ marginBottom: '20px' }}>
+        <form onSubmit={handleMagicLink} style={{ marginBottom: '24px' }}>
           {error && (
             <div style={{
               background: '#fee2e2',
@@ -100,17 +109,33 @@ export default function LoginPage() {
               padding: '12px 16px',
               borderRadius: '8px',
               marginBottom: '16px',
-              fontSize: '14px'
+              fontSize: '14px',
+              fontWeight: '500'
             }}>
               ⚠️ {error}
             </div>
           )}
 
-          <div style={{ marginBottom: '16px' }}>
+          {success && (
+            <div style={{
+              background: '#d1fae5',
+              border: '1px solid #6ee7b7',
+              color: '#047857',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}>
+              {success}
+            </div>
+          )}
+
+          <div style={{ marginBottom: '24px' }}>
             <label style={{
               display: 'block',
               fontSize: '14px',
-              fontWeight: '600',
+              fontWeight: '700',
               color: '#000000',
               marginBottom: '8px'
             }}>
@@ -120,70 +145,28 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder="rouble@airanix.com"
               required
               style={{
                 width: '100%',
                 padding: '12px 16px',
-                border: '1px solid #000000',
+                border: '2px solid #dbeafe',
                 borderRadius: '8px',
                 fontSize: '14px',
                 boxSizing: 'border-box',
-                background: '#ffffff',
-                color: '#000000'
+                background: '#f9fafb',
+                color: '#000000',
+                transition: 'all 0.3s ease'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#3b82f6'
+                e.currentTarget.style.background = '#ffffff'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = '#dbeafe'
+                e.currentTarget.style.background = '#f9fafb'
               }}
             />
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#000000',
-              marginBottom: '8px'
-            }}>
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                border: '1px solid #000000',
-                borderRadius: '8px',
-                fontSize: '14px',
-                boxSizing: 'border-box',
-                background: '#ffffff',
-                color: '#000000'
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
-            <input
-              type="checkbox"
-              id="rememberMe"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              style={{
-                marginRight: '8px',
-                cursor: 'pointer',
-                width: '16px',
-                height: '16px'
-              }}
-            />
-            <label htmlFor="rememberMe" style={{
-              fontSize: '14px',
-              color: '#000000',
-              cursor: 'pointer'
-            }}>
-              Remember me
-            </label>
           </div>
 
           <button
@@ -191,45 +174,54 @@ export default function LoginPage() {
             disabled={loading}
             style={{
               width: '100%',
-              padding: '12px 16px',
-              background: loading ? '#cccccc' : '#000000',
+              padding: '14px 16px',
+              background: loading ? '#9ca3af' : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
               color: '#ffffff',
-              border: '2px solid #000000',
+              border: 'none',
               borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
+              fontSize: '15px',
+              fontWeight: '700',
               cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: loading ? 'none' : '0 8px 16px rgba(59, 130, 246, 0.3)'
             }}
             onMouseEnter={(e) => {
               if (!loading) {
-                e.currentTarget.style.background = '#333333'
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 12px 24px rgba(59, 130, 246, 0.4)'
               }
             }}
             onMouseLeave={(e) => {
               if (!loading) {
-                e.currentTarget.style.background = '#000000'
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = '0 8px 16px rgba(59, 130, 246, 0.3)'
               }
             }}
           >
-            {loading ? '⏳ Signing in...' : '🔐 Sign In'}
+            {loading ? '📧 Sending link...' : '🔗 Send Login Link'}
           </button>
         </form>
 
-        {/* Demo Info */}
+        {/* Info Box */}
         <div style={{
-          background: '#f5f5f5',
-          border: '1px solid #e0e0e0',
-          padding: '12px 16px',
-          borderRadius: '8px',
-          fontSize: '12px',
-          color: '#666666',
-          textAlign: 'center',
-          lineHeight: '1.6'
+          background: 'linear-gradient(135deg, #f0f9ff 0%, #f9fafb 100%)',
+          border: '2px solid #dbeafe',
+          padding: '20px 16px',
+          borderRadius: '12px',
+          fontSize: '13px',
+          color: '#1e40af',
+          lineHeight: '1.8',
+          textAlign: 'center'
         }}>
-          <strong>Demo Credentials:</strong><br />
-          Email: rouble@airanix.com<br />
-          Password: 191288
+          <div style={{ marginBottom: '12px', fontWeight: '700' }}>
+            ✨ Passwordless Login
+          </div>
+          <div style={{ color: '#666666', fontSize: '12px' }}>
+            Enter your email and we'll send you a magic link. Click it to log in instantly — no password needed!
+          </div>
+          <div style={{ marginTop: '12px', fontSize: '12px', color: '#999999' }}>
+            Demo: <strong>rouble@airanix.com</strong>
+          </div>
         </div>
       </div>
     </div>
