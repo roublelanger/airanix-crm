@@ -133,6 +133,27 @@ export default function MobileHeader() {
               from { transform: translateY(-20px); opacity: 0; }
               to { transform: translateY(0); opacity: 1; }
             }
+            .mobile-nav-menu a {
+              color: #1f2937 !important;
+              background: #dbeafe !important;
+              padding: 16px 18px !important;
+              margin: 10px 14px !important;
+              display: block !important;
+              text-decoration: none !important;
+              font-size: 16px !important;
+              font-weight: 600 !important;
+              border-radius: 8px !important;
+              border-left: 4px solid #0284c7 !important;
+              cursor: pointer !important;
+              width: calc(100% - 28px) !important;
+              box-sizing: border-box !important;
+              line-height: 1.5 !important;
+              letter-spacing: 0.3px !important;
+            }
+            .mobile-nav-menu a:hover {
+              background: #0284c7 !important;
+              color: #ffffff !important;
+            }
           `}</style>
           {navLinks.map((link, index) => (
             <a
