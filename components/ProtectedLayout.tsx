@@ -77,7 +77,6 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
           {/* Header Section */}
           <div style={{
             padding: '24px 20px 20px 20px',
-            borderBottom: '2px solid #3b82f6',
             background: '#1e293b',
             marginBottom: '12px'
           }}>
@@ -122,8 +121,22 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
             <a href="/settings" className="nav-link" style={{ color: '#1f2937', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>⚙️ Settings</a>
           </nav>
 
-          {/* Logout Button Only - No border, No user info */}
-          <div style={{ padding: '12px', background: '#1e293b' }}>
+          {/* User Section at Bottom - No border line */}
+          <div style={{
+            padding: '12px',
+            background: '#1e293b'
+          }}>
+            <div style={{
+              background: '#ffffff',
+              color: '#000000',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              marginBottom: '12px',
+              fontSize: '12px'
+            }}>
+              <div style={{ fontWeight: '600', marginBottom: '4px' }}>{user.email}</div>
+              <div style={{ fontSize: '11px', color: '#666666' }}>Logged in</div>
+            </div>
             <LogoutButton />
           </div>
         </nav>
