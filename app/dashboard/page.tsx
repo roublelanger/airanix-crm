@@ -76,134 +76,178 @@ export default function Dashboard() {
           }}>
             {/* Total Contacts Card */}
             <div style={{
-              background: '#ffffff',
-              border: '2px solid #000000',
-              borderRadius: '16px',
-              padding: '32px',
+              background: 'linear-gradient(135deg, #f8f9fc 0%, #f0f4ff 100%)',
+              border: '1px solid #e2e8f0',
+              borderLeft: '5px solid #2563eb',
+              borderRadius: '12px',
+              padding: '28px',
               cursor: 'pointer',
-              transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.08)',
               position: 'relative',
               overflow: 'hidden'
             }}
             onClick={() => window.location.href = '/contacts'}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.12)'
-              e.currentTarget.style.borderColor = '#2563eb'
+              e.currentTarget.style.transform = 'translateY(-6px)'
+              e.currentTarget.style.boxShadow = '0 12px 28px rgba(37, 99, 235, 0.15)'
+              e.currentTarget.style.borderLeftColor = '#1d4ed8'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0) scale(1)'
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'
-              e.currentTarget.style.borderColor = '#e2e8f0'
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(37, 99, 235, 0.08)'
+              e.currentTarget.style.borderLeftColor = '#2563eb'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px' }}>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Total Contacts</span>
-                <span style={{ fontSize: '32px' }}>👥</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Contacts</span>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '24px',
+                  boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)'
+                }}>👥</div>
               </div>
-              <p style={{ fontSize: '48px', fontWeight: '900', color: '#0f172a', margin: '0 0 12px 0', lineHeight: '1' }}>
+              <p style={{ fontSize: '52px', fontWeight: '900', color: '#0f172a', margin: '0 0 8px 0', lineHeight: '1' }}>
                 {metrics.totalContacts}
               </p>
-              <p style={{ fontSize: '14px', color: '#64748b', margin: '0', fontWeight: '500' }}>All contacts in your CRM</p>
+              <p style={{ fontSize: '13px', color: '#64748b', margin: '0', fontWeight: '500' }}>All contacts in your CRM</p>
             </div>
 
             {/* New Leads Card */}
             <div style={{
-              background: '#f5f5f5',
-              border: '2px solid #000000',
-              borderRadius: '16px',
-              padding: '32px',
+              background: 'linear-gradient(135deg, #fffbf0 0%, #fef3e2 100%)',
+              border: '1px solid #fde047',
+              borderLeft: '5px solid #ca8a04',
+              borderRadius: '12px',
+              padding: '28px',
               cursor: 'pointer',
-              transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              boxShadow: '0 2px 8px rgba(202, 138, 4, 0.15)',
+              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              boxShadow: '0 2px 8px rgba(202, 138, 4, 0.12)',
               position: 'relative',
               overflow: 'hidden'
             }}
             onClick={() => window.location.href = '/contacts?status=lead'}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(202, 138, 4, 0.25)'
-              e.currentTarget.style.borderColor = '#ca8a04'
+              e.currentTarget.style.transform = 'translateY(-6px)'
+              e.currentTarget.style.boxShadow = '0 12px 28px rgba(202, 138, 4, 0.20)'
+              e.currentTarget.style.borderLeftColor = '#b45309'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0) scale(1)'
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(202, 138, 4, 0.15)'
-              e.currentTarget.style.borderColor = '#fde047'
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(202, 138, 4, 0.12)'
+              e.currentTarget.style.borderLeftColor = '#ca8a04'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px' }}>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: '#000000', textTransform: 'uppercase', letterSpacing: '0.8px' }}>New Leads</span>
-                <span style={{ fontSize: '32px' }}>🎯</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: '#92400e', textTransform: 'uppercase', letterSpacing: '1px' }}>New Leads</span>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #ca8a04 0%, #b45309 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '24px',
+                  boxShadow: '0 4px 12px rgba(202, 138, 4, 0.25)'
+                }}>🎯</div>
               </div>
-              <p style={{ fontSize: '48px', fontWeight: '900', color: '#92400e', margin: '0 0 12px 0', lineHeight: '1' }}>
+              <p style={{ fontSize: '52px', fontWeight: '900', color: '#92400e', margin: '0 0 8px 0', lineHeight: '1' }}>
                 {metrics.newLeads}
               </p>
-              <p style={{ fontSize: '14px', color: '#92400e', margin: '0', fontWeight: '500' }}>Fresh opportunities to pursue</p>
+              <p style={{ fontSize: '13px', color: '#92400e', margin: '0', fontWeight: '500' }}>Fresh opportunities to pursue</p>
             </div>
 
             {/* Active Deals Card */}
             <div style={{
-              background: '#f5f5f5',
-              border: '2px solid #000000',
-              borderRadius: '16px',
-              padding: '32px',
+              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+              border: '1px solid #93c5fd',
+              borderLeft: '5px solid #0369a1',
+              borderRadius: '12px',
+              padding: '28px',
               cursor: 'pointer',
-              transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)',
+              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              boxShadow: '0 2px 8px rgba(3, 105, 161, 0.12)',
               position: 'relative',
               overflow: 'hidden'
             }}
             onClick={() => window.location.href = '/deals'}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(59, 130, 246, 0.25)'
-              e.currentTarget.style.borderColor = '#0369a1'
+              e.currentTarget.style.transform = 'translateY(-6px)'
+              e.currentTarget.style.boxShadow = '0 12px 28px rgba(3, 105, 161, 0.20)'
+              e.currentTarget.style.borderLeftColor = '#00509e'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0) scale(1)'
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.15)'
-              e.currentTarget.style.borderColor = '#93c5fd'
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(3, 105, 161, 0.12)'
+              e.currentTarget.style.borderLeftColor = '#0369a1'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px' }}>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: '#0369a1', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Active Deals</span>
-                <span style={{ fontSize: '32px' }}>💼</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: '#0369a1', textTransform: 'uppercase', letterSpacing: '1px' }}>Active Deals</span>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #0369a1 0%, #00509e 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '24px',
+                  boxShadow: '0 4px 12px rgba(3, 105, 161, 0.25)'
+                }}>💼</div>
               </div>
-              <p style={{ fontSize: '48px', fontWeight: '900', color: '#0369a1', margin: '0 0 12px 0', lineHeight: '1' }}>
+              <p style={{ fontSize: '52px', fontWeight: '900', color: '#0369a1', margin: '0 0 8px 0', lineHeight: '1' }}>
                 {metrics.activeDeal}
               </p>
-              <p style={{ fontSize: '14px', color: '#0369a1', margin: '0', fontWeight: '500' }}>Deals in your pipeline</p>
+              <p style={{ fontSize: '13px', color: '#0369a1', margin: '0', fontWeight: '500' }}>Deals in your pipeline</p>
             </div>
 
             {/* Conversions Card */}
             <div style={{
-              background: '#f5f5f5',
-              border: '2px solid #000000',
-              borderRadius: '16px',
-              padding: '32px',
+              background: 'linear-gradient(135deg, #f0fdf4 0%, #e1fce4 100%)',
+              border: '1px solid #86efac',
+              borderLeft: '5px solid #10b981',
+              borderRadius: '12px',
+              padding: '28px',
               cursor: 'pointer',
-              transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)',
+              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              boxShadow: '0 2px 8px rgba(16, 185, 129, 0.12)',
               position: 'relative',
               overflow: 'hidden'
             }}
             onClick={() => window.location.href = '/deals?stage=won'}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(16, 185, 129, 0.25)'
-              e.currentTarget.style.borderColor = '#047857'
+              e.currentTarget.style.transform = 'translateY(-6px)'
+              e.currentTarget.style.boxShadow = '0 12px 28px rgba(16, 185, 129, 0.20)'
+              e.currentTarget.style.borderLeftColor = '#059669'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0) scale(1)'
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.15)'
-              e.currentTarget.style.borderColor = '#6ee7b7'
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.12)'
+              e.currentTarget.style.borderLeftColor = '#10b981'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px' }}>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: '#047857', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Conversions</span>
-                <span style={{ fontSize: '32px' }}>🏆</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: '#047857', textTransform: 'uppercase', letterSpacing: '1px' }}>Conversions</span>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '24px',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)'
+                }}>🏆</div>
               </div>
-              <p style={{ fontSize: '48px', fontWeight: '900', color: '#047857', margin: '0 0 12px 0', lineHeight: '1' }}>
+              <p style={{ fontSize: '52px', fontWeight: '900', color: '#047857', margin: '0 0 8px 0', lineHeight: '1' }}>
                 {metrics.conversions}
               </p>
-              <p style={{ fontSize: '14px', color: '#047857', margin: '0', fontWeight: '500' }}>Successfully closed deals</p>
+              <p style={{ fontSize: '13px', color: '#047857', margin: '0', fontWeight: '500' }}>Successfully closed deals</p>
             </div>
           </div>
         </div>
