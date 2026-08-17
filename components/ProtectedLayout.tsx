@@ -110,55 +110,16 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
           </div>
 
           {/* Navigation Section */}
-          <nav style={{ padding: '8px 0 16px 0', flex: 1, overflowY: 'auto' }}>
-            {[
-              { href: '/', label: '🏠 Home' },
-              { href: '/dashboard', label: '📈 Dashboard' },
-              { href: '/contacts', label: '👥 Contacts' },
-              { href: '/deals', label: '🎯 Leads' },
-              { href: '/activities', label: '📞 Activities' },
-              { href: '/followups', label: '📋 Follow-ups' },
-              { href: '/emails', label: '📧 Email Templates' },
-              { href: '/analytics', label: '📊 Analytics' },
-              { href: '/settings', label: '⚙️ Settings' }
-            ].map((item) => {
-              const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
-              return (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className="nav-link"
-                  style={{
-                    display: 'block',
-                    color: isActive ? '#ffffff' : '#e5e7eb',
-                    background: isActive ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-                    borderLeft: isActive ? '4px solid #3b82f6' : '4px solid transparent',
-                    textDecoration: 'none',
-                    fontSize: '14px',
-                    fontWeight: isActive ? '700' : '600',
-                    lineHeight: '1.6',
-                    padding: '14px 14px 14px 14px',
-                    transition: 'all 0.2s ease',
-                    marginBottom: '4px',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.background = 'rgba(75, 85, 99, 0.3)'
-                      e.currentTarget.style.color = '#ffffff'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.background = 'transparent'
-                      e.currentTarget.style.color = '#e5e7eb'
-                    }
-                  }}
-                >
-                  {item.label}
-                </a>
-              )
-            })}
+          <nav style={{ padding: '8px 0 16px 0', flex: 1, overflowY: 'auto', background: '#1f2937' }}>
+            <a href="/" className="nav-link">🏠 Home</a>
+            <a href="/dashboard" className="nav-link">📈 Dashboard</a>
+            <a href="/contacts" className="nav-link">👥 Contacts</a>
+            <a href="/deals" className="nav-link">🎯 Leads</a>
+            <a href="/activities" className="nav-link">📞 Activities</a>
+            <a href="/followups" className="nav-link">📋 Follow-ups</a>
+            <a href="/emails" className="nav-link">📧 Email Templates</a>
+            <a href="/analytics" className="nav-link">📊 Analytics</a>
+            <a href="/settings" className="nav-link">⚙️ Settings</a>
           </nav>
 
           {/* User Section at Bottom */}
