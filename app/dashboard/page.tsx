@@ -109,9 +109,15 @@ export default function Dashboard() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '24px',
                   boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)'
-                }}>👥</div>
+                }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </div>
               </div>
               <p style={{ fontSize: '52px', fontWeight: '900', color: '#0f172a', margin: '0 0 8px 0', lineHeight: '1' }}>
                 {metrics.totalContacts}
@@ -153,9 +159,18 @@ export default function Dashboard() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '24px',
                   boxShadow: '0 4px 12px rgba(202, 138, 4, 0.25)'
-                }}>🎯</div>
+                }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <path d="M12 8v-4"></path>
+                    <path d="M16 14h4"></path>
+                    <path d="M8 14H4"></path>
+                    <path d="M20.485 20.485a2 2 0 1 1 2.828-2.828 2 2 0 0 1-2.828 2.828"></path>
+                    <path d="M2.343 2.343A2 2 0 1 0 5.17 5.17a2 2 0 0 0-2.828-2.828"></path>
+                    <circle cx="12" cy="12" r="8"></circle>
+                  </svg>
+                </div>
               </div>
               <p style={{ fontSize: '52px', fontWeight: '900', color: '#92400e', margin: '0 0 8px 0', lineHeight: '1' }}>
                 {metrics.newLeads}
@@ -197,9 +212,13 @@ export default function Dashboard() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '24px',
                   boxShadow: '0 4px 12px rgba(3, 105, 161, 0.25)'
-                }}>💼</div>
+                }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <path d="M16 21H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h5a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="3"></circle>
+                  </svg>
+                </div>
               </div>
               <p style={{ fontSize: '52px', fontWeight: '900', color: '#0369a1', margin: '0 0 8px 0', lineHeight: '1' }}>
                 {metrics.activeDeal}
@@ -241,9 +260,12 @@ export default function Dashboard() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '24px',
                   boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)'
-                }}>🏆</div>
+                }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
               </div>
               <p style={{ fontSize: '52px', fontWeight: '900', color: '#047857', margin: '0 0 8px 0', lineHeight: '1' }}>
                 {metrics.conversions}
