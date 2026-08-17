@@ -28,13 +28,11 @@ interface Message {
 }
 
 const STAGES = [
-  { id: 'PROSPECTING', label: 'Prospecting', badge: 'primary' },
-  { id: 'INITIAL_CONTACT', label: 'Initial Contact', badge: 'orange' },
-  { id: 'QUALIFICATION', label: 'Qualification', badge: 'purple' },
-  { id: 'PROPOSAL', label: 'Proposal Presented', badge: 'pink' },
-  { id: 'NEGOTIATION', label: 'Negotiation', badge: 'indigo' },
-  { id: 'WON', label: 'Closed Won', badge: 'green' },
-  { id: 'LOST', label: 'Closed Lost', badge: 'red' }
+  { id: 'LEAD', label: 'Lead', badge: 'primary' },
+  { id: 'CONTACTED', label: 'Contacted', badge: 'orange' },
+  { id: 'PROPOSAL', label: 'Proposal', badge: 'pink' },
+  { id: 'CLOSED_WON', label: 'Closed Won', badge: 'green' },
+  { id: 'CLOSED_LOST', label: 'Closed Lost', badge: 'red' }
 ]
 
 const BADGE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -58,7 +56,7 @@ export default function LeadsPage() {
   const [formData, setFormData] = useState({
     name: '',
     value: '',
-    stage: 'PROSPECTING',
+    stage: 'LEAD',
     owner: '',
     close_date: '',
     last_activity: '',
@@ -176,7 +174,7 @@ export default function LeadsPage() {
         type: 'success',
         text: selectedLead ? 'Lead updated successfully!' : 'Lead created successfully!'
       })
-      setFormData({ name: '', value: '', stage: 'PROSPECTING', owner: '', close_date: '', last_activity: '', notes: '' })
+      setFormData({ name: '', value: '', stage: 'LEAD', owner: '', close_date: '', last_activity: '', notes: '' })
       setShowForm(false)
       setShowDetailsModal(false)
       setSelectedLead(null)
@@ -262,7 +260,7 @@ export default function LeadsPage() {
   function closeLeadDetails() {
     setShowDetailsModal(false)
     setSelectedLead(null)
-    setFormData({ name: '', value: '', stage: 'PROSPECTING', owner: '', close_date: '', last_activity: '', notes: '' })
+    setFormData({ name: '', value: '', stage: 'LEAD', owner: '', close_date: '', last_activity: '', notes: '' })
   }
 
   const filteredLeads = leads.filter(lead => {

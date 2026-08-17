@@ -42,7 +42,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       .update({
         name,
         value: parseInt(value),
-        stage: stage || 'PROSPECTING',
+        stage: stage || 'LEAD',
         owner: owner || null,
         close_date: close_date || null,
         last_activity: last_activity || null,

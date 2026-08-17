@@ -41,7 +41,7 @@ export async function POST(request: Request) {
         name,
         title: name,
         value: parseInt(value),
-        stage: stage || 'PROSPECTING',
+        stage: stage || 'LEAD',
         owner: owner || null,
         close_date: close_date || null,
         last_activity: last_activity || null,
@@ -80,7 +80,7 @@ export async function PUT(request: Request) {
       .update({
         name,
         value: parseInt(value),
-        stage: stage || 'PROSPECTING',
+        stage: stage || 'LEAD',
         owner: owner || null,
         close_date: close_date || null,
         last_activity: last_activity || null,
