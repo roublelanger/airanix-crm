@@ -111,15 +111,15 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
           {/* Navigation Section */}
           <nav style={{ padding: '8px 0 16px 0', flex: 1, overflowY: 'auto', background: '#1f2937' }}>
-            <a href="/" className="nav-link">🏠 Home</a>
-            <a href="/dashboard" className="nav-link">📈 Dashboard</a>
-            <a href="/contacts" className="nav-link">👥 Contacts</a>
-            <a href="/deals" className="nav-link">🎯 Leads</a>
-            <a href="/activities" className="nav-link">📞 Activities</a>
-            <a href="/followups" className="nav-link">📋 Follow-ups</a>
-            <a href="/emails" className="nav-link">📧 Email Templates</a>
-            <a href="/analytics" className="nav-link">📊 Analytics</a>
-            <a href="/settings" className="nav-link">⚙️ Settings</a>
+            <a href="/" className="nav-link" style={{ color: '#ffffff', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>🏠 Home</a>
+            <a href="/dashboard" className="nav-link" style={{ color: '#ffffff', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>📈 Dashboard</a>
+            <a href="/contacts" className="nav-link" style={{ color: '#ffffff', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>👥 Contacts</a>
+            <a href="/deals" className="nav-link" style={{ color: '#ffffff', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>🎯 Leads</a>
+            <a href="/activities" className="nav-link" style={{ color: '#ffffff', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>📞 Activities</a>
+            <a href="/followups" className="nav-link" style={{ color: '#ffffff', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>📋 Follow-ups</a>
+            <a href="/emails" className="nav-link" style={{ color: '#ffffff', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>📧 Email Templates</a>
+            <a href="/analytics" className="nav-link" style={{ color: '#ffffff', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>📊 Analytics</a>
+            <a href="/settings" className="nav-link" style={{ color: '#ffffff', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>⚙️ Settings</a>
           </nav>
 
           {/* User Section at Bottom */}
