@@ -31,7 +31,7 @@ a:not(.nav-link):hover {
 
 /* Sidebar navigation links */
 .nav-link {
-  color: #ffffff !important;
+  color: #1f2937 !important;
   border: none !important;
   display: block !important;
   width: 100% !important;
@@ -45,7 +45,7 @@ a:not(.nav-link):hover {
 
 .nav-link:hover {
   background-color: rgba(75, 85, 99, 0.4) !important;
-  color: #ffffff !important;
+  color: #1f2937 !important;
   padding-left: 20px !important;
 }
 
