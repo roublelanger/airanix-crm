@@ -82,7 +82,8 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
           <div style={{
             padding: '24px 20px 20px 20px',
             background: '#1e293b',
-            marginBottom: '12px'
+            margin: '0',
+            border: 'none'
           }}>
             <a href="/" style={{ textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
               {/* Logo Circle */}
@@ -95,7 +96,8 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
-                boxShadow: '0 4px 12px rgba(255, 255, 255, 0.2)'
+                boxShadow: 'none',
+                border: 'none'
               }}>
                 <span style={{
                   fontSize: '20px',
@@ -113,7 +115,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
           </div>
 
           {/* Navigation Section */}
-          <nav style={{ padding: '8px 0 16px 0', flex: 1, overflowY: 'auto', background: '#1f2937' }}>
+          <nav style={{ padding: '8px 0 16px 0', flex: 1, overflowY: 'auto', background: '#1e293b', margin: '0', border: 'none' }}>
             <a href="/" className="nav-link" style={{ color: '#1f2937', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>🏠 Home</a>
             <a href="/dashboard" className="nav-link" style={{ color: '#1f2937', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>📈 Dashboard</a>
             <a href="/contacts" className="nav-link" style={{ color: '#1f2937', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>👥 Contacts</a>
