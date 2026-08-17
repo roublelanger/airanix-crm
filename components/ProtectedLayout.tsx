@@ -111,15 +111,15 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
           {/* Navigation Section */}
           <div style={{ padding: '4px 0 16px 0', flex: 1, overflowY: 'auto' }}>
-            <a href="/" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5', padding: '8px 16px' }}>🏠 Home</a>
-            <a href="/dashboard" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5', padding: '8px 16px' }}>📈 Dashboard</a>
-            <a href="/contacts" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5', padding: '8px 16px' }}>👥 Contacts</a>
-            <a href="/deals" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5', padding: '8px 16px' }}>🎯 Leads</a>
-            <a href="/activities" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5', padding: '8px 16px' }}>📞 Activities</a>
-            <a href="/followups" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5', padding: '8px 16px' }}>📋 Follow-ups</a>
-            <a href="/emails" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5', padding: '8px 16px' }}>📧 Email Templates</a>
-            <a href="/analytics" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5', padding: '8px 16px' }}>📊 Analytics</a>
-            <a href="/settings" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '13px', fontWeight: '500', lineHeight: '1.5', padding: '8px 16px' }}>⚙️ Settings</a>
+            <a href="/" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600', lineHeight: '1.6', padding: '12px 18px', transition: 'all 0.2s ease' }}>🏠 Home</a>
+            <a href="/dashboard" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600', lineHeight: '1.6', padding: '12px 18px', transition: 'all 0.2s ease' }}>📈 Dashboard</a>
+            <a href="/contacts" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600', lineHeight: '1.6', padding: '12px 18px', transition: 'all 0.2s ease' }}>👥 Contacts</a>
+            <a href="/deals" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600', lineHeight: '1.6', padding: '12px 18px', transition: 'all 0.2s ease' }}>🎯 Leads</a>
+            <a href="/activities" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600', lineHeight: '1.6', padding: '12px 18px', transition: 'all 0.2s ease' }}>📞 Activities</a>
+            <a href="/followups" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600', lineHeight: '1.6', padding: '12px 18px', transition: 'all 0.2s ease' }}>📋 Follow-ups</a>
+            <a href="/emails" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600', lineHeight: '1.6', padding: '12px 18px', transition: 'all 0.2s ease' }}>📧 Email Templates</a>
+            <a href="/analytics" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600', lineHeight: '1.6', padding: '12px 18px', transition: 'all 0.2s ease' }}>📊 Analytics</a>
+            <a href="/settings" className="nav-link" style={{ display: 'block', color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600', lineHeight: '1.6', padding: '12px 18px', transition: 'all 0.2s ease' }}>⚙️ Settings</a>
           </div>
 
           {/* User Section at Bottom */}
