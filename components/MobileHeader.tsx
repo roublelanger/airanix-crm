@@ -134,25 +134,28 @@ export default function MobileHeader() {
               to { transform: translateY(0); opacity: 1; }
             }
           `}</style>
-          {navLinks.map((link, index) => (
+          {navLinks.map((link, index) => {
+            const labelParts = link.label.split(' ')
+            const emoji = labelParts[0]
+            const text = labelParts.slice(1).join(' ')
+
+            return (
             <a
               key={link.href}
               href={link.href}
               onClick={() => setMenuOpen(false)}
               style={{
-                padding: '16px 20px',
-                margin: '10px 12px',
+                padding: '14px 16px',
+                margin: '8px 12px',
                 color: '#000000',
                 textDecoration: 'none',
                 fontSize: '16px',
                 fontWeight: '700',
                 borderRadius: '10px',
-                background: '#e0f2ff',
-                borderLeft: '5px solid #0284c7',
+                background: '#e8f4f8',
+                borderLeft: '4px solid #0284c7',
                 transition: 'all 0.3s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
+                display: 'block',
                 cursor: 'pointer',
                 animation: `slideIn 0.3s ease-out ${index * 0.05}s both`,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
@@ -160,20 +163,21 @@ export default function MobileHeader() {
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = '#0284c7';
                 e.currentTarget.style.color = '#ffffff';
-                e.currentTarget.style.paddingLeft = '24px';
-                e.currentTarget.style.boxShadow = '0 6px 16px rgba(2,132,199,0.4)';
+                e.currentTarget.style.transform = 'translateX(8px)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#e0f2ff';
+                e.currentTarget.style.background = '#e8f4f8';
                 e.currentTarget.style.color = '#000000';
-                e.currentTarget.style.paddingLeft = '20px';
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                e.currentTarget.style.transform = 'translateX(0)';
               }}
             >
-              <span style={{ fontSize: '22px', minWidth: '28px', color: '#000000' }}>{link.label.split(' ')[0]}</span>
-              <span style={{ fontWeight: '700', color: '#000000', flex: 1 }}>{link.label.substring(2)}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '24px' }}>{emoji}</span>
+                <span style={{ color: '#000000', fontWeight: '700' }}>{text}</span>
+              </div>
             </a>
-          ))}
+          )
+          })}
         </div>
       )}
     </>
