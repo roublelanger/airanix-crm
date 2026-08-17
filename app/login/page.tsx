@@ -22,11 +22,24 @@ export default function LoginPage() {
         throw new Error('Supabase client not initialized')
       }
 
+      // Check if user exists in system
+      const checkRes = await fetch('/api/auth/check-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+
+      const checkData = await checkRes.json()
+
+      if (!checkRes.ok || !checkData.exists) {
+        throw new Error('This email is not registered in the system. Please contact an administrator.')
+      }
+
       const { error: authError } = await supabase.auth.signInWithOtp({
         email,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
-          shouldCreateUser: true
+          shouldCreateUser: false
         }
       })
 
