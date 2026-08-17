@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import EnhancedExcelImport from '@/components/EnhancedExcelImport'
 
+// Dashboard redesign v2: Professional CRM metrics with gradients, colored borders, enhanced icons
 export default function Dashboard() {
   const [metrics, setMetrics] = useState({ totalContacts: 0, activeDeal: 0, newLeads: 0, conversions: 0 })
   const [loading, setLoading] = useState(true)
