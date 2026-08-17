@@ -127,8 +127,33 @@ export default function DealsPage() {
   }
 
   const filteredDeals = deals.filter(deal => {
+    // Search filter
     if (filters.searchText && !deal.name.toLowerCase().includes(filters.searchText.toLowerCase())) return false
+
+    // Owner filter
     if (filters.dealOwner && deal.owner !== filters.dealOwner) return false
+
+    // Created date filter
+    if (filters.createdAfter) {
+      const dealDate = new Date(deal.created_at)
+      const filterDate = new Date(filters.createdAfter)
+      if (dealDate < filterDate) return false
+    }
+
+    // Close date filter
+    if (filters.closedAfter && deal.close_date) {
+      const dealDate = new Date(deal.close_date)
+      const filterDate = new Date(filters.closedAfter)
+      if (dealDate < filterDate) return false
+    }
+
+    // Last activity filter
+    if (filters.lastActivityAfter && deal.last_activity) {
+      const dealDate = new Date(deal.last_activity)
+      const filterDate = new Date(filters.lastActivityAfter)
+      if (dealDate < filterDate) return false
+    }
+
     return true
   })
 
@@ -345,9 +370,9 @@ export default function DealsPage() {
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
               style={{
                 padding: '8px 12px',
-                background: showAdvancedFilters ? '#2563eb' : 'white',
-                color: showAdvancedFilters ? 'white' : '#6b7280',
-                border: `1px solid ${showAdvancedFilters ? '#2563eb' : '#d1d5db'}`,
+                background: (filters.createdAfter || filters.closedAfter || filters.lastActivityAfter) ? '#2563eb' : (showAdvancedFilters ? '#2563eb' : 'white'),
+                color: (filters.createdAfter || filters.closedAfter || filters.lastActivityAfter) ? 'white' : (showAdvancedFilters ? 'white' : '#6b7280'),
+                border: `1px solid ${showAdvancedFilters || (filters.createdAfter || filters.closedAfter || filters.lastActivityAfter) ? '#2563eb' : '#d1d5db'}`,
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontWeight: '600',
@@ -355,8 +380,27 @@ export default function DealsPage() {
                 whiteSpace: 'nowrap'
               }}
             >
-              Advanced filters
+              Filter {(filters.createdAfter || filters.closedAfter || filters.lastActivityAfter) ? '✓' : ''}
             </button>
+
+            {(filters.dealOwner || filters.createdAfter || filters.closedAfter || filters.lastActivityAfter || filters.searchText) && (
+              <button
+                onClick={() => setFilters({ dealOwner: '', createdAfter: '', closedAfter: '', lastActivityAfter: '', searchText: '' })}
+                style={{
+                  padding: '8px 12px',
+                  background: '#fee2e2',
+                  color: '#dc2626',
+                  border: '1px solid #fecaca',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '12px',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                Clear Filters
+              </button>
+            )}
 
             <select
               value={sortBy}
