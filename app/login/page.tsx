@@ -228,7 +228,7 @@ export default function LoginPage() {
           lineHeight: '1.6'
         }}>
           <strong>Demo Credentials:</strong><br />
-          Email: admin@airanix.com<br />
+          Email: rouble@airanix.com<br />
           Password: 191288
         </div>
       </div>

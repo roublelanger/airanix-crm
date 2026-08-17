@@ -40,21 +40,21 @@ You have two options:
 ### Option A: Use the Admin API (Recommended)
 1. Set up a temporary admin creation endpoint or run it manually
 2. Use the `/api/admin/users` POST endpoint with:
-   - Email: `admin@airanix.com`
+   - Email: `rouble@airanix.com`
    - Password: `191288`
    - Name: `Admin`
    - Role: `admin`
 
 ### Option B: Create via Supabase Dashboard
 1. Go to Authentication > Users in Supabase
-2. Create a new user with email `admin@airanix.com` and password `191288`
+2. Create a new user with email `rouble@airanix.com` and password `191288`
 3. Then insert into crm_users table:
 
 ```sql
 INSERT INTO crm_users (id, email, name, role)
 VALUES (
   '(user_id_from_auth)',
-  'admin@airanix.com',
+  'rouble@airanix.com',
   'Admin',
   'admin'
 );
