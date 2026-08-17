@@ -718,11 +718,20 @@ function ContactsContent() {
 
   // Calculate statistics
   useEffect(() => {
+    const allStatuses = ['NEW', 'LEAD', 'ACTIVE', 'CLOSED', 'INACTIVE']
     const byStatus: Record<string, number> = {}
+
+    // Initialize all statuses with 0
+    allStatuses.forEach(status => {
+      byStatus[status] = 0
+    })
+
+    // Count contacts by status
     contacts.forEach(contact => {
       const status = contact.status || 'NEW'
       byStatus[status] = (byStatus[status] || 0) + 1
     })
+
     setStats({ total: contacts.length, byStatus })
   }, [contacts])
 
