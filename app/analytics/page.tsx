@@ -1,32 +1,43 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts'
 
-interface AnalyticsData {
-  totalContacts: number
-  newContactsLast30: number
-  totalDeals: number
-  newDealsLast30: number
-  dealsByStage: Record<string, number>
-  contactsBySource: Record<string, number>
-  activitiesByType: Record<string, number>
-  contactsOverTime: { date: string; count: number }[]
-  dealsOverTime: { date: string; count: number }[]
-  avgDealValue: number
-  totalDealValue: number
+interface Contact {
+  id: string
+  name: string
+  createdAt: string
+  platform?: string
+  company?: string
+}
+
+interface Deal {
+  id: string
+  name: string
+  value: number
+  stage: string
+  createdAt: string
+}
+
+interface Activity {
+  id: string
+  type: string
+  createdAt: string
 }
 
 export default function AnalyticsPage() {
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const [deals, setDeals] = useState<Deal[]>([])
+  const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchAnalytics()
-    const interval = setInterval(fetchAnalytics, 30000)
+    fetchData()
+    const interval = setInterval(fetchData, 10000) // Refresh every 10 seconds
     return () => clearInterval(interval)
   }, [])
 
-  async function fetchAnalytics() {
+  async function fetchData() {
     try {
       const [contactsRes, dealsRes, activitiesRes] = await Promise.all([
         fetch('/api/contacts'),
@@ -34,84 +45,98 @@ export default function AnalyticsPage() {
         fetch('/api/activities')
       ])
 
-      const contacts = await contactsRes.json()
-      const deals = await dealsRes.json()
-      const activities = await activitiesRes.json()
+      const contactsData = await contactsRes.json()
+      const dealsData = await dealsRes.json()
+      const activitiesData = await activitiesRes.json()
 
-      const now = new Date()
-      const last30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-
-      const newContacts = contacts.filter((c: any) => new Date(c.createdAt) > last30).length
-      const newDeals = deals.filter((d: any) => new Date(d.createdAt) > last30).length
-
-      const dealsByStage = deals.reduce((acc: any, d: any) => {
-        acc[d.stage || 'LEAD'] = (acc[d.stage || 'LEAD'] || 0) + 1
-        return acc
-      }, {})
-
-      const contactsBySource = contacts.reduce((acc: any, c: any) => {
-        const source = c.platform || c.company || 'Direct'
-        acc[source] = (acc[source] || 0) + 1
-        return acc
-      }, {})
-
-      const activitiesByType = activities.reduce((acc: any, a: any) => {
-        acc[a.type || 'Task'] = (acc[a.type || 'Task'] || 0) + 1
-        return acc
-      }, {})
-
-      const contactsOverTime = generateTimeSeriesData(contacts, 30)
-      const dealsOverTime = generateTimeSeriesData(deals, 30)
-
-      const totalDealValue = deals.reduce((sum: number, d: any) => sum + (d.value || 0), 0)
-      const avgDealValue = deals.length > 0 ? totalDealValue / deals.length : 0
-
-      setAnalytics({
-        totalContacts: contacts.length,
-        newContactsLast30: newContacts,
-        totalDeals: deals.length,
-        newDealsLast30: newDeals,
-        dealsByStage,
-        contactsBySource,
-        activitiesByType,
-        contactsOverTime,
-        dealsOverTime,
-        avgDealValue,
-        totalDealValue
-      })
+      setContacts(contactsData)
+      setDeals(dealsData)
+      setActivities(activitiesData)
     } catch (error) {
-      console.error('Error fetching analytics:', error)
+      console.error('Error fetching analytics data:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  function generateTimeSeriesData(items: any[], days: number) {
-    const data: { date: string; count: number }[] = []
-    const now = new Date()
+  // Calculate metrics
+  const now = new Date()
+  const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  const last60Days = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
+  const previous30Start = new Date(last30Days.getTime() - 30 * 24 * 60 * 60 * 1000)
 
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
-      const dateStr = date.toISOString().split('T')[0]
-      const count = items.filter((item) => item.createdAt?.startsWith(dateStr)).length
-      data.push({ date: dateStr, count })
+  const contactsLast30 = contacts.filter(c => new Date(c.createdAt) > last30Days).length
+  const contactsPrevious30 = contacts.filter(c => {
+    const d = new Date(c.createdAt)
+    return d > previous30Start && d <= last30Days
+  }).length
+  const contactsGrowth = contactsPrevious30 > 0 ? ((contactsLast30 - contactsPrevious30) / contactsPrevious30 * 100).toFixed(0) : '0'
+
+  const dealsLast30 = deals.filter(d => new Date(d.createdAt) > last30Days).length
+  const dealsPrevious30 = deals.filter(d => {
+    const cr = new Date(d.createdAt)
+    return cr > previous30Start && cr <= last30Days
+  }).length
+  const dealsGrowth = dealsPrevious30 > 0 ? ((dealsLast30 - dealsPrevious30) / dealsPrevious30 * 100).toFixed(0) : '0'
+
+  // Generate time series data (last 30 days)
+  const timeSeriesData = Array.from({ length: 30 }).map((_, i) => {
+    const date = new Date(now.getTime() - (29 - i) * 24 * 60 * 60 * 1000)
+    const dateStr = date.toISOString().split('T')[0]
+    const contactCount = contacts.filter(c => c.createdAt.startsWith(dateStr)).length
+    const dealCount = deals.filter(d => d.createdAt.startsWith(dateStr)).length
+    return {
+      date: new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      fullDate: dateStr,
+      contacts: contactCount,
+      deals: dealCount
     }
+  })
 
-    return data
+  // Contact sources
+  const contactSourcesMap = contacts.reduce((acc: any, c) => {
+    const source = c.platform || c.company || 'Direct'
+    acc[source] = (acc[source] || 0) + 1
+    return acc
+  }, {})
+
+  const contactSourcesData = Object.entries(contactSourcesMap)
+    .map(([source, count]) => ({ name: source, value: count }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6)
+
+  // Deals by stage
+  const dealsByStageMap = deals.reduce((acc: any, d) => {
+    const stage = d.stage || 'LEAD'
+    acc[stage] = (acc[stage] || 0) + 1
+    return acc
+  }, {})
+
+  const dealsByStageData = Object.entries(dealsByStageMap).map(([stage, count]) => ({
+    name: stage,
+    value: count
+  }))
+
+  // Activity breakdown
+  const activityByTypeMap = activities.reduce((acc: any, a) => {
+    const type = a.type || 'Task'
+    acc[type] = (acc[type] || 0) + 1
+    return acc
+  }, {})
+
+  const COLORS = ['#2563eb', '#ca8a04', '#0369a1', '#10b981', '#ef4444', '#8b5cf6']
+
+  const activityIcons: any = {
+    'Call': '📞',
+    'Email': '📧',
+    'Meeting': '🤝',
+    'Task': '📋'
   }
 
   if (loading) {
     return (
-      <div style={{ padding: '40px 24px', textAlign: 'center', color: '#64748b' }}>
-        Loading analytics...
-      </div>
-    )
-  }
-
-  if (!analytics) {
-    return (
-      <div style={{ padding: '40px 24px', textAlign: 'center', color: '#ef4444' }}>
-        Error loading analytics
+      <div style={{ padding: '40px 24px', textAlign: 'center', color: '#64748b', minHeight: '100vh' }}>
+        <p>Loading analytics...</p>
       </div>
     )
   }
@@ -120,159 +145,158 @@ export default function AnalyticsPage() {
     <div style={{ padding: '40px 24px', background: '#ffffff', minHeight: '100vh' }}>
       <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ marginBottom: '40px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: '900', color: '#0f172a', margin: '0 0 8px 0' }}>
-            Analytics Dashboard
+        <div style={{ marginBottom: '32px' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', margin: '0 0 8px 0' }}>
+            Analytics
           </h1>
           <p style={{ fontSize: '14px', color: '#64748b', margin: '0', fontWeight: '500' }}>
-            Last 30 days performance overview
+            📊 In the last 30 days
           </p>
         </div>
 
-        {/* Filter Bar */}
-        <div style={{
-          display: 'flex',
-          gap: '12px',
-          marginBottom: '32px',
-          padding: '12px',
-          background: '#f8f9fa',
-          borderRadius: '8px',
-          borderLeft: '4px solid #2563eb'
-        }}>
-          <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>
-            📊 Last 30 Days
-          </span>
-        </div>
-
-        {/* Key Metrics Row 1 */}
+        {/* Top 4 Metrics - 2x2 Grid */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '20px',
-          marginBottom: '32px'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+          gap: '24px',
+          marginBottom: '40px'
         }}>
           {/* New Contacts Created */}
           <div style={{
-            background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-            border: '1px solid #7dd3fc',
-            borderLeft: '4px solid #0369a1',
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
             borderRadius: '12px',
-            padding: '24px',
-            boxShadow: '0 2px 8px rgba(3, 105, 161, 0.08)'
+            padding: '28px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
           }}>
-            <div style={{ marginBottom: '16px' }}>
-              <p style={{ fontSize: '11px', fontWeight: '700', color: '#0369a1', textTransform: 'uppercase', margin: '0', letterSpacing: '0.8px' }}>
-                New Contacts Created
-              </p>
-              <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 0 0' }}>In the last 30 days</p>
-            </div>
-            <p style={{ fontSize: '48px', fontWeight: '900', color: '#0369a1', margin: '0 0 8px 0' }}>
-              {analytics.newContactsLast30}
+            <p style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', margin: '0 0 16px 0', letterSpacing: '0.5px' }}>
+              📇 New Contacts Created
             </p>
-            <p style={{ fontSize: '12px', color: '#0369a1', margin: '0' }}>
-              Total: {analytics.totalContacts} contacts
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '8px' }}>
+              <p style={{ fontSize: '48px', fontWeight: '900', color: '#0f172a', margin: '0' }}>
+                {contactsLast30}
+              </p>
+              <span style={{
+                fontSize: '12px',
+                fontWeight: '700',
+                color: contactsLast30 >= contactsPrevious30 ? '#10b981' : '#ef4444',
+                padding: '4px 8px',
+                background: contactsLast30 >= contactsPrevious30 ? '#f0fdf4' : '#fef2f2',
+                borderRadius: '4px'
+              }}>
+                {contactsGrowth}% vs previous
+              </span>
+            </div>
+            <p style={{ fontSize: '13px', color: '#64748b', margin: '0' }}>
+              In the last 30 days | {contactsPrevious30} in previous 30 days
             </p>
           </div>
 
           {/* New Deals Created */}
           <div style={{
-            background: 'linear-gradient(135deg, #f0fdf4 0%, #e1fce4 100%)',
-            border: '1px solid #86efac',
-            borderLeft: '4px solid #10b981',
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
             borderRadius: '12px',
-            padding: '24px',
-            boxShadow: '0 2px 8px rgba(16, 185, 129, 0.08)'
+            padding: '28px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
           }}>
-            <div style={{ marginBottom: '16px' }}>
-              <p style={{ fontSize: '11px', fontWeight: '700', color: '#047857', textTransform: 'uppercase', margin: '0', letterSpacing: '0.8px' }}>
-                New Deals Created
-              </p>
-              <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 0 0' }}>In the last 30 days</p>
-            </div>
-            <p style={{ fontSize: '48px', fontWeight: '900', color: '#047857', margin: '0 0 8px 0' }}>
-              {analytics.newDealsLast30}
+            <p style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', margin: '0 0 16px 0', letterSpacing: '0.5px' }}>
+              🎯 New Deals Created
             </p>
-            <p style={{ fontSize: '12px', color: '#047857', margin: '0' }}>
-              Total: {analytics.totalDeals} deals
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '8px' }}>
+              <p style={{ fontSize: '48px', fontWeight: '900', color: '#0f172a', margin: '0' }}>
+                {dealsLast30}
+              </p>
+              <span style={{
+                fontSize: '12px',
+                fontWeight: '700',
+                color: dealsLast30 >= dealsPrevious30 ? '#10b981' : '#ef4444',
+                padding: '4px 8px',
+                background: dealsLast30 >= dealsPrevious30 ? '#f0fdf4' : '#fef2f2',
+                borderRadius: '4px'
+              }}>
+                {dealsGrowth}% vs previous
+              </span>
+            </div>
+            <p style={{ fontSize: '13px', color: '#64748b', margin: '0' }}>
+              In the last 30 days | {dealsPrevious30} in previous 30 days
             </p>
           </div>
 
-          {/* Avg Deal Value */}
+          {/* Total Contacts */}
           <div style={{
-            background: 'linear-gradient(135deg, #fffbf0 0%, #fef3e2 100%)',
-            border: '1px solid #fde047',
-            borderLeft: '4px solid #ca8a04',
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
             borderRadius: '12px',
-            padding: '24px',
-            boxShadow: '0 2px 8px rgba(202, 138, 4, 0.08)'
+            padding: '28px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
           }}>
-            <div style={{ marginBottom: '16px' }}>
-              <p style={{ fontSize: '11px', fontWeight: '700', color: '#92400e', textTransform: 'uppercase', margin: '0', letterSpacing: '0.8px' }}>
-                Average Deal Value
-              </p>
-              <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 0 0' }}>Per deal</p>
-            </div>
-            <p style={{ fontSize: '48px', fontWeight: '900', color: '#92400e', margin: '0 0 8px 0' }}>
-              ₹{(analytics.avgDealValue / 100000).toFixed(1)}L
+            <p style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', margin: '0 0 16px 0', letterSpacing: '0.5px' }}>
+              👥 Total Contacts
             </p>
-            <p style={{ fontSize: '12px', color: '#92400e', margin: '0' }}>
-              Total: ₹{(analytics.totalDealValue / 100000).toFixed(1)}L
+            <p style={{ fontSize: '48px', fontWeight: '900', color: '#0f172a', margin: '0 0 8px 0' }}>
+              {contacts.length}
+            </p>
+            <p style={{ fontSize: '13px', color: '#64748b', margin: '0' }}>
+              All contacts in your CRM
+            </p>
+          </div>
+
+          {/* Total Deals */}
+          <div style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '12px',
+            padding: '28px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+          }}>
+            <p style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', margin: '0 0 16px 0', letterSpacing: '0.5px' }}>
+              💼 Total Deals
+            </p>
+            <p style={{ fontSize: '48px', fontWeight: '900', color: '#0f172a', margin: '0 0 8px 0' }}>
+              {deals.length}
+            </p>
+            <p style={{ fontSize: '13px', color: '#64748b', margin: '0' }}>
+              All deals in pipeline
             </p>
           </div>
         </div>
 
-        {/* Charts Row 1 */}
+        {/* Charts Row 1 - Contacts & Deals Over Time */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-          gap: '20px',
-          marginBottom: '32px'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
+          gap: '24px',
+          marginBottom: '40px'
         }}>
           {/* Contacts Added Over Time */}
           <div style={{
             background: '#ffffff',
             border: '1px solid #e2e8f0',
-            borderLeft: '4px solid #2563eb',
             borderRadius: '12px',
-            padding: '24px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+            padding: '28px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
           }}>
-            <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 20px 0' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 24px 0' }}>
               📈 Contacts Added Over Time
             </h3>
-            <div style={{
-              height: '300px',
-              background: '#f8f9fa',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'space-around',
-              padding: '16px',
-              gap: '8px'
-            }}>
-              {analytics.contactsOverTime.map((item, idx) => {
-                const maxCount = Math.max(...analytics.contactsOverTime.map(d => d.count), 1)
-                const height = (item.count / maxCount) * 250
-                return (
-                  <div
-                    key={idx}
-                    style={{
-                      flex: 1,
-                      height: `${height}px`,
-                      background: 'linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%)',
-                      borderRadius: '4px 4px 0 0',
-                      minHeight: '4px',
-                      cursor: 'pointer',
-                      transition: 'opacity 0.2s',
-                      opacity: height > 0 ? 0.9 : 0.3
-                    }}
-                    title={`${item.date}: ${item.count} contacts`}
-                  />
-                )
-              })}
-            </div>
-            <p style={{ fontSize: '11px', color: '#64748b', margin: '12px 0 0 0', textAlign: 'center' }}>
-              Daily breakdown over 30 days
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={timeSeriesData}>
+                <defs>
+                  <linearGradient id="colorContacts" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#64748b' }} />
+                <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
+                <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
+                <Area type="monotone" dataKey="contacts" stroke="#2563eb" fillOpacity={1} fill="url(#colorContacts)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+            <p style={{ fontSize: '12px', color: '#64748b', margin: '12px 0 0 0', textAlign: 'center' }}>
+              Daily - In the last 30 days
             </p>
           </div>
 
@@ -280,158 +304,99 @@ export default function AnalyticsPage() {
           <div style={{
             background: '#ffffff',
             border: '1px solid #e2e8f0',
-            borderLeft: '4px solid #10b981',
             borderRadius: '12px',
-            padding: '24px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+            padding: '28px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
           }}>
-            <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 20px 0' }}>
-              📊 Deals Added Over Time
+            <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 24px 0' }}>
+              📊 Deals Created Over Time
             </h3>
-            <div style={{
-              height: '300px',
-              background: '#f8f9fa',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'space-around',
-              padding: '16px',
-              gap: '8px'
-            }}>
-              {analytics.dealsOverTime.map((item, idx) => {
-                const maxCount = Math.max(...analytics.dealsOverTime.map(d => d.count), 1)
-                const height = (item.count / maxCount) * 250
-                return (
-                  <div
-                    key={idx}
-                    style={{
-                      flex: 1,
-                      height: `${height}px`,
-                      background: 'linear-gradient(180deg, #10b981 0%, #059669 100%)',
-                      borderRadius: '4px 4px 0 0',
-                      minHeight: '4px',
-                      cursor: 'pointer',
-                      transition: 'opacity 0.2s',
-                      opacity: height > 0 ? 0.9 : 0.3
-                    }}
-                    title={`${item.date}: ${item.count} deals`}
-                  />
-                )
-              })}
-            </div>
-            <p style={{ fontSize: '11px', color: '#64748b', margin: '12px 0 0 0', textAlign: 'center' }}>
-              Daily breakdown over 30 days
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={timeSeriesData}>
+                <defs>
+                  <linearGradient id="colorDeals" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#64748b' }} />
+                <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
+                <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
+                <Area type="monotone" dataKey="deals" stroke="#10b981" fillOpacity={1} fill="url(#colorDeals)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+            <p style={{ fontSize: '12px', color: '#64748b', margin: '12px 0 0 0', textAlign: 'center' }}>
+              Daily - In the last 30 days
             </p>
           </div>
         </div>
 
-        {/* Charts Row 2 */}
+        {/* Charts Row 2 - Sources & Stages */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-          gap: '20px',
-          marginBottom: '32px'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
+          gap: '24px',
+          marginBottom: '40px'
         }}>
-          {/* Deals by Stage */}
-          <div style={{
-            background: '#ffffff',
-            border: '1px solid #e2e8f0',
-            borderLeft: '4px solid #0369a1',
-            borderRadius: '12px',
-            padding: '24px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-          }}>
-            <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 20px 0' }}>
-              🎯 Deals by Stage
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {Object.entries(analytics.dealsByStage).map(([stage, count]) => {
-                const total = analytics.totalDeals
-                const percentage = total > 0 ? ((count as number) / total) * 100 : 0
-                const stageColors: any = {
-                  LEAD: '#2563eb',
-                  CONTACTED: '#ca8a04',
-                  PROPOSAL: '#0369a1',
-                  CLOSED_WON: '#10b981',
-                  CLOSED_LOST: '#ef4444'
-                }
-                return (
-                  <div key={stage}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: '600', color: '#0f172a' }}>
-                        {stage}
-                      </span>
-                      <span style={{ fontSize: '12px', fontWeight: '700', color: stageColors[stage] }}>
-                        {count} ({percentage.toFixed(0)}%)
-                      </span>
-                    </div>
-                    <div style={{
-                      width: '100%',
-                      height: '8px',
-                      background: '#f0f0f0',
-                      borderRadius: '4px',
-                      overflow: 'hidden'
-                    }}>
-                      <div style={{
-                        width: `${percentage}%`,
-                        height: '100%',
-                        background: stageColors[stage],
-                        transition: 'width 0.3s ease'
-                      }} />
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
           {/* Contact Sources */}
           <div style={{
             background: '#ffffff',
             border: '1px solid #e2e8f0',
-            borderLeft: '4px solid #ca8a04',
             borderRadius: '12px',
-            padding: '24px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+            padding: '28px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
           }}>
-            <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 20px 0' }}>
-              👥 Contact Sources
+            <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 24px 0' }}>
+              🔗 Contact Sources
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {Object.entries(analytics.contactsBySource)
-                .sort((a, b) => (b[1] as number) - (a[1] as number))
-                .slice(0, 6)
-                .map(([source, count]) => {
-                  const total = analytics.totalContacts
-                  const percentage = total > 0 ? ((count as number) / total) * 100 : 0
-                  return (
-                    <div key={source}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: '600', color: '#0f172a' }}>
-                          {source}
-                        </span>
-                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#2563eb' }}>
-                          {count} ({percentage.toFixed(0)}%)
-                        </span>
-                      </div>
-                      <div style={{
-                        width: '100%',
-                        height: '8px',
-                        background: '#f0f0f0',
-                        borderRadius: '4px',
-                        overflow: 'hidden'
-                      }}>
-                        <div style={{
-                          width: `${percentage}%`,
-                          height: '100%',
-                          background: '#2563eb',
-                          transition: 'width 0.3s ease'
-                        }} />
-                      </div>
-                    </div>
-                  )
-                })}
-            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={contactSourcesData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} />
+                <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
+                <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
+                <Bar dataKey="value" fill="#ca8a04" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+            <p style={{ fontSize: '12px', color: '#64748b', margin: '12px 0 0 0', textAlign: 'center' }}>
+              In the last 30 days
+            </p>
+          </div>
+
+          {/* Deals by Stage */}
+          <div style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '12px',
+            padding: '28px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+          }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 24px 0' }}>
+              🎯 Deals by Stage
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={dealsByStageData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={80}
+                  outerRadius={120}
+                  paddingAngle={2}
+                  dataKey="value"
+                >
+                  {dealsByStageData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => `${value} deals`} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+            <p style={{ fontSize: '12px', color: '#64748b', margin: '12px 0 0 0', textAlign: 'center' }}>
+              In the last 30 days
+            </p>
           </div>
         </div>
 
@@ -439,48 +404,47 @@ export default function AnalyticsPage() {
         <div style={{
           background: '#ffffff',
           border: '1px solid #e2e8f0',
-          borderLeft: '4px solid #10b981',
           borderRadius: '12px',
-          padding: '24px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+          padding: '28px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
         }}>
-          <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 20px 0' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 24px 0' }}>
             📞 Activity Type Breakdown
           </h3>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
             gap: '20px'
           }}>
-            {Object.entries(analytics.activitiesByType).map(([type, count]) => {
-              const icons: any = {
-                'Call': '📞',
-                'Email': '📧',
-                'Meeting': '🤝',
-                'Task': '📋'
-              }
-              return (
-                <div key={type} style={{
-                  padding: '16px',
-                  background: '#f8f9fa',
-                  borderRadius: '8px',
-                  textAlign: 'center',
-                  border: '1px solid #e2e8f0'
-                }}>
-                  <p style={{ fontSize: '24px', margin: '0 0 8px 0' }}>
-                    {icons[type] || '📌'}
-                  </p>
-                  <p style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: '600', margin: '0 0 8px 0' }}>
-                    {type}
-                  </p>
-                  <p style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', margin: '0' }}>
-                    {count}
-                  </p>
-                </div>
-              )
-            })}
+            {Object.entries(activityByTypeMap).map(([type, count]: [string, any]) => (
+              <div key={type} style={{
+                padding: '20px',
+                background: '#f8f9fa',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                textAlign: 'center'
+              }}>
+                <p style={{ fontSize: '28px', margin: '0 0 8px 0' }}>
+                  {activityIcons[type] || '📌'}
+                </p>
+                <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: '600', margin: '0 0 8px 0' }}>
+                  {type}
+                </p>
+                <p style={{ fontSize: '32px', fontWeight: '900', color: '#0f172a', margin: '0' }}>
+                  {count}
+                </p>
+              </div>
+            ))}
           </div>
+          <p style={{ fontSize: '12px', color: '#64748b', margin: '20px 0 0 0', textAlign: 'center' }}>
+            In the last 30 days | Compared to | Previous 30 days
+          </p>
         </div>
+
+        {/* Last Updated */}
+        <p style={{ fontSize: '11px', color: '#94a3b8', margin: '32px 0 0 0', textAlign: 'center' }}>
+          Auto-refresh every 10 seconds • Last updated: {new Date().toLocaleTimeString()}
+        </p>
       </div>
     </div>
   )
