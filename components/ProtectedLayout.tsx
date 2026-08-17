@@ -63,7 +63,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
       {!isMobile && (
         <nav style={{
           width: '250px',
-          background: '#000000',
+          background: '#1e293b',
           color: 'white',
           padding: '0',
           position: 'fixed',
