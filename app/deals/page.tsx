@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-interface Deal {
+interface Lead {
   id: string
   name: string
   value: number
@@ -15,7 +15,7 @@ interface Deal {
 }
 
 interface Filters {
-  dealOwner: string
+  leadOwner: string
   createdAfter: string
   closedAfter: string
   lastActivityAfter: string
@@ -47,12 +47,12 @@ const BADGE_COLORS: Record<string, { bg: string; text: string; border: string }>
   red: { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5' }
 }
 
-export default function DealsPage() {
-  const [deals, setDeals] = useState<Deal[]>([])
+export default function LeadsPage() {
+  const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
-  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null)
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [message, setMessage] = useState<Message | null>(null)
   const [formData, setFormData] = useState({
@@ -65,7 +65,7 @@ export default function DealsPage() {
     notes: ''
   })
   const [filters, setFilters] = useState<Filters>({
-    dealOwner: '',
+    leadOwner: '',
     createdAfter: '',
     closedAfter: '',
     lastActivityAfter: '',
@@ -73,7 +73,7 @@ export default function DealsPage() {
   })
 
   useEffect(() => {
-    fetchDeals()
+    fetchLeads()
   }, [])
 
   // Auto-hide messages after 3 seconds
@@ -84,29 +84,40 @@ export default function DealsPage() {
     }
   }, [message])
 
-  async function fetchDeals() {
+  async function fetchLeads() {
     try {
+      console.log('[Leads] Fetching leads from API...')
       const res = await fetch('/api/deals')
+      console.log('[Leads] Response status:', res.status)
+
+      if (!res.ok) {
+        const responseText = await res.text()
+        throw new Error(`Failed to fetch leads (${res.status}): ${responseText}`)
+      }
+
       const data = await res.json()
-      setDeals(Array.isArray(data) ? data : [])
+      console.log('[Leads] Fetched', data.length, 'leads')
+      setLeads(Array.isArray(data) ? data : [])
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to load deals' })
+      const errorMsg = error instanceof Error ? error.message : 'Failed to load leads'
+      console.error('[Leads] Error:', errorMsg)
+      setMessage({ type: 'error', text: errorMsg })
     } finally {
       setLoading(false)
     }
   }
 
-  function validateDeal() {
+  function validateLead() {
     if (!formData.name.trim()) {
-      setMessage({ type: 'error', text: 'Deal name is required' })
+      setMessage({ type: 'error', text: 'Lead name is required' })
       return false
     }
     if (formData.name.length > 100) {
-      setMessage({ type: 'error', text: 'Deal name must be less than 100 characters' })
+      setMessage({ type: 'error', text: 'Lead name must be less than 100 characters' })
       return false
     }
     if (!formData.value || parseInt(formData.value) <= 0) {
-      setMessage({ type: 'error', text: 'Deal value must be greater than 0' })
+      setMessage({ type: 'error', text: 'Lead value must be greater than 0' })
       return false
     }
     if (formData.notes && formData.notes.length > 500) {
@@ -116,126 +127,170 @@ export default function DealsPage() {
     return true
   }
 
-  async function handleSaveDeal() {
-    if (!validateDeal()) return
+  async function handleSaveLead() {
+    if (!validateLead()) return
 
     try {
-      const url = selectedDeal ? `/api/deals/${selectedDeal.id}` : '/api/deals'
-      const method = selectedDeal ? 'PUT' : 'POST'
+      const url = selectedLead ? `/api/deals/${selectedLead.id}` : '/api/deals'
+      const method = selectedLead ? 'PUT' : 'POST'
+
+      const payload = {
+        name: formData.name,
+        value: parseInt(formData.value),
+        stage: formData.stage,
+        owner: formData.owner || null,
+        close_date: formData.close_date || null,
+        last_activity: formData.last_activity || null,
+        notes: formData.notes || null
+      }
+
+      if (selectedLead) {
+        payload.id = selectedLead.id
+      }
+
+      console.log(`[Lead Save] ${method} ${url}`, payload)
 
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          value: parseInt(formData.value),
-          stage: formData.stage,
-          owner: formData.owner || null,
-          close_date: formData.close_date || null,
-          last_activity: formData.last_activity || null,
-          notes: formData.notes || null
-        })
+        body: JSON.stringify(payload)
       })
 
+      console.log(`[Lead Save] Response status: ${res.status}`)
+
+      const responseText = await res.text()
+      console.log(`[Lead Save] Response body: ${responseText}`)
+
       if (!res.ok) {
-        const error = await res.json()
-        throw new Error(error.message || 'Failed to save deal')
+        let errorMessage = 'Failed to save lead'
+        try {
+          const errorData = JSON.parse(responseText)
+          errorMessage = errorData.error || errorData.message || errorMessage
+        } catch (e) {
+          errorMessage = `Server error (${res.status}): ${responseText || 'No details provided'}`
+        }
+        throw new Error(errorMessage)
       }
 
       setMessage({
         type: 'success',
-        text: selectedDeal ? 'Deal updated successfully!' : 'Deal created successfully!'
+        text: selectedLead ? 'Lead updated successfully!' : 'Lead created successfully!'
       })
       setFormData({ name: '', value: '', stage: 'PROSPECTING', owner: '', close_date: '', last_activity: '', notes: '' })
       setShowForm(false)
       setShowDetailsModal(false)
-      setSelectedDeal(null)
-      fetchDeals()
+      setSelectedLead(null)
+      fetchLeads()
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Failed to save lead'
+      console.error('[Lead Save] Error:', errorMsg)
       setMessage({
         type: 'error',
-        text: error instanceof Error ? error.message : 'Failed to save deal'
+        text: errorMsg
       })
     }
   }
 
-  async function handleUpdateDealStage(dealId: string, newStage: string) {
+  async function handleUpdateLeadStage(leadId: string, newStage: string) {
     try {
-      const res = await fetch(`/api/deals/${dealId}`, {
+      const res = await fetch(`/api/deals/${leadId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stage: newStage })
       })
 
-      if (!res.ok) throw new Error('Failed to update deal')
+      const responseText = await res.text()
+      if (!res.ok) {
+        let errorMsg = 'Failed to update lead'
+        try {
+          const errorData = JSON.parse(responseText)
+          errorMsg = errorData.error || errorMsg
+        } catch (e) {
+          errorMsg = `Server error (${res.status}): ${responseText || 'No details'}`
+        }
+        throw new Error(errorMsg)
+      }
 
-      setMessage({ type: 'success', text: 'Deal moved successfully' })
-      fetchDeals()
+      setMessage({ type: 'success', text: 'Lead moved successfully' })
+      fetchLeads()
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to move deal' })
+      const errorMsg = error instanceof Error ? error.message : 'Failed to move lead'
+      setMessage({ type: 'error', text: errorMsg })
     }
   }
 
-  async function handleDeleteDeal(dealId: string) {
-    if (!confirm('Are you sure you want to delete this deal?')) return
+  async function handleDeleteLead(leadId: string) {
+    if (!confirm('Are you sure you want to delete this lead?')) return
 
     try {
-      const res = await fetch(`/api/deals/${dealId}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete deal')
+      const res = await fetch(`/api/deals/${leadId}`, { method: 'DELETE' })
+      const responseText = await res.text()
 
-      setMessage({ type: 'success', text: 'Deal deleted successfully' })
-      fetchDeals()
+      if (!res.ok) {
+        let errorMsg = 'Failed to delete lead'
+        try {
+          const errorData = JSON.parse(responseText)
+          errorMsg = errorData.error || errorMsg
+        } catch (e) {
+          errorMsg = `Server error (${res.status}): ${responseText || 'No details'}`
+        }
+        throw new Error(errorMsg)
+      }
+
+      setMessage({ type: 'success', text: 'Lead deleted successfully' })
+      fetchLeads()
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to delete deal' })
+      const errorMsg = error instanceof Error ? error.message : 'Failed to delete lead'
+      setMessage({ type: 'error', text: errorMsg })
     }
   }
 
-  function openDealDetails(deal: Deal) {
-    setSelectedDeal(deal)
+  function openLeadDetails(lead: Lead) {
+    setSelectedLead(lead)
     setFormData({
-      name: deal.name,
-      value: deal.value.toString(),
-      stage: deal.stage,
-      owner: deal.owner || '',
-      close_date: deal.close_date || '',
-      last_activity: deal.last_activity || '',
-      notes: deal.notes || ''
+      name: lead.name,
+      value: lead.value.toString(),
+      stage: lead.stage,
+      owner: lead.owner || '',
+      close_date: lead.close_date || '',
+      last_activity: lead.last_activity || '',
+      notes: lead.notes || ''
     })
     setShowDetailsModal(true)
   }
 
-  function closeDealDetails() {
+  function closeLeadDetails() {
     setShowDetailsModal(false)
-    setSelectedDeal(null)
+    setSelectedLead(null)
     setFormData({ name: '', value: '', stage: 'PROSPECTING', owner: '', close_date: '', last_activity: '', notes: '' })
   }
 
-  const filteredDeals = deals.filter(deal => {
-    if (filters.searchText && !deal.name.toLowerCase().includes(filters.searchText.toLowerCase())) return false
-    if (filters.dealOwner && deal.owner !== filters.dealOwner) return false
+  const filteredLeads = leads.filter(lead => {
+    if (filters.searchText && !lead.name.toLowerCase().includes(filters.searchText.toLowerCase())) return false
+    if (filters.leadOwner && lead.owner !== filters.leadOwner) return false
     if (filters.createdAfter) {
-      const dealDate = new Date(deal.created_at)
+      const leadDate = new Date(lead.created_at)
       const filterDate = new Date(filters.createdAfter)
-      if (dealDate < filterDate) return false
+      if (leadDate < filterDate) return false
     }
-    if (filters.closedAfter && deal.close_date) {
-      const dealDate = new Date(deal.close_date)
+    if (filters.closedAfter && lead.close_date) {
+      const leadDate = new Date(lead.close_date)
       const filterDate = new Date(filters.closedAfter)
-      if (dealDate < filterDate) return false
+      if (leadDate < filterDate) return false
     }
-    if (filters.lastActivityAfter && deal.last_activity) {
-      const dealDate = new Date(deal.last_activity)
+    if (filters.lastActivityAfter && lead.last_activity) {
+      const leadDate = new Date(lead.last_activity)
       const filterDate = new Date(filters.lastActivityAfter)
-      if (dealDate < filterDate) return false
+      if (leadDate < filterDate) return false
     }
     return true
   })
 
-  const getDealsByStage = (stageId: string) => {
-    return filteredDeals.filter(deal => deal.stage === stageId)
+  const getLeadsByStage = (stageId: string) => {
+    return filteredLeads.filter(lead => lead.stage === stageId)
   }
 
-  const totalValue = filteredDeals.reduce((sum, deal) => sum + deal.value, 0)
+  const totalValue = filteredLeads.reduce((sum, lead) => sum + lead.value, 0)
 
   return (
     <div style={{ background: '#f9fafb', minHeight: '100vh', padding: '24px 0' }}>
@@ -267,10 +322,10 @@ export default function DealsPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <div>
               <h1 style={{ margin: '0 0 4px 0', fontSize: '28px', fontWeight: '800', color: '#111827' }}>
-                Deals
+                Leads
               </h1>
               <p style={{ margin: '0', fontSize: '13px', color: '#6b7280' }}>
-                All deals • {filteredDeals.length} deals • ₹{totalValue.toLocaleString('en-IN')} total
+                All leads • {filteredLeads.length} leads • ₹{totalValue.toLocaleString('en-IN')} total
               </p>
             </div>
             <button
@@ -290,19 +345,19 @@ export default function DealsPage() {
                 transition: 'all 0.2s'
               }}
             >
-              {showForm ? '✕ Close' : '+ Add deals'}
+              {showForm ? '✕ Close' : '+ Add leads'}
             </button>
           </div>
 
-          {/* Add Deal Form */}
+          {/* Add Lead Form */}
           {showForm && (
             <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e5e7eb' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '12px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '4px' }}>Deal Name *</label>
+                  <label style={{ fontSize: '11px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '4px' }}>Lead Name *</label>
                   <input
                     type="text"
-                    placeholder="e.g., Acme Corp Deal"
+                    placeholder="e.g., Acme Corp Lead"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     maxLength={100}
@@ -434,7 +489,7 @@ export default function DealsPage() {
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
-                  onClick={handleSaveDeal}
+                  onClick={handleSaveLead}
                   style={{
                     padding: '8px 16px',
                     background: '#2563eb',
@@ -449,7 +504,7 @@ export default function DealsPage() {
                   onMouseEnter={(e) => e.currentTarget.style.background = '#1d4ed8'}
                   onMouseLeave={(e) => e.currentTarget.style.background = '#2563eb'}
                 >
-                  Save Deal
+                  Save Lead
                 </button>
                 <button
                   onClick={() => setShowForm(false)}
@@ -476,7 +531,7 @@ export default function DealsPage() {
               <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', whiteSpace: 'nowrap' }}>🔍 Search</label>
               <input
                 type="text"
-                placeholder="Deal name..."
+                placeholder="Lead name..."
                 value={filters.searchText}
                 onChange={(e) => setFilters({ ...filters, searchText: e.target.value })}
                 style={{
@@ -491,10 +546,10 @@ export default function DealsPage() {
             </div>
 
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', minWidth: '200px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', whiteSpace: 'nowrap' }}>Deal owner</label>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', whiteSpace: 'nowrap' }}>Lead owner</label>
               <select
-                value={filters.dealOwner}
-                onChange={(e) => setFilters({ ...filters, dealOwner: e.target.value })}
+                value={filters.leadOwner}
+                onChange={(e) => setFilters({ ...filters, leadOwner: e.target.value })}
                 style={{
                   flex: 1,
                   padding: '8px 10px',
@@ -530,9 +585,9 @@ export default function DealsPage() {
               Filter {(filters.createdAfter || filters.closedAfter || filters.lastActivityAfter) ? '✓' : ''}
             </button>
 
-            {(filters.dealOwner || filters.createdAfter || filters.closedAfter || filters.lastActivityAfter || filters.searchText) && (
+            {(filters.leadOwner || filters.createdAfter || filters.closedAfter || filters.lastActivityAfter || filters.searchText) && (
               <button
-                onClick={() => setFilters({ dealOwner: '', createdAfter: '', closedAfter: '', lastActivityAfter: '', searchText: '' })}
+                onClick={() => setFilters({ leadOwner: '', createdAfter: '', closedAfter: '', lastActivityAfter: '', searchText: '' })}
                 style={{
                   padding: '8px 12px',
                   background: '#fee2e2',
@@ -609,8 +664,8 @@ export default function DealsPage() {
         </div>
       </div>
 
-      {/* Deal Details Modal */}
-      {showDetailsModal && selectedDeal && (
+      {/* Lead Details Modal */}
+      {showDetailsModal && selectedLead && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -635,10 +690,10 @@ export default function DealsPage() {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h2 style={{ margin: '0', fontSize: '22px', fontWeight: '700', color: '#111827' }}>
-                Edit Deal
+                Edit Lead
               </h2>
               <button
-                onClick={closeDealDetails}
+                onClick={closeLeadDetails}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -653,7 +708,7 @@ export default function DealsPage() {
 
             <div style={{ display: 'grid', gap: '16px', marginBottom: '24px' }}>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '6px' }}>Deal Name</label>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '6px' }}>Lead Name</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -793,7 +848,7 @@ export default function DealsPage() {
 
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
-                onClick={handleSaveDeal}
+                onClick={handleSaveLead}
                 style={{
                   flex: 1,
                   padding: '10px 16px',
@@ -809,10 +864,10 @@ export default function DealsPage() {
                 onMouseEnter={(e) => e.currentTarget.style.background = '#1d4ed8'}
                 onMouseLeave={(e) => e.currentTarget.style.background = '#2563eb'}
               >
-                Update Deal
+                Update Lead
               </button>
               <button
-                onClick={() => handleDeleteDeal(selectedDeal.id)}
+                onClick={() => handleDeleteLead(selectedLead.id)}
                 style={{
                   flex: 1,
                   padding: '10px 16px',
@@ -825,10 +880,10 @@ export default function DealsPage() {
                   fontSize: '14px'
                 }}
               >
-                Delete Deal
+                Delete Lead
               </button>
               <button
-                onClick={closeDealDetails}
+                onClick={closeLeadDetails}
                 style={{
                   flex: 1,
                   padding: '10px 16px',
@@ -851,14 +906,14 @@ export default function DealsPage() {
       {/* Kanban Board */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <p style={{ color: '#6b7280' }}>Loading deals...</p>
+          <p style={{ color: '#6b7280' }}>Loading leads...</p>
         </div>
       ) : (
         <div style={{ padding: '0 24px', overflow: 'auto' }}>
           <div style={{ maxWidth: '1800px', margin: '0 auto', display: 'flex', gap: '16px', minWidth: 'min-content' }}>
             {STAGES.map(stage => {
-              const stageDealCount = getDealsByStage(stage.id).length
-              const stageValue = getDealsByStage(stage.id).reduce((sum, deal) => sum + deal.value, 0)
+              const stageLeadCount = getLeadsByStage(stage.id).length
+              const stageValue = getLeadsByStage(stage.id).reduce((sum, lead) => sum + lead.value, 0)
               const badgeColor = BADGE_COLORS[stage.badge]
 
               return (
@@ -892,7 +947,7 @@ export default function DealsPage() {
                         {stage.label}
                       </span>
                       <span style={{ background: 'white', color: badgeColor.text, padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '700' }}>
-                        {stageDealCount}
+                        {stageLeadCount}
                       </span>
                     </div>
                     <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
@@ -900,18 +955,18 @@ export default function DealsPage() {
                     </div>
                   </div>
 
-                  {/* Deal Cards Container */}
+                  {/* Lead Cards Container */}
                   <div style={{ flex: 1, overflow: 'auto', padding: '12px' }}>
-                    {getDealsByStage(stage.id).length === 0 ? (
+                    {getLeadsByStage(stage.id).length === 0 ? (
                       <div style={{ textAlign: 'center', padding: '24px 12px', color: '#9ca3af' }}>
                         <div style={{ fontSize: '28px', marginBottom: '8px' }}>+</div>
-                        <div style={{ fontSize: '13px' }}>No deals</div>
+                        <div style={{ fontSize: '13px' }}>No leads</div>
                       </div>
                     ) : (
-                      getDealsByStage(stage.id).map((deal) => (
+                      getLeadsByStage(stage.id).map((lead) => (
                         <div
-                          key={deal.id}
-                          onClick={() => openDealDetails(deal)}
+                          key={lead.id}
+                          onClick={() => openLeadDetails(lead)}
                           style={{
                             background: '#ffffff',
                             border: `1px solid ${badgeColor.border}`,
@@ -931,27 +986,27 @@ export default function DealsPage() {
                           }}
                         >
                           <div style={{ fontWeight: '600', color: '#111827', marginBottom: '8px', fontSize: '13px' }}>
-                            {deal.name}
+                            {lead.name}
                           </div>
                           <div style={{ color: badgeColor.text, fontWeight: '700', marginBottom: '10px', fontSize: '15px' }}>
-                            ₹{(deal.value || 0).toLocaleString('en-IN')}
+                            ₹{(lead.value || 0).toLocaleString('en-IN')}
                           </div>
                           <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '10px' }}>
-                            {deal.owner && <div style={{ marginBottom: '4px' }}>👤 {deal.owner}</div>}
-                            {deal.created_at && <div>{new Date(deal.created_at).toLocaleDateString('en-IN')}</div>}
+                            {lead.owner && <div style={{ marginBottom: '4px' }}>👤 {lead.owner}</div>}
+                            {lead.created_at && <div>{new Date(lead.created_at).toLocaleDateString('en-IN')}</div>}
                           </div>
-                          {deal.notes && (
+                          {lead.notes && (
                             <div style={{ fontSize: '11px', color: '#9ca3af', padding: '8px', background: '#f9fafb', borderRadius: '4px', marginBottom: '10px', maxHeight: '50px', overflow: 'hidden' }}>
-                              {deal.notes}
+                              {lead.notes}
                             </div>
                           )}
                           <div style={{ display: 'flex', gap: '6px', paddingTop: '10px', borderTop: '1px solid #e5e7eb' }}>
                             <select
                               onClick={(e) => e.stopPropagation()}
-                              value={deal.stage}
+                              value={lead.stage}
                               onChange={(e) => {
                                 e.stopPropagation()
-                                handleUpdateDealStage(deal.id, e.target.value)
+                                handleUpdateLeadStage(lead.id, e.target.value)
                               }}
                               style={{
                                 flex: 1,
@@ -971,7 +1026,7 @@ export default function DealsPage() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()
-                                handleDeleteDeal(deal.id)
+                                handleDeleteLead(lead.id)
                               }}
                               style={{
                                 padding: '6px 10px',
