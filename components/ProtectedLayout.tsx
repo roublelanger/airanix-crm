@@ -77,8 +77,8 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
           {/* Header Section */}
           <div style={{
             padding: '24px 20px 20px 20px',
-            borderBottom: '2px solid #ffffff',
-            background: '#000000',
+            borderBottom: '2px solid #3b82f6',
+            background: '#1e293b',
             marginBottom: '12px'
           }}>
             <a href="/" style={{ textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -125,8 +125,8 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
           {/* User Section at Bottom */}
           <div style={{
             padding: '12px',
-            borderTop: '2px solid #ffffff',
-            background: '#000000'
+            borderTop: '2px solid #3b82f6',
+            background: '#1e293b'
           }}>
             <div style={{
               background: '#ffffff',
