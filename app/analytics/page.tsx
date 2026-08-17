@@ -2,152 +2,485 @@
 
 import { useState, useEffect } from 'react'
 
-// Sales Analytics: Currency in INR, Interactive pipeline cards, Auto-refresh every 5 seconds
+interface AnalyticsData {
+  totalContacts: number
+  newContactsLast30: number
+  totalDeals: number
+  newDealsLast30: number
+  dealsByStage: Record<string, number>
+  contactsBySource: Record<string, number>
+  activitiesByType: Record<string, number>
+  contactsOverTime: { date: string; count: number }[]
+  dealsOverTime: { date: string; count: number }[]
+  avgDealValue: number
+  totalDealValue: number
+}
 
 export default function AnalyticsPage() {
-  const [deals, setDeals] = useState<any[]>([])
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [selectedStage, setSelectedStage] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchDeals()
-    const interval = setInterval(fetchDeals, 5000)
+    fetchAnalytics()
+    const interval = setInterval(fetchAnalytics, 30000)
     return () => clearInterval(interval)
   }, [])
 
-  async function fetchDeals() {
+  async function fetchAnalytics() {
     try {
-      const res = await fetch('/api/deals')
-      const data = await res.json()
-      setDeals(data)
+      const [contactsRes, dealsRes, activitiesRes] = await Promise.all([
+        fetch('/api/contacts'),
+        fetch('/api/deals'),
+        fetch('/api/activities')
+      ])
+
+      const contacts = await contactsRes.json()
+      const deals = await dealsRes.json()
+      const activities = await activitiesRes.json()
+
+      const now = new Date()
+      const last30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+      const newContacts = contacts.filter((c: any) => new Date(c.createdAt) > last30).length
+      const newDeals = deals.filter((d: any) => new Date(d.createdAt) > last30).length
+
+      const dealsByStage = deals.reduce((acc: any, d: any) => {
+        acc[d.stage || 'LEAD'] = (acc[d.stage || 'LEAD'] || 0) + 1
+        return acc
+      }, {})
+
+      const contactsBySource = contacts.reduce((acc: any, c: any) => {
+        const source = c.platform || c.company || 'Direct'
+        acc[source] = (acc[source] || 0) + 1
+        return acc
+      }, {})
+
+      const activitiesByType = activities.reduce((acc: any, a: any) => {
+        acc[a.type || 'Task'] = (acc[a.type || 'Task'] || 0) + 1
+        return acc
+      }, {})
+
+      const contactsOverTime = generateTimeSeriesData(contacts, 30)
+      const dealsOverTime = generateTimeSeriesData(deals, 30)
+
+      const totalDealValue = deals.reduce((sum: number, d: any) => sum + (d.value || 0), 0)
+      const avgDealValue = deals.length > 0 ? totalDealValue / deals.length : 0
+
+      setAnalytics({
+        totalContacts: contacts.length,
+        newContactsLast30: newContacts,
+        totalDeals: deals.length,
+        newDealsLast30: newDeals,
+        dealsByStage,
+        contactsBySource,
+        activitiesByType,
+        contactsOverTime,
+        dealsOverTime,
+        avgDealValue,
+        totalDealValue
+      })
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error fetching analytics:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const formatCurrency = (value: number) => {
-    return `₹${(value / 100000).toFixed(2)}L`
+  function generateTimeSeriesData(items: any[], days: number) {
+    const data: { date: string; count: number }[] = []
+    const now = new Date()
+
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
+      const dateStr = date.toISOString().split('T')[0]
+      const count = items.filter((item) => item.createdAt?.startsWith(dateStr)).length
+      data.push({ date: dateStr, count })
+    }
+
+    return data
   }
 
-  const stages = ['LEAD', 'CONTACTED', 'PROPOSAL', 'WON', 'LOST']
-  const stageColors: any = {
-    LEAD: '#dbeafe',
-    CONTACTED: '#fef3c7',
-    PROPOSAL: '#d1fae5',
-    WON: '#10b981',
-    LOST: '#ef4444'
+  if (loading) {
+    return (
+      <div style={{ padding: '40px 24px', textAlign: 'center', color: '#64748b' }}>
+        Loading analytics...
+      </div>
+    )
   }
 
-  const dealsByStage = stages.map(stage => ({
-    stage,
-    count: deals.filter(d => d.stage === stage).length,
-    value: deals.filter(d => d.stage === stage).reduce((sum: number, d: any) => sum + (d.value || 0), 0)
-  }))
-
-  const totalValue = deals.reduce((sum: number, d: any) => sum + (d.value || 0), 0)
-  const avgDealValue = deals.length > 0 ? (totalValue / deals.length) : 0
-
-  const conversionRate = deals.filter(d => d.stage === 'WON').length > 0
-    ? ((deals.filter(d => d.stage === 'WON').length / deals.length) * 100).toFixed(1)
-    : 0
-
-  const selectedStageData = dealsByStage.find(s => s.stage === selectedStage)
+  if (!analytics) {
+    return (
+      <div style={{ padding: '40px 24px', textAlign: 'center', color: '#ef4444' }}>
+        Error loading analytics
+      </div>
+    )
+  }
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '40px 20px' }}>
-      <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '30px' }}>📊 Sales Analytics</h1>
-
-      {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '40px' }}>
-        <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <p style={{ color: '#666', fontSize: '13px', margin: '0 0 8px 0' }}>Total Pipeline Value</p>
-          <p style={{ fontSize: '28px', fontWeight: 'bold', margin: 0 }}>{formatCurrency(totalValue)}</p>
+    <div style={{ padding: '40px 24px', background: '#ffffff', minHeight: '100vh' }}>
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{ marginBottom: '40px' }}>
+          <h1 style={{ fontSize: '32px', fontWeight: '900', color: '#0f172a', margin: '0 0 8px 0' }}>
+            Analytics Dashboard
+          </h1>
+          <p style={{ fontSize: '14px', color: '#64748b', margin: '0', fontWeight: '500' }}>
+            Last 30 days performance overview
+          </p>
         </div>
 
-        <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <p style={{ color: '#666', fontSize: '13px', margin: '0 0 8px 0' }}>Total Deals</p>
-          <p style={{ fontSize: '28px', fontWeight: 'bold', margin: 0 }}>{deals.length}</p>
+        {/* Filter Bar */}
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          marginBottom: '32px',
+          padding: '12px',
+          background: '#f8f9fa',
+          borderRadius: '8px',
+          borderLeft: '4px solid #2563eb'
+        }}>
+          <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>
+            📊 Last 30 Days
+          </span>
         </div>
 
-        <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <p style={{ color: '#666', fontSize: '13px', margin: '0 0 8px 0' }}>Avg Deal Value</p>
-          <p style={{ fontSize: '28px', fontWeight: 'bold', margin: 0 }}>{formatCurrency(avgDealValue)}</p>
-        </div>
-
-        <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <p style={{ color: '#666', fontSize: '13px', margin: '0 0 8px 0' }}>Win Rate</p>
-          <p style={{ fontSize: '28px', fontWeight: 'bold', margin: 0 }}>{conversionRate}%</p>
-        </div>
-      </div>
-
-      {/* Pipeline by Stage - Interactive */}
-      <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '40px' }}>
-        <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>Pipeline by Stage (Click to View Details)</h2>
-
-        {loading ? (
-          <div style={{ textAlign: 'center', color: '#999' }}>Loading...</div>
-        ) : (
-          <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: selectedStage ? '24px' : '0' }}>
-              {dealsByStage.map(stage => (
-                <div
-                  key={stage.stage}
-                  onClick={() => setSelectedStage(selectedStage === stage.stage ? null : stage.stage)}
-                  style={{
-                    background: stageColors[stage.stage],
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: selectedStage === stage.stage ? '3px solid #1e40af' : '1px solid rgba(0,0,0,0.1)',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    transform: selectedStage === stage.stage ? 'scale(1.05)' : 'scale(1)'
-                  }}
-                >
-                  <p style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '500', textTransform: 'uppercase' }}>
-                    {stage.stage}
-                  </p>
-                  <p style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>{stage.count}</p>
-                  <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#666' }}>
-                    {formatCurrency(stage.value)}
-                  </p>
-                </div>
-              ))}
+        {/* Key Metrics Row 1 */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '20px',
+          marginBottom: '32px'
+        }}>
+          {/* New Contacts Created */}
+          <div style={{
+            background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+            border: '1px solid #7dd3fc',
+            borderLeft: '4px solid #0369a1',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 2px 8px rgba(3, 105, 161, 0.08)'
+          }}>
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{ fontSize: '11px', fontWeight: '700', color: '#0369a1', textTransform: 'uppercase', margin: '0', letterSpacing: '0.8px' }}>
+                New Contacts Created
+              </p>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 0 0' }}>In the last 30 days</p>
             </div>
+            <p style={{ fontSize: '48px', fontWeight: '900', color: '#0369a1', margin: '0 0 8px 0' }}>
+              {analytics.newContactsLast30}
+            </p>
+            <p style={{ fontSize: '12px', color: '#0369a1', margin: '0' }}>
+              Total: {analytics.totalContacts} contacts
+            </p>
+          </div>
 
-            {selectedStageData && (
-              <div style={{ background: '#f0f9ff', padding: '16px', borderRadius: '8px', border: '1px solid #93c5fd' }}>
-                <h3 style={{ margin: '0 0 12px 0', color: '#1e40af' }}>📊 {selectedStageData.stage} Details</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                  <div>
-                    <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>Deal Count</p>
-                    <p style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>{selectedStageData.count}</p>
+          {/* New Deals Created */}
+          <div style={{
+            background: 'linear-gradient(135deg, #f0fdf4 0%, #e1fce4 100%)',
+            border: '1px solid #86efac',
+            borderLeft: '4px solid #10b981',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 2px 8px rgba(16, 185, 129, 0.08)'
+          }}>
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{ fontSize: '11px', fontWeight: '700', color: '#047857', textTransform: 'uppercase', margin: '0', letterSpacing: '0.8px' }}>
+                New Deals Created
+              </p>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 0 0' }}>In the last 30 days</p>
+            </div>
+            <p style={{ fontSize: '48px', fontWeight: '900', color: '#047857', margin: '0 0 8px 0' }}>
+              {analytics.newDealsLast30}
+            </p>
+            <p style={{ fontSize: '12px', color: '#047857', margin: '0' }}>
+              Total: {analytics.totalDeals} deals
+            </p>
+          </div>
+
+          {/* Avg Deal Value */}
+          <div style={{
+            background: 'linear-gradient(135deg, #fffbf0 0%, #fef3e2 100%)',
+            border: '1px solid #fde047',
+            borderLeft: '4px solid #ca8a04',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 2px 8px rgba(202, 138, 4, 0.08)'
+          }}>
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{ fontSize: '11px', fontWeight: '700', color: '#92400e', textTransform: 'uppercase', margin: '0', letterSpacing: '0.8px' }}>
+                Average Deal Value
+              </p>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 0 0' }}>Per deal</p>
+            </div>
+            <p style={{ fontSize: '48px', fontWeight: '900', color: '#92400e', margin: '0 0 8px 0' }}>
+              ₹{(analytics.avgDealValue / 100000).toFixed(1)}L
+            </p>
+            <p style={{ fontSize: '12px', color: '#92400e', margin: '0' }}>
+              Total: ₹{(analytics.totalDealValue / 100000).toFixed(1)}L
+            </p>
+          </div>
+        </div>
+
+        {/* Charts Row 1 */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+          gap: '20px',
+          marginBottom: '32px'
+        }}>
+          {/* Contacts Added Over Time */}
+          <div style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #2563eb',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+          }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 20px 0' }}>
+              📈 Contacts Added Over Time
+            </h3>
+            <div style={{
+              height: '300px',
+              background: '#f8f9fa',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'space-around',
+              padding: '16px',
+              gap: '8px'
+            }}>
+              {analytics.contactsOverTime.map((item, idx) => {
+                const maxCount = Math.max(...analytics.contactsOverTime.map(d => d.count), 1)
+                const height = (item.count / maxCount) * 250
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      flex: 1,
+                      height: `${height}px`,
+                      background: 'linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%)',
+                      borderRadius: '4px 4px 0 0',
+                      minHeight: '4px',
+                      cursor: 'pointer',
+                      transition: 'opacity 0.2s',
+                      opacity: height > 0 ? 0.9 : 0.3
+                    }}
+                    title={`${item.date}: ${item.count} contacts`}
+                  />
+                )
+              })}
+            </div>
+            <p style={{ fontSize: '11px', color: '#64748b', margin: '12px 0 0 0', textAlign: 'center' }}>
+              Daily breakdown over 30 days
+            </p>
+          </div>
+
+          {/* Deals Added Over Time */}
+          <div style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #10b981',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+          }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 20px 0' }}>
+              📊 Deals Added Over Time
+            </h3>
+            <div style={{
+              height: '300px',
+              background: '#f8f9fa',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'space-around',
+              padding: '16px',
+              gap: '8px'
+            }}>
+              {analytics.dealsOverTime.map((item, idx) => {
+                const maxCount = Math.max(...analytics.dealsOverTime.map(d => d.count), 1)
+                const height = (item.count / maxCount) * 250
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      flex: 1,
+                      height: `${height}px`,
+                      background: 'linear-gradient(180deg, #10b981 0%, #059669 100%)',
+                      borderRadius: '4px 4px 0 0',
+                      minHeight: '4px',
+                      cursor: 'pointer',
+                      transition: 'opacity 0.2s',
+                      opacity: height > 0 ? 0.9 : 0.3
+                    }}
+                    title={`${item.date}: ${item.count} deals`}
+                  />
+                )
+              })}
+            </div>
+            <p style={{ fontSize: '11px', color: '#64748b', margin: '12px 0 0 0', textAlign: 'center' }}>
+              Daily breakdown over 30 days
+            </p>
+          </div>
+        </div>
+
+        {/* Charts Row 2 */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+          gap: '20px',
+          marginBottom: '32px'
+        }}>
+          {/* Deals by Stage */}
+          <div style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #0369a1',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+          }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 20px 0' }}>
+              🎯 Deals by Stage
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {Object.entries(analytics.dealsByStage).map(([stage, count]) => {
+                const total = analytics.totalDeals
+                const percentage = total > 0 ? ((count as number) / total) * 100 : 0
+                const stageColors: any = {
+                  LEAD: '#2563eb',
+                  CONTACTED: '#ca8a04',
+                  PROPOSAL: '#0369a1',
+                  CLOSED_WON: '#10b981',
+                  CLOSED_LOST: '#ef4444'
+                }
+                return (
+                  <div key={stage}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: '600', color: '#0f172a' }}>
+                        {stage}
+                      </span>
+                      <span style={{ fontSize: '12px', fontWeight: '700', color: stageColors[stage] }}>
+                        {count} ({percentage.toFixed(0)}%)
+                      </span>
+                    </div>
+                    <div style={{
+                      width: '100%',
+                      height: '8px',
+                      background: '#f0f0f0',
+                      borderRadius: '4px',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        width: `${percentage}%`,
+                        height: '100%',
+                        background: stageColors[stage],
+                        transition: 'width 0.3s ease'
+                      }} />
+                    </div>
                   </div>
-                  <div>
-                    <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>Total Value</p>
-                    <p style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>{formatCurrency(selectedStageData.value)}</p>
-                  </div>
-                  <div>
-                    <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>Avg Value per Deal</p>
-                    <p style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>{selectedStageData.count > 0 ? formatCurrency(selectedStageData.value / selectedStageData.count) : '₹0'}</p>
-                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Contact Sources */}
+          <div style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #ca8a04',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+          }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 20px 0' }}>
+              👥 Contact Sources
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {Object.entries(analytics.contactsBySource)
+                .sort((a, b) => (b[1] as number) - (a[1] as number))
+                .slice(0, 6)
+                .map(([source, count]) => {
+                  const total = analytics.totalContacts
+                  const percentage = total > 0 ? ((count as number) / total) * 100 : 0
+                  return (
+                    <div key={source}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: '600', color: '#0f172a' }}>
+                          {source}
+                        </span>
+                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#2563eb' }}>
+                          {count} ({percentage.toFixed(0)}%)
+                        </span>
+                      </div>
+                      <div style={{
+                        width: '100%',
+                        height: '8px',
+                        background: '#f0f0f0',
+                        borderRadius: '4px',
+                        overflow: 'hidden'
+                      }}>
+                        <div style={{
+                          width: `${percentage}%`,
+                          height: '100%',
+                          background: '#2563eb',
+                          transition: 'width 0.3s ease'
+                        }} />
+                      </div>
+                    </div>
+                  )
+                })}
+            </div>
+          </div>
+        </div>
+
+        {/* Activity Breakdown */}
+        <div style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderLeft: '4px solid #10b981',
+          borderRadius: '12px',
+          padding: '24px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+        }}>
+          <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 20px 0' }}>
+            📞 Activity Type Breakdown
+          </h3>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: '20px'
+          }}>
+            {Object.entries(analytics.activitiesByType).map(([type, count]) => {
+              const icons: any = {
+                'Call': '📞',
+                'Email': '📧',
+                'Meeting': '🤝',
+                'Task': '📋'
+              }
+              return (
+                <div key={type} style={{
+                  padding: '16px',
+                  background: '#f8f9fa',
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                  border: '1px solid #e2e8f0'
+                }}>
+                  <p style={{ fontSize: '24px', margin: '0 0 8px 0' }}>
+                    {icons[type] || '📌'}
+                  </p>
+                  <p style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: '600', margin: '0 0 8px 0' }}>
+                    {type}
+                  </p>
+                  <p style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', margin: '0' }}>
+                    {count}
+                  </p>
                 </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Quick Insights */}
-      <div style={{ background: '#f0f9ff', padding: '24px', borderRadius: '8px', border: '1px solid #93c5fd' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1e40af', margin: '0 0 12px 0' }}>💡 Quick Insights</h3>
-        <ul style={{ margin: 0, paddingLeft: '20px', color: '#1e40af', fontSize: '14px', lineHeight: '1.8' }}>
-          <li>Top stage: <strong>{dealsByStage.sort((a, b) => b.value - a.value)[0].stage}</strong> with {formatCurrency(dealsByStage.sort((a, b) => b.value - a.value)[0].value)} value</li>
-          <li>Deals in pipeline: <strong>{dealsByStage.find(s => s.stage === 'LEAD')?.count || 0}</strong> leads waiting follow-up</li>
-          <li>Win rate: <strong>{conversionRate}%</strong> (industry average: 20-30%)</li>
-          <li>Last updated: <strong>Every 5 seconds</strong> ⟳ (auto-refresh enabled)</li>
-        </ul>
+              )
+            })}
+          </div>
+        </div>
       </div>
     </div>
   )
