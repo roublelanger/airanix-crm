@@ -134,7 +134,7 @@ export default function LeadsPage() {
       const url = selectedLead ? `/api/deals/${selectedLead.id}` : '/api/deals'
       const method = selectedLead ? 'PUT' : 'POST'
 
-      const payload = {
+      const payload: any = {
         name: formData.name,
         value: parseInt(formData.value),
         stage: formData.stage,
@@ -561,7 +561,7 @@ export default function LeadsPage() {
                 }}
               >
                 <option value="">All</option>
-                {[...new Set(deals.map(d => d.owner).filter(Boolean))].map(owner => (
+                {[...new Set(leads.map(d => d.owner).filter(Boolean))].map(owner => (
                   <option key={owner} value={owner}>{owner}</option>
                 ))}
               </select>
