@@ -47,7 +47,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         close_date: close_date || null,
         last_activity: last_activity || null,
         notes: notes || null,
-        updated_at: new Date().toISOString()
+        updatedAt: new Date().toISOString()
       })
       .eq('id', params.id)
       .select('*')

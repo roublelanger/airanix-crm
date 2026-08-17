@@ -47,8 +47,8 @@ export async function POST(request: Request) {
         last_activity: last_activity || null,
         notes: notes || null,
         contactId: null,
-        created_at: now,
-        updated_at: now
+        createdAt: now,
+        updatedAt: now
       }])
       .select('*')
 
@@ -85,7 +85,7 @@ export async function PUT(request: Request) {
         close_date: close_date || null,
         last_activity: last_activity || null,
         notes: notes || null,
-        updated_at: new Date().toISOString()
+        updatedAt: new Date().toISOString()
       })
       .eq('id', id)
       .select('*')
