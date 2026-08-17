@@ -4,9 +4,11 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function GET(req: NextRequest) {
   try {
     // Fetch all users from auth.users
-    const { data: authUsers, error: authError } = await supabaseServer.auth.admin.listUsers()
+    const authResponse = await supabaseServer.auth.admin.listUsers()
 
-    if (authError) throw authError
+    if (authResponse.error) throw authResponse.error
+
+    const authUsers = authResponse.data?.users || []
 
     // Get all crm_users to supplement with names and roles
     const { data: crmUsers, error: crmError } = await supabaseServer
