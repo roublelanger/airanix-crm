@@ -2,6 +2,15 @@
 
 import { useEffect, useState } from 'react'
 
+interface Contact {
+  id: string
+  name: string
+  email: string
+  phone?: string
+  company?: string
+  assigned_to?: string
+}
+
 interface Lead {
   id: string
   name: string
@@ -12,6 +21,7 @@ interface Lead {
   close_date?: string
   last_activity?: string
   notes?: string
+  contactId?: string
 }
 
 interface Filters {
@@ -47,6 +57,7 @@ const BADGE_COLORS: Record<string, { bg: string; text: string; border: string }>
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([])
+  const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
@@ -60,7 +71,8 @@ export default function LeadsPage() {
     owner: '',
     close_date: '',
     last_activity: '',
-    notes: ''
+    notes: '',
+    contactId: ''
   })
   const [filters, setFilters] = useState<Filters>({
     leadOwner: '',
@@ -72,6 +84,7 @@ export default function LeadsPage() {
 
   useEffect(() => {
     fetchLeads()
+    fetchContacts()
   }, [])
 
   // Auto-hide messages after 3 seconds
@@ -102,6 +115,36 @@ export default function LeadsPage() {
       setMessage({ type: 'error', text: errorMsg })
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function fetchContacts() {
+    try {
+      console.log('[Leads] Fetching contacts from API...')
+      const res = await fetch('/api/contacts')
+
+      if (!res.ok) {
+        console.warn('[Leads] Failed to fetch contacts, continuing without them')
+        return
+      }
+
+      const data = await res.json()
+      console.log('[Leads] Fetched', data.length, 'contacts')
+      setContacts(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.warn('[Leads] Could not fetch contacts:', error)
+    }
+  }
+
+  function handleContactSelect(contactId: string) {
+    const contact = contacts.find(c => c.id === contactId)
+    if (contact) {
+      setFormData({
+        ...formData,
+        contactId: contact.id,
+        name: formData.name || contact.name,
+        owner: formData.owner || contact.assigned_to || ''
+      })
     }
   }
 
@@ -139,7 +182,8 @@ export default function LeadsPage() {
         owner: formData.owner || null,
         close_date: formData.close_date || null,
         last_activity: formData.last_activity || null,
-        notes: formData.notes || null
+        notes: formData.notes || null,
+        contactId: formData.contactId || null
       }
 
       if (selectedLead) {
@@ -174,7 +218,7 @@ export default function LeadsPage() {
         type: 'success',
         text: selectedLead ? 'Lead updated successfully!' : 'Lead created successfully!'
       })
-      setFormData({ name: '', value: '', stage: 'LEAD', owner: '', close_date: '', last_activity: '', notes: '' })
+      setFormData({ name: '', value: '', stage: 'LEAD', owner: '', close_date: '', last_activity: '', notes: '', contactId: '' })
       setShowForm(false)
       setShowDetailsModal(false)
       setSelectedLead(null)
@@ -252,7 +296,8 @@ export default function LeadsPage() {
       owner: lead.owner || '',
       close_date: lead.close_date || '',
       last_activity: lead.last_activity || '',
-      notes: lead.notes || ''
+      notes: lead.notes || '',
+      contactId: lead.contactId || ''
     })
     setShowDetailsModal(true)
   }
@@ -260,7 +305,7 @@ export default function LeadsPage() {
   function closeLeadDetails() {
     setShowDetailsModal(false)
     setSelectedLead(null)
-    setFormData({ name: '', value: '', stage: 'LEAD', owner: '', close_date: '', last_activity: '', notes: '' })
+    setFormData({ name: '', value: '', stage: 'LEAD', owner: '', close_date: '', last_activity: '', notes: '', contactId: '' })
   }
 
   const filteredLeads = leads.filter(lead => {
@@ -351,6 +396,37 @@ export default function LeadsPage() {
           {showForm && (
             <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e5e7eb' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '12px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '4px' }}>Select Contact</label>
+                  <select
+                    value={formData.contactId}
+                    onChange={(e) => {
+                      const contactId = e.target.value
+                      if (contactId) {
+                        handleContactSelect(contactId)
+                      } else {
+                        setFormData({ ...formData, contactId: '' })
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      fontFamily: 'inherit',
+                      backgroundColor: 'white',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="">-- Select a Contact --</option>
+                    {contacts.map(contact => (
+                      <option key={contact.id} value={contact.id}>
+                        {contact.name} {contact.email ? `(${contact.email})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label style={{ fontSize: '11px', fontWeight: '600', color: '#6b7280', display: 'block', marginBottom: '4px' }}>Lead Name *</label>
                   <input
