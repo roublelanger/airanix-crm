@@ -1,10 +1,17 @@
 ﻿import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import https from 'https'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
 let supabase: SupabaseClient | null = null
 let supabaseServer: SupabaseClient | null = null
+
+// Create HTTPS agent that rejects unauthorized certificates (for production)
+// In development, we use NODE_TLS_REJECT_UNAUTHORIZED=0
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: process.env.NODE_ENV === 'production'
+})
 
 try {
   if (supabaseUrl && supabaseAnonKey) {
@@ -28,4 +35,4 @@ try {
   console.error('Failed to initialize Supabase server client:', error)
 }
 
-export { supabase, supabaseServer }
+export { supabase, supabaseServer, httpsAgent }

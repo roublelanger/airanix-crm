@@ -3,21 +3,6 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(req: NextRequest) {
   try {
-    const { data: { user }, error: authError } = await supabaseServer.auth.admin.getUserById('')
-    if (authError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { data: userProfile, error: profileError } = await supabaseServer
-      .from('crm_users')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError || userProfile?.role !== 'admin') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-    }
-
     const { data: users, error } = await supabaseServer
       .from('crm_users')
       .select('*')
