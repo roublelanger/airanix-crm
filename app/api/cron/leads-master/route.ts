@@ -34,7 +34,7 @@ interface EnrichedLead extends Lead {
 
 // 1. FETCH FROM GOOGLE FORMS (Google Sheets)
 async function fetchGoogleFormsLeads(): Promise<Lead[]> {
-  if (!SHEET_ID || !GOOGLE_SHEETS_API_KEY) {
+  if (!GOOGLE_SHEET_ID || !GOOGLE_SHEETS_API_KEY) {
     console.log('[MASTER-CRON] Google Sheets not configured')
     return []
   }
