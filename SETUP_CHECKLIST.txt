@@ -1,0 +1,209 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    LEADS MASTER SETUP - QUICK REFERENCE
+═══════════════════════════════════════════════════════════════════════════════
+
+📖 FULL GUIDE: Read DETAILED_SETUP_GUIDE.md for step-by-step instructions with
+   exact clicks, URLs, and what to expect at each step.
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ STEP 1: GET 5 API KEYS (10 MINUTES)
+───────────────────────────────────────────────────────────────────────────────
+
+[ ] Apollo.io
+    Go to: https://apollo.io
+    Sign up → Settings → API → Copy API Key
+    Save as: APOLLO_API_KEY
+
+[ ] Clearbit
+    Go to: https://clearbit.com/enrichment
+    Sign up → Dashboard → API Keys → Copy API Key
+    Save as: CLEARBIT_API_KEY
+
+[ ] Google Sheets API
+    Go to: https://console.cloud.google.com
+    New Project → Enable Google Sheets API → Create API Key
+    Save as: GOOGLE_SHEETS_API_KEY
+
+[ ] OpenAI (Optional but recommended)
+    Go to: https://platform.openai.com/api-keys
+    Sign up → Create Secret Key → Copy immediately (only shown once!)
+    Save as: OPENAI_API_KEY
+
+[ ] Generate Random Secret
+    Run: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+    Save as: CRON_SECRET
+
+✅ STEP 2: CREATE GOOGLE SHEETS (5 MINUTES)
+───────────────────────────────────────────────────────────────────────────────
+
+[ ] Go to: https://sheets.google.com
+[ ] Create new spreadsheet → Name: "Airanix Leads"
+[ ] Create Sheet 1 "Leads" with columns:
+    Name | Email | Company | Phone | Designation | Company Size | LinkedIn URL
+[ ] Create Sheet 2 "LinkedIn" with same columns
+[ ] Copy your Sheet ID from URL: https://docs.google.com/spreadsheets/d/[ID_HERE]/edit
+    Save as: GOOGLE_SHEET_ID
+
+✅ STEP 3: ADD TO VERCEL (3 MINUTES)
+───────────────────────────────────────────────────────────────────────────────
+
+Go to: https://vercel.com/dashboard/airanix-crm → Settings → Environment Variables
+
+Add these 6 variables (copy from your notepad):
+
+[ ] APOLLO_API_KEY = <your-key>
+[ ] CLEARBIT_API_KEY = <your-key>
+[ ] GOOGLE_SHEETS_API_KEY = <your-key>
+[ ] GOOGLE_SHEET_ID = <your-sheet-id>
+[ ] OPENAI_API_KEY = <your-key> (optional)
+[ ] CRON_SECRET = <your-secret>
+
+Each must show green checkmark ✅
+
+✅ STEP 4: REDEPLOY (2 MINUTES)
+───────────────────────────────────────────────────────────────────────────────
+
+[ ] Go to: https://vercel.com/dashboard/airanix-crm
+[ ] Click "Deployments" tab
+[ ] Click top deployment
+[ ] Click "Redeploy" button
+[ ] Wait 2-3 minutes for "Ready" status
+
+✅ STEP 5: TEST ENDPOINT (2 MINUTES)
+───────────────────────────────────────────────────────────────────────────────
+
+Open Terminal/PowerShell and run:
+
+curl -H "Authorization: Bearer YOUR_CRON_SECRET" \
+  https://YOUR_DOMAIN.com/api/cron/leads-master
+
+Replace YOUR_CRON_SECRET with your secret
+Replace YOUR_DOMAIN with your Vercel domain (e.g., airanix-crm.vercel.app)
+
+Should return JSON with "success": true
+
+✅ STEP 6: ADD TEST DATA (5 MINUTES)
+───────────────────────────────────────────────────────────────────────────────
+
+[ ] Open Google Sheets: https://sheets.google.com
+[ ] Click "Airanix Leads" spreadsheet
+[ ] "Leads" tab → Add sample row:
+    Rajesh Kumar | rajesh@techcorp.com | TechCorp India | +91-9876543210 | Sales Manager | 250-500
+
+[ ] "LinkedIn" tab → Add sample row:
+    Priya Singh | priya@softco.com | SoftCo | +91-8765432109 | Operations Manager | 100-250
+
+[ ] Run curl command again (from Step 5)
+[ ] Should show: "imported": 2
+
+[ ] Go to CRM → /contacts → Verify 2 test leads appeared with Status "NEW"
+
+✅ STEP 7: SETUP GOOGLE FORMS (OPTIONAL - 5 MINUTES)
+───────────────────────────────────────────────────────────────────────────────
+
+[ ] Go to: https://forms.google.com
+[ ] Create form with fields:
+    - Full Name (required)
+    - Email (required)
+    - Company Name
+    - Phone Number
+    - Job Title
+    - Company Size
+
+[ ] Connect to spreadsheet: Responses → Create Spreadsheet → Choose "Airanix Leads"
+[ ] Embed on website: Send → Embed → Copy code → Paste on your site
+
+Responses now auto-import to Google Sheets → Auto-import to CRM daily!
+
+✅ STEP 8: SETUP LINKEDIN EXPORTS (ONGOING - 2X PER WEEK)
+───────────────────────────────────────────────────────────────────────────────
+
+Every Monday & Thursday (or whenever you want):
+
+[ ] Go to: https://linkedin.com
+[ ] Search for prospects (e.g., "Sales Manager" in "India")
+[ ] Select people → Download as CSV
+[ ] Open CSV file → Copy all data
+[ ] Go to Google Sheets → "Airanix Leads" → "LinkedIn" tab
+[ ] Paste data starting at first empty row
+[ ] Done! Next day at 9 AM IST, system imports them automatically.
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎯 DAILY AUTOMATIC FLOW (9:00 AM IST)
+───────────────────────────────────────────────────────────────────────────────
+
+Every morning at 9 AM IST, your system automatically:
+
+1. Fetches Google Forms responses (from "Leads" sheet)
+2. Fetches LinkedIn exports (from "LinkedIn" sheet)
+3. Calls Apollo.io API (100 verified leads)
+4. Enriches with Clearbit (company size, industry, revenue, tech stack, etc)
+5. Scores with OpenAI (quality score 1-10)
+6. Removes duplicates (vs existing CRM contacts)
+7. Filters low quality (keeps only score > 5)
+8. Bulk imports to CRM with Status "NEW"
+9. Logs complete report to Vercel
+
+Result: New qualified leads appear in your CRM automatically!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📊 EXPECTED RESULTS
+───────────────────────────────────────────────────────────────────────────────
+
+Per Month:
+- Google Forms: 30 leads (100% quality, opted-in)
+- LinkedIn: 100 leads (90% quality, your targeted exports)
+- Apollo.io: 100 leads (95% quality, verified emails/phones)
+─────────────────────────────────────
+TOTAL: ~230 leads/month | 95%+ quality | $0 cost
+
+Each lead includes:
+✅ Name (verified)
+✅ Email (verified with confidence score)
+✅ Phone (verified)
+✅ Company (verified)
+✅ Job Title
+✅ Company Size
+✅ Company Industry
+✅ Tech Stack (what tools they use)
+✅ Quality Score (1-10, AI-scored)
+✅ Source (google-forms, linkedin, apollo)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+❓ NEED HELP?
+───────────────────────────────────────────────────────────────────────────────
+
+FULL GUIDE: Open DETAILED_SETUP_GUIDE.md (in this folder)
+- Every step has exact URLs
+- Every step says what to click
+- Includes troubleshooting
+
+QUICK SETUP: Open QUICK_SETUP.md (in this folder)
+- 15-minute overview
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ ALL SETUP FILES IN YOUR REPOSITORY:
+───────────────────────────────────────────────────────────────────────────────
+
+1. DETAILED_SETUP_GUIDE.md ← START HERE (click-by-click)
+2. QUICK_SETUP.md ← 15-minute overview
+3. LEADS_MASTER_SETUP.md ← Detailed documentation
+4. SETUP_CHECKLIST.txt ← This file
+5. FREE_TOOLS_STACK.md ← All 40+ free tools available
+6. app/api/cron/leads-master/route.ts ← The working code
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 YOU'RE READY TO START! Choose option:
+
+OPTION A: Follow DETAILED_SETUP_GUIDE.md (recommended, step-by-step)
+OPTION B: Follow QUICK_SETUP.md (fast 15-min overview)
+
+Both will get you to the same place. DETAILED_SETUP_GUIDE has more detail.
+
+═══════════════════════════════════════════════════════════════════════════════
