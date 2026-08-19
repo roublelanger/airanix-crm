@@ -97,6 +97,18 @@ function ContactsContent() {
   const [newNote, setNewNote] = useState('')
   const [availableTags] = useState(['Client', 'Partner', 'Prospect', 'Lead', 'VIP', 'Inactive', 'Hot', 'Cold'])
 
+  // Expandable Rows
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
+  const toggleRowExpand = (contactId: string) => {
+    const newExpanded = new Set(expandedRows)
+    if (newExpanded.has(contactId)) {
+      newExpanded.delete(contactId)
+    } else {
+      newExpanded.add(contactId)
+    }
+    setExpandedRows(newExpanded)
+  }
+
   // Add or remove tag from contact
   async function handleTagToggle(contactId: string, tag: string) {
     try {
@@ -2842,11 +2854,12 @@ function ContactsContent() {
             </thead>
             <tbody>
               {paginatedContacts.map((contact, idx) => (
+                <>
                 <tr
                   key={contact.id}
                   style={{
-                    borderBottom: '1px solid #e5e7eb',
-                    backgroundColor: idx % 2 === 0 ? 'white' : '#fafbfc',
+                    borderBottom: expandedRows.has(contact.id) ? 'none' : '1px solid #e5e7eb',
+                    backgroundColor: expandedRows.has(contact.id) ? '#eff6ff' : idx % 2 === 0 ? 'white' : '#fafbfc',
                     transition: 'all 0.2s ease',
                     cursor: 'pointer',
                   }}
@@ -2855,10 +2868,10 @@ function ContactsContent() {
                     ;(e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 1px #bfdbfe'
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = idx % 2 === 0 ? 'white' : '#fafbfc'
+                    (e.currentTarget as HTMLElement).style.backgroundColor = expandedRows.has(contact.id) ? '#eff6ff' : idx % 2 === 0 ? 'white' : '#fafbfc'
                     ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
                   }}
-                  onClick={() => (window.location.href = `/contacts/${contact.id}`)}
+                  onClick={() => toggleRowExpand(contact.id)}
                 >
                   <td style={{ padding: '14px 12px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                     <input
@@ -2912,17 +2925,17 @@ function ContactsContent() {
                     </div>
                   </td>
                   {visibleColumns.company && (
-                    <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={contact.company || ''}>
                       {contact.company || '—'}
                     </td>
                   )}
                   {visibleColumns.designation && (
-                    <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={contact.designation || ''}>
                       {contact.designation || '—'}
                     </td>
                   )}
                   {visibleColumns.phone && (
-                    <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={contact.phone || ''}>
                       {contact.phone ? (
                         <a href={`tel:${contact.phone}`} onClick={(e) => e.stopPropagation()} style={{ color: '#2563eb', textDecoration: 'none', transition: 'all 0.2s' }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}>
                           {contact.phone}
@@ -2933,7 +2946,7 @@ function ContactsContent() {
                     </td>
                   )}
                   {visibleColumns.email && (
-                    <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '14px 20px', fontSize: '14px', color: '#6b7280', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={contact.email || ''}>
                       {contact.email ? (
                         <a href={`mailto:${contact.email}`} onClick={(e) => e.stopPropagation()} style={{ color: '#2563eb', textDecoration: 'none', transition: 'all 0.2s' }} onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}>
                           {contact.email}
