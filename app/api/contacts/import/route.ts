@@ -50,7 +50,8 @@ function validateContact(contact: Contact, index: number): ValidationResult {
     return { valid: false, name: 'Unknown', email, company, phone: null, designation: null, location: null, industry: null, remarks: null, assigned_to: null, error: 'Name is required' }
   }
 
-  // Handle missing/invalid emails - store as 'NA' instead of generating temp email
+  // Handle missing/invalid emails - use empty string (becomes NULL in DB)
+  // This avoids unique constraint violations since NULL allows duplicates
   const isNA = !email ||
     email === 'na' ||
     email === 'n/a' ||
@@ -61,10 +62,8 @@ function validateContact(contact: Contact, index: number): ValidationResult {
     email.length === 0 ||
     /^n\/?a$/i.test(email) // Case-insensitive NA/N/A check
 
-  if (isNA) {
-    email = 'NA'
-  } else if (!email.includes('@') || !email.includes('.')) {
-    email = 'NA'
+  if (isNA || !email.includes('@') || !email.includes('.')) {
+    email = '' // Empty string = NULL in database (allows duplicates)
   }
 
   // Length validation
