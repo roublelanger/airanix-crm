@@ -50,11 +50,21 @@ function validateContact(contact: Contact, index: number): ValidationResult {
     return { valid: false, name: 'Unknown', email, company, phone: null, designation: null, location: null, industry: null, remarks: null, assigned_to: null, error: 'Name is required' }
   }
 
-  // Handle missing/invalid emails
-  if (!email || email === 'na' || email === 'n/a' || email.length === 0) {
-    email = `auto_${uuidv4().substring(0, 8)}@temp.local`
+  // Handle missing/invalid emails - store as 'NA' instead of generating temp email
+  const isNA = !email ||
+    email === 'na' ||
+    email === 'n/a' ||
+    email === 'undefined' ||
+    email === 'null' ||
+    email === 'none' ||
+    email === '-' ||
+    email.length === 0 ||
+    /^n\/?a$/i.test(email) // Case-insensitive NA/N/A check
+
+  if (isNA) {
+    email = 'NA'
   } else if (!email.includes('@') || !email.includes('.')) {
-    email = `auto_${uuidv4().substring(0, 8)}@temp.local`
+    email = 'NA'
   }
 
   // Length validation

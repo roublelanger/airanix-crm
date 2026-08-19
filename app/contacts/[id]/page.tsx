@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import ActivityCard from '@/components/ActivityCard'
 
 export default function ContactDetailPage() {
   const params = useParams()
@@ -93,11 +94,18 @@ export default function ContactDetailPage() {
 
   async function fetchActivities() {
     try {
-      const res = await fetch(`/api/activities?contactId=${params.id}`)
+      const res = await fetch(`/api/activities?contact_id=${params.id}`)
       const data = await res.json()
-      setActivities(Array.isArray(data) ? data : [])
+      if (data.success && Array.isArray(data.data)) {
+        setActivities(data.data)
+      } else if (Array.isArray(data)) {
+        setActivities(data)
+      } else {
+        setActivities([])
+      }
     } catch (error) {
       console.error('Error:', error)
+      setActivities([])
     }
   }
 
@@ -841,55 +849,9 @@ export default function ContactDetailPage() {
           </div>
         ) : (
           <div>
-            {activities.map((activity: any) => {
-              const typeConfig: Record<string, { icon: string; label: string; color: string }> = {
-                'follow-up-call': { icon: '☎️', label: 'Follow-up Call', color: '#3b82f6' },
-                'follow-up-meeting': { icon: '🔔', label: 'Follow-up for Meeting', color: '#f59e0b' },
-                'meeting-booked': { icon: '📅', label: 'Meeting Booked', color: '#8b5cf6' },
-                'meeting-happened': { icon: '✅', label: 'Meeting Happened', color: '#10b981' },
-                'assigned': { icon: '👤', label: 'Assigned', color: '#6366f1' },
-                'call': { icon: '☎️', label: 'Call', color: '#3b82f6' },
-                'email': { icon: '📧', label: 'Email', color: '#0ea5e9' },
-                'meeting': { icon: '📅', label: 'Meeting', color: '#a855f7' },
-                'note': { icon: '📝', label: 'Note', color: '#64748b' }
-              };
-
-              const config = typeConfig[activity.type] || { icon: '📌', label: activity.type?.toUpperCase() || 'Activity', color: '#6b7280' };
-
-              return (
-                <div key={activity.id} style={{ padding: '16px', borderBottom: '1px solid #e5e7eb', borderLeft: `4px solid ${config.color}`, background: '#f9fafb', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#f3f4f6'; e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = '#f9fafb'; e.currentTarget.style.boxShadow = 'none'; }}>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '18px', marginRight: '12px' }}>{config.icon}</span>
-                    <strong style={{ color: config.color, fontSize: '14px', fontWeight: '600' }}>{config.label}</strong>
-                  </div>
-
-                  {/* Meeting Details */}
-                  {(activity.type === 'meeting-booked' || activity.type === 'meeting-happened') && activity.description && (
-                    <>
-                      {activity.description.includes('Date:') && (
-                        <div style={{ margin: '8px 0', fontSize: '12px', color: '#555', paddingLeft: '28px' }}>
-                          {activity.description.split('\n').map((line: string, idx: number) => (
-                            <div key={idx}>{line}</div>
-                          ))}
-                        </div>
-                      )}
-                      {!activity.description.includes('Date:') && (
-                        <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#333', paddingLeft: '28px' }}>{activity.description}</p>
-                      )}
-                    </>
-                  )}
-
-                  {/* Regular Description */}
-                  {activity.type !== 'meeting-booked' && activity.type !== 'meeting-happened' && activity.description && (
-                    <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#333', paddingLeft: '28px' }}>{activity.description}</p>
-                  )}
-
-                  <p style={{ margin: 0, fontSize: '12px', color: '#999', paddingLeft: '28px' }}>
-                    {activity.created_at ? new Date(activity.created_at).toLocaleString() : 'Recently'}
-                  </p>
-                </div>
-              );
-            })}
+            {activities.map((activity: any) => (
+              <ActivityCard key={activity.id} activity={activity} />
+            ))}
           </div>
         )}
       </div>

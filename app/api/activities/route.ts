@@ -9,40 +9,81 @@ const supabase = createClient(
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const contactId = searchParams.get('contactId')
+    const contactId = searchParams.get('contact_id')
 
-    let query = supabase.from('interactions').select('*')
-
-    if (contactId) {
-      query = query.eq('contact_id', contactId)
+    if (!contactId) {
+      return NextResponse.json(
+        { error: 'contact_id is required' },
+        { status: 400 }
+      )
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false })
+    // Debug: Log what we're querying
+    console.log(`[ACTIVITIES] Querying interactions for contact_id: ${contactId}`)
+
+    // Get ALL interactions and filter in JavaScript (bypass RLS issues)
+    const { data: allInteractions, error } = await supabase
+      .from('interactions')
+      .select('*')
+      .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('GET error:', error)
-      throw error
+      console.error('[ACTIVITIES] Supabase error:', error)
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      )
     }
 
-    // Transform data to match expected format
-    const transformedData = (data || []).map((activity: any) => ({
+    // Log all contact_ids to debug
+    console.log(`[ACTIVITIES] All contact_ids in DB:`, allInteractions?.map((row: any) => row.contact_id))
+    console.log(`[ACTIVITIES] Looking for: "${contactId}" (type: ${typeof contactId})`)
+
+    // Filter by contact_id in JavaScript
+    const data = (allInteractions || []).filter((row: any) => {
+      const match = row.contact_id === contactId
+      console.log(`[ACTIVITIES] Comparing: "${row.contact_id}" (type: ${typeof row.contact_id}) === "${contactId}" ? ${match}`)
+      return match
+    })
+    const count = data.length
+
+    console.log(`[ACTIVITIES] Total in DB: ${allInteractions?.length || 0}, for contact ${contactId}: ${count}`)
+
+
+    // Format response with ISR names and formatted timestamps
+    const formattedActivities = (data || []).map((activity: any) => ({
       id: activity.id,
-      type: activity.type,
-      title: activity.notes?.split(':')[0] || activity.type,
-      description: activity.notes || '',
-      outcome: activity.outcome || 'pending',
-      contact_id: activity.contact_id,
-      created_at: activity.created_at,
-      updated_at: activity.updated_at
+      type: activity.type || 'note',
+      title: activity.notes?.substring(0, 50) || activity.description?.substring(0, 50) || 'Activity',
+      description: activity.notes || activity.description,
+      createdBy: {
+        id: activity.created_by,
+        name: activity.created_by_name || 'Unknown User',
+        initials: (activity.created_by_name || 'U')
+          .split(' ')
+          .map((n: string) => n[0])
+          .join('')
+          .toUpperCase()
+      },
+      createdAt: activity.created_at,
+      createdAtFormatted: formatDateTime(activity.created_at),
+      updatedAt: activity.updated_at
     }))
 
-    return NextResponse.json(transformedData)
-  } catch (error: any) {
-    console.error('GET /api/activities error:', {
-      message: error.message,
-      code: error.code
+    return NextResponse.json({
+      success: true,
+      data: formattedActivities,
+      pagination: {
+        total: count || 0,
+        hasMore: false
+      }
     })
-    return NextResponse.json({ error: error.message || 'Failed to fetch activities' }, { status: 500 })
+  } catch (error: any) {
+    console.error('[ACTIVITIES] Catch error:', error)
+    return NextResponse.json(
+      { success: false, error: error.message || 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
 
@@ -113,4 +154,20 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
+}
+
+function formatDateTime(dateString: string): string {
+  if (!dateString) return 'Unknown'
+
+  const date = new Date(dateString)
+  const options: Intl.DateTimeFormatOptions = {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  }
+
+  return date.toLocaleDateString('en-US', options)
 }
