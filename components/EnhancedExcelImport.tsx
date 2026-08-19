@@ -190,9 +190,16 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
     setMessageType('')
 
     try {
-      // Validate file
-      if (!file.name.match(/\.(csv|xlsx?|txt)$/i)) {
+      // Validate file extension
+      const extension = file.name.split('.').pop()?.toLowerCase()
+
+      if (!extension || !['csv', 'xlsx', 'xls', 'txt'].includes(extension)) {
         throw new Error('Invalid file type. Please upload a CSV, XLSX, or TXT file.')
+      }
+
+      // Check if Excel file - we need CSV format
+      if (extension === 'xlsx' || extension === 'xls') {
+        throw new Error('❌ Excel files (.xlsx/.xls) are not directly supported.\n\n✅ Solution: Export your Excel file as CSV:\n1. Open Excel file\n2. File → Save As\n3. Choose "CSV (Comma delimited) (*.csv)"\n4. Click Save\n5. Upload the CSV file\n\nThis preserves all your data correctly.')
       }
 
       if (file.size > 10 * 1024 * 1024) {
@@ -216,7 +223,7 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
       setMessage(`📋 Found ${parsed.length} valid contacts ready to import.`)
       setMessageType('info')
     } catch (error: any) {
-      setMessage(`❌ ${error.message || 'Error parsing CSV'}`)
+      setMessage(`${error.message || 'Error parsing file'}`)
       setMessageType('error')
       setShowPreview(false)
       setPreviewData([])
