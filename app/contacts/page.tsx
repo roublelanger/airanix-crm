@@ -2854,7 +2854,6 @@ function ContactsContent() {
             </thead>
             <tbody>
               {paginatedContacts.map((contact, idx) => (
-                <>
                 <tr
                   key={contact.id}
                   style={{
