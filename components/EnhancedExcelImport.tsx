@@ -243,10 +243,10 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
     setLoading(true)
 
     try {
-      const response = await fetch('/api/contacts/import-v2', {
+      const response = await fetch('/api/contacts/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contacts: previewData, forceImport: force })
+        body: JSON.stringify({ contacts: previewData })
       })
 
       if (!response.ok) {
