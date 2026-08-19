@@ -2870,7 +2870,9 @@ function ContactsContent() {
                     (e.currentTarget as HTMLElement).style.backgroundColor = expandedRows.has(contact.id) ? '#eff6ff' : idx % 2 === 0 ? 'white' : '#fafbfc'
                     ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
                   }}
-                  onClick={() => toggleRowExpand(contact.id)}
+                  onClick={() => {
+                    window.location.href = `/contacts/${contact.id}`
+                  }}
                 >
                   <td style={{ padding: '14px 12px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                     <input
