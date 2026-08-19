@@ -62,6 +62,11 @@ function validateContact(contact: Contact, index: number): ValidationResult {
     /^n\/?a$/i.test(email) // Case-insensitive NA/N/A check
 
   if (isNA || !email.includes('@') || !email.includes('.')) {
+    email = 'NA' // Always uppercase
+  }
+
+  // Ensure uppercase NA (in case email is modified elsewhere)
+  if (email.toUpperCase() === 'NA') {
     email = 'NA'
   }
 
