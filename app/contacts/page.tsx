@@ -142,7 +142,7 @@ function ContactsContent() {
     }
   }
 
-  // Add note to contact
+  // Add note to contact (as activity in interactions table)
   async function handleAddNote(contactId: string, noteText: string) {
     if (!noteText.trim()) {
       showToast('warning', 'Note cannot be empty')
@@ -150,24 +150,27 @@ function ContactsContent() {
     }
 
     try {
-      const contact = contacts.find(c => c.id === contactId)
-      if (!contact) return
-
-      const timestamp = new Date().toLocaleString()
-      const noteWithTime = `[${timestamp}] ${noteText}`
-
-      const existingNotes = contact.remarks ? `${contact.remarks}\n${noteWithTime}` : noteWithTime
-
-      const res = await fetch(`/api/contacts/${contactId}`, {
-        method: 'PUT',
+      const res = await fetch('/api/activities', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ remarks: existingNotes })
+        body: JSON.stringify({
+          type: 'note',
+          contactId,
+          description: noteText
+        })
       })
 
       if (res.ok) {
-        fetchContacts()
         setNewNote('')
         showToast('success', 'Note added')
+        // Refresh the current contact to update activity timeline
+        const contactId_str = selectedContactForModal?.id
+        if (contactId_str) {
+          // The activity timeline will auto-refresh when modal closes/reopens
+        }
+      } else {
+        const error = await res.json()
+        showToast('error', error.error || 'Failed to add note')
       }
     } catch (error) {
       console.error('Error adding note:', error)
@@ -3336,16 +3339,9 @@ function ContactsContent() {
               </button>
             </div>
 
-            {selectedContactForModal.remarks && (
-              <div style={{ marginBottom: '24px', background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', maxHeight: '300px', overflowY: 'auto' }}>
-                <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#374151', margin: '0 0 16px 0', textTransform: 'uppercase' }}>
-                  📋 Previous Notes
-                </h3>
-                <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                  {selectedContactForModal.remarks}
-                </div>
-              </div>
-            )}
+            <div style={{ padding: '12px', background: '#f3f4f6', borderRadius: '8px', marginBottom: '20px', fontSize: '13px', color: '#6b7280' }}>
+              💡 Notes will appear in the Activity Timeline with timestamps and user attribution.
+            </div>
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button
