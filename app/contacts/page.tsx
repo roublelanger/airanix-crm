@@ -97,6 +97,9 @@ function ContactsContent() {
   const [newNote, setNewNote] = useState('')
   const [availableTags] = useState(['Client', 'Partner', 'Prospect', 'Lead', 'VIP', 'Inactive', 'Hot', 'Cold'])
 
+  // Latest activities for each contact
+  const [latestActivities, setLatestActivities] = useState<Record<string, any>>({})
+
   // Expandable Rows
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
   const toggleRowExpand = (contactId: string) => {
@@ -344,6 +347,23 @@ function ContactsContent() {
           return true
         })
         setContacts(deduplicated)
+
+        // Fetch latest activity for each contact in parallel
+        const activitiesMap: Record<string, any> = {}
+        await Promise.all(
+          deduplicated.map(async (contact) => {
+            try {
+              const actRes = await fetch(`/api/activities?contact_id=${contact.id}`)
+              const actData = await actRes.json()
+              if (actData.success && actData.data && actData.data.length > 0) {
+                activitiesMap[contact.id] = actData.data[0] // Get latest (first in list)
+              }
+            } catch (err) {
+              console.error(`Error fetching activities for contact ${contact.id}:`, err)
+            }
+          })
+        )
+        setLatestActivities(activitiesMap)
       } else {
         console.error('API returned non-array:', data)
         setContacts([])
@@ -2936,6 +2956,21 @@ function ContactsContent() {
                                 🏷️ {tag.trim()}
                               </span>
                             ))}
+                          </div>
+                        )}
+                        {latestActivities[contact.id] && (
+                          <div style={{ marginTop: '8px', padding: '8px 10px', background: '#fef3c7', borderRadius: '6px', borderLeft: '3px solid #f59e0b' }}>
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
+                              <span style={{ fontSize: '12px', fontWeight: '600', color: '#78350f', textTransform: 'capitalize' }}>
+                                {latestActivities[contact.id].type === 'note' ? '📝' : '📞'} {latestActivities[contact.id].type}
+                              </span>
+                              <span style={{ fontSize: '11px', color: '#92400e' }}>
+                                by {latestActivities[contact.id].createdBy?.name || 'Unknown'}
+                              </span>
+                            </div>
+                            <p style={{ margin: '0', fontSize: '12px', color: '#78350f', lineHeight: '1.4', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                              {latestActivities[contact.id].description || latestActivities[contact.id].title || 'Activity'}
+                            </p>
                           </div>
                         )}
                       </div>
