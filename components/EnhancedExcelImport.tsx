@@ -47,6 +47,7 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
   const [messageType, setMessageType] = useState<'success' | 'error' | 'info' | ''>('')
   const [showPreview, setShowPreview] = useState(false)
   const [previewData, setPreviewData] = useState<ParsedContact[]>([])
+  const [forceImport, setForceImport] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Map CSV headers to expected field names
@@ -232,7 +233,7 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
     }
   }
 
-  const handleImport = async () => {
+  const handleImport = async (force: boolean = false) => {
     if (previewData.length === 0) {
       setMessage('❌ No contacts to import')
       setMessageType('error')
@@ -245,7 +246,7 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
       const response = await fetch('/api/contacts/import-v2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contacts: previewData })
+        body: JSON.stringify({ contacts: previewData, forceImport: force })
       })
 
       if (!response.ok) {
@@ -260,13 +261,30 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
 
       if (result.success) {
         const summary = result.summary || { companiesCreated: 0, contactsAdded: 0, skipped: 0 }
-        const errorMsg = result.failed > 0
-          ? ` | ${result.failed} failed`
-          : ''
+        const generatedEmails = (result.summary as any)?.generatedEmails || 0
+        const totalErrors = (result.summary as any)?.totalErrors || 0
 
-        setMessage(
-          `✅ Import Successful!\n📊 Companies: ${summary.companiesCreated} created\n👥 Contacts: ${summary.contactsAdded} added${result.failed > 0 ? errorMsg : ''}`
-        )
+        const detailLines = [
+          `✅ Import Successful!`,
+          `📊 Companies created: ${summary.companiesCreated}`,
+          `👥 Contacts imported: ${summary.contactsAdded}`,
+          ...(generatedEmails > 0 ? [`⚠️  Generated temp emails: ${generatedEmails} (for missing emails)`] : []),
+          ...(summary.skipped > 0 ? [`❌ Skipped: ${summary.skipped}`] : []),
+          `📈 Total: ${summary.contactsAdded + summary.skipped} processed`
+        ]
+
+        const warnings = (result as any)?.warnings || []
+        if (warnings && warnings.length > 0) {
+          detailLines.push(`\n⚠️  Warnings (${warnings.length}):`)
+          warnings.slice(0, 3).forEach((w: any) => {
+            detailLines.push(`• Row ${w.row} (${w.name}): ${w.message}`)
+          })
+          if (warnings.length > 3) {
+            detailLines.push(`• ... and ${warnings.length - 3} more`)
+          }
+        }
+
+        setMessage(detailLines.join('\n'))
         setMessageType('success')
         setPreviewData([])
         setShowPreview(false)
@@ -280,14 +298,25 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
           if (onImportComplete) {
             onImportComplete()
           }
-        }, 3000)
+        }, 5000)
       } else {
-        const errorDetails = result.errors
-          ?.slice(0, 5)
-          .map(e => `Row ${e.row}: ${e.error}`)
+        const errors = (result as any)?.errors || []
+        const errorDetails = errors
+          ?.slice(0, 10)
+          .map((e: any) => `Row ${e.row} (${e.name || 'Unknown'}): ${e.error}`)
           .join('\n') || 'Unknown error'
 
-        setMessage(`❌ Import Failed\n${result.summary?.companiesCreated || 0} companies created, ${result.summary?.contactsAdded || 0} contacts added\n\nErrors:\n${errorDetails}`)
+        const detailLines = [
+          `❌ Import Failed or Incomplete`,
+          `📊 Companies: ${result.summary?.companiesCreated || 0}`,
+          `👥 Contacts imported: ${result.summary?.contactsAdded || 0}`,
+          `⚠️  Skipped: ${result.summary?.skipped || 0}`,
+          `🔴 Total errors: ${result.failed || 0}`,
+          `\nError Details (showing first 10):`,
+          errorDetails
+        ]
+
+        setMessage(detailLines.join('\n'))
         setMessageType('error')
       }
     } catch (error: any) {
@@ -394,9 +423,9 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
             </table>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             <button
-              onClick={handleImport}
+              onClick={() => handleImport(false)}
               disabled={loading}
               style={{
                 padding: '10px 20px',
@@ -410,6 +439,26 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
               }}
             >
               {loading ? '⏳ Importing...' : `✅ Import ${previewData.length} Contacts`}
+            </button>
+            <button
+              onClick={() => {
+                setForceImport(true)
+                handleImport(true)
+              }}
+              disabled={loading}
+              title="Import all contacts, generating temporary emails for missing ones"
+              style={{
+                padding: '10px 20px',
+                background: '#f59e0b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontWeight: '500',
+                opacity: loading ? 0.6 : 1
+              }}
+            >
+              {loading ? '⏳ Force Importing...' : '⚡ Force Import All'}
             </button>
             <button
               onClick={handleCancel}
