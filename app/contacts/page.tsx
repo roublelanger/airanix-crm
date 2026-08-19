@@ -156,12 +156,12 @@ function ContactsContent() {
       const timestamp = new Date().toLocaleString()
       const noteWithTime = `[${timestamp}] ${noteText}`
 
-      const existingNotes = contact.location ? `${contact.location}\n${noteWithTime}` : noteWithTime
+      const existingNotes = contact.remarks ? `${contact.remarks}\n${noteWithTime}` : noteWithTime
 
       const res = await fetch(`/api/contacts/${contactId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ location: existingNotes })
+        body: JSON.stringify({ remarks: existingNotes })
       })
 
       if (res.ok) {
@@ -3334,13 +3334,13 @@ function ContactsContent() {
               </button>
             </div>
 
-            {selectedContactForModal.location && (
+            {selectedContactForModal.remarks && (
               <div style={{ marginBottom: '24px', background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', maxHeight: '300px', overflowY: 'auto' }}>
                 <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#374151', margin: '0 0 16px 0', textTransform: 'uppercase' }}>
                   📋 Previous Notes
                 </h3>
                 <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                  {selectedContactForModal.location}
+                  {selectedContactForModal.remarks}
                 </div>
               </div>
             )}
