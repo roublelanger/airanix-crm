@@ -107,7 +107,7 @@ export async function POST(request: Request) {
       : body.description || 'Activity'
 
     // Build the insert data - only use columns that exist in interactions table
-    // The interactions table has: id, contact_id, type, notes, created_at, updated_at, created_by, scheduled_date, completed_date
+    // The interactions table has: id, contact_id, type, notes, created_at, updated_at, created_by, created_by_name, scheduled_date, completed_date
     const insertData: any = {
       type: body.type,
       notes: notes.trim()
@@ -116,6 +116,14 @@ export async function POST(request: Request) {
     // Only add contact_id if provided and valid
     if (body.contactId) {
       insertData.contact_id = body.contactId
+    }
+
+    // Capture user attribution (client sends current user info)
+    if (body.userId) {
+      insertData.created_by = body.userId
+    }
+    if (body.userName) {
+      insertData.created_by_name = body.userName
     }
 
     // Note: outcome, call_duration, email_opens, and meeting_outcome are stored in the notes field

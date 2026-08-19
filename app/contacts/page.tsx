@@ -150,24 +150,37 @@ function ContactsContent() {
     }
 
     try {
+      // Get current user from Supabase
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+      const currentUser = session?.user
+
+      // Get user name from crm_users table
+      let userName = 'Unknown'
+      if (currentUser?.id) {
+        const { data: userData } = await supabase
+          .from('crm_users')
+          .select('name')
+          .eq('id', currentUser.id)
+          .single()
+        userName = userData?.name || currentUser.email?.split('@')[0] || 'Unknown'
+      }
+
       const res = await fetch('/api/activities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'note',
           contactId,
-          description: noteText
+          description: noteText,
+          userId: currentUser?.id,
+          userName
         })
       })
 
       if (res.ok) {
         setNewNote('')
         showToast('success', 'Note added')
-        // Refresh the current contact to update activity timeline
-        const contactId_str = selectedContactForModal?.id
-        if (contactId_str) {
-          // The activity timeline will auto-refresh when modal closes/reopens
-        }
       } else {
         const error = await res.json()
         showToast('error', error.error || 'Failed to add note')
