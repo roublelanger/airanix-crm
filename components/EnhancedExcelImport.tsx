@@ -67,12 +67,45 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
     return normalized.replace(/\s+/g, '_')
   }
 
+  // Robust CSV parsing that handles quoted fields
+  const parseCSVLine = (line: string): string[] => {
+    const result = []
+    let current = ''
+    let insideQuotes = false
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i]
+      const nextChar = line[i + 1]
+
+      if (char === '"') {
+        if (insideQuotes && nextChar === '"') {
+          // Escaped quote
+          current += '"'
+          i++
+        } else {
+          // Toggle quote state
+          insideQuotes = !insideQuotes
+        }
+      } else if (char === ',' && !insideQuotes) {
+        // Field separator
+        result.push(current.trim())
+        current = ''
+      } else {
+        current += char
+      }
+    }
+
+    // Add last field
+    result.push(current.trim())
+    return result
+  }
+
   // Simple, robust CSV parsing with debugging
   const parseCSV = (text: string): ParsedContact[] => {
     try {
       // Normalize line endings and remove empty lines
       const normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-      const lines = normalizedText.split('\n').map(line => line.trim()).filter(line => line.length > 0)
+      const lines = normalizedText.split('\n').filter(line => line.trim().length > 0)
 
       console.log('🔍 CSV Debug:', { totalLines: lines.length, firstLine: lines[0]?.substring(0, 100) })
 
@@ -81,7 +114,7 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
       }
 
       // Parse header row
-      const rawHeaders = lines[0].split(',').map(h => h.trim())
+      const rawHeaders = parseCSVLine(lines[0])
       console.log('📋 Raw Headers:', rawHeaders)
 
       const headers = rawHeaders.map(mapHeaderToField)
@@ -95,13 +128,13 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
         console.log(`📍 Row ${i}:`, line.substring(0, 100))
 
         // Skip empty lines
-        if (!line || line.length === 0) {
+        if (!line || line.trim().length === 0) {
           console.log(`  → Skipped (empty)`)
           continue
         }
 
-        // Simple split for non-quoted CSV
-        const values = line.split(',').map(v => v.trim())
+        // Parse CSV line (handles quoted fields)
+        const values = parseCSVLine(line)
         console.log(`  → Values:`, values.slice(0, 3))
 
         // Skip if not enough columns
@@ -113,7 +146,7 @@ export default function EnhancedExcelImport({ onImportComplete }: { onImportComp
         // Build contact object
         const contact: any = {}
         headers.forEach((header, index) => {
-          const value = values[index]
+          const value = values[index]?.replace(/^"|"$/g, '') // Remove surrounding quotes
           if (value && value.length > 0) {
             contact[header] = value
           }
