@@ -606,9 +606,9 @@ function ContactsContent() {
           continue
         }
 
-        // Check for duplicate email
+        // Check for duplicate email (skip for NA/missing emails)
         const emailLower = contactData.email.toLowerCase().trim()
-        if (existingEmails.has(emailLower)) {
+        if (emailLower !== 'na' && emailLower !== '' && existingEmails.has(emailLower)) {
           rejectedRecords.push({
             ...row,
             'Reject Reason': 'Duplicate Email'
