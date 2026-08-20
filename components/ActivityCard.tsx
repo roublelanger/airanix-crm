@@ -31,6 +31,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
       meeting: '🤝',
       note: '📝',
       task: '✓',
+      'call-not-received': '📵',
       default: '📌'
     }
     return icons[type?.toLowerCase()] || icons.default
@@ -43,6 +44,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
       meeting: 'bg-green-50 border-green-200',
       note: 'bg-gray-50 border-gray-200',
       task: 'bg-yellow-50 border-yellow-200',
+      'call-not-received': 'bg-red-50 border-red-200',
       default: 'bg-gray-50 border-gray-200'
     }
     return colors[type?.toLowerCase()] || colors.default

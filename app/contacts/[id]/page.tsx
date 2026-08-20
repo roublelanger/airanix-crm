@@ -134,6 +134,7 @@ export default function ContactDetailPage() {
       'follow-up-meeting': 'Follow-up for Meeting',
       'meeting-booked': 'Meeting Booked',
       'meeting-happened': 'Meeting Happened',
+      'call-not-received': 'Call Not Received',
       'assigned': 'Contact Assigned'
     }
     const title = typeLabels[activityForm.type] || 'Activity'
@@ -653,6 +654,7 @@ export default function ContactDetailPage() {
                   { value: 'follow-up-meeting', label: '🔔 Follow-up for Meeting', desc: 'Follow-up before meeting' },
                   { value: 'meeting-booked', label: '📅 Meeting Booked', desc: 'Meeting confirmed' },
                   { value: 'meeting-happened', label: '✅ Meeting Happened', desc: 'Meeting completed' },
+                  { value: 'call-not-received', label: '📵 Call Not Received', desc: 'Call was not received' },
                   { value: 'assigned', label: '👤 Assigned', desc: 'Contact assigned' }
                 ].map(option => (
                   <div
