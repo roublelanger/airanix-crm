@@ -60,6 +60,22 @@ const FollowupsPage = () => {
       const followup = followups.find(f => f.id === followupId)
       if (!followup) return
 
+      // Get current user for attribution
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+      const currentUser = session?.user
+
+      // Get user name
+      let userName = 'Unknown'
+      if (currentUser?.id) {
+        const { data: userData } = await supabase
+          .from('crm_users')
+          .select('name')
+          .eq('id', currentUser.id)
+          .single()
+        userName = userData?.name || currentUser.email?.split('@')[0] || 'Unknown'
+      }
+
       const res = await fetch('/api/followups', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -76,7 +92,9 @@ const FollowupsPage = () => {
           body: JSON.stringify({
             type: 'follow-up-completed',
             description: `Follow-up Call completed - Scheduled for ${followup.scheduledDate} at ${followup.scheduledTime}`,
-            contactId: followup.contactId
+            contactId: followup.contactId,
+            userId: currentUser?.id,
+            userName: userName
           })
         })
         fetchFollowups()
