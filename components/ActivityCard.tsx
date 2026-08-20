@@ -17,6 +17,11 @@ interface Activity {
   createdAt: string
   createdAtFormatted: string
   updatedAt: string
+  followUp?: {
+    scheduledDate: string
+    scheduledTime: string
+    priority: string
+  }
 }
 
 interface ActivityCardProps {
@@ -97,6 +102,22 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
         <p className="text-sm text-gray-700 mb-3 pl-7 leading-relaxed">
           {activity.description}
         </p>
+      )}
+
+      {/* Follow-up Preview - if this activity has a scheduled follow-up */}
+      {activity.followUp && (
+        <div style={{ background: '#fef3c7', padding: '10px', borderRadius: '6px', margin: '8px 0', borderLeft: '3px solid #f59e0b', display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <span style={{ fontSize: '16px' }}>🔔</span>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: '0', fontSize: '12px', fontWeight: '600', color: '#78350f' }}>
+              Follow-up Scheduled
+            </p>
+            <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#92400e' }}>
+              📅 {new Date(activity.followUp.scheduledDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at 🕐 {activity.followUp.scheduledTime}
+              {activity.followUp.priority && ` • ${activity.followUp.priority.toUpperCase()}`}
+            </p>
+          </div>
+        </div>
       )}
 
       {/* Footer: ISR name, initials avatar, and timestamp */}
