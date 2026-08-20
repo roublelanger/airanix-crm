@@ -91,6 +91,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'scheduledTime is required' }, { status: 400 })
     }
 
+    console.log('[FOLLOWUPS POST] Creating follow-up:', {
+      contactId: body.contactId,
+      scheduledDate: body.scheduledDate,
+      userId: body.userId,
+      userName: body.userName
+    })
+
     const { data, error } = await supabase
       .from('follow_ups')
       .insert([{
@@ -102,7 +109,8 @@ export async function POST(request: Request) {
         description: body.description || null,
         priority: body.priority || 'normal',
         status: 'pending',
-        notes: body.notes || null
+        notes: body.notes || null,
+        created_by: body.userId || null
       }])
       .select()
 

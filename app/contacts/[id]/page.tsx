@@ -209,7 +209,9 @@ export default function ContactDetailPage() {
               scheduledTime: activityForm.followupTime,
               activityType: activityForm.type,
               description: fullDescription || title,
-              priority: activityForm.followupPriority || 'normal'
+              priority: activityForm.followupPriority || 'normal',
+              userId: currentUser?.id,
+              userName: userName
             })
           })
 
