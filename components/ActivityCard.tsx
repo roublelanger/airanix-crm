@@ -41,6 +41,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
       'follow-up-meeting': '🔔',
       'meeting-booked': '📅',
       'meeting-happened': '✅',
+      'follow-up-completed': '✅',
       'assigned': '👤',
       default: '📌'
     }
@@ -59,6 +60,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
       'follow-up-meeting': 'Follow-up for Meeting',
       'meeting-booked': 'Meeting Booked',
       'meeting-happened': 'Meeting Happened',
+      'follow-up-completed': 'Follow-up Completed',
       'assigned': 'Assigned'
     }
     return labels[type?.toLowerCase()] || type
@@ -76,6 +78,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
       'follow-up-meeting': 'bg-indigo-50 border-indigo-200',
       'meeting-booked': 'bg-emerald-50 border-emerald-200',
       'meeting-happened': 'bg-green-50 border-green-200',
+      'follow-up-completed': 'bg-green-50 border-green-200',
       'assigned': 'bg-orange-50 border-orange-200',
       default: 'bg-gray-50 border-gray-200'
     }

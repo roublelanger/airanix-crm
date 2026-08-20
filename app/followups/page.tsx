@@ -25,7 +25,7 @@ interface FollowUp {
 const FollowupsPage = () => {
   const [followups, setFollowups] = useState<FollowUp[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'today' | 'week' | 'upcoming'>('today')
+  const [activeTab, setActiveTab] = useState<'today' | 'week' | 'upcoming' | 'completed'>('today')
   const [filterStatus, setFilterStatus] = useState<'pending' | 'all'>('pending')
 
   useEffect(() => {
@@ -35,8 +35,16 @@ const FollowupsPage = () => {
   async function fetchFollowups() {
     try {
       setLoading(true)
-      const status = filterStatus === 'all' ? '' : 'pending'
-      const url = `/api/followups?range=${activeTab}${status ? `&status=${status}` : ''}`
+      let status = filterStatus === 'all' ? '' : 'pending'
+      let range = activeTab
+
+      // For completed tab, override status to 'completed'
+      if (activeTab === 'completed') {
+        status = 'completed'
+        range = 'upcoming' // Get all completed regardless of date
+      }
+
+      const url = `/api/followups?range=${range}${status ? `&status=${status}` : ''}`
       const res = await fetch(url)
       const data = await res.json()
       setFollowups(data.data || [])
@@ -49,6 +57,9 @@ const FollowupsPage = () => {
 
   async function handleComplete(followupId: string) {
     try {
+      const followup = followups.find(f => f.id === followupId)
+      if (!followup) return
+
       const res = await fetch('/api/followups', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -58,6 +69,16 @@ const FollowupsPage = () => {
         })
       })
       if (res.ok) {
+        // Log completion as activity in contact's timeline
+        await fetch('/api/activities', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'follow-up-completed',
+            description: `Follow-up Call completed - Scheduled for ${followup.scheduledDate} at ${followup.scheduledTime}`,
+            contactId: followup.contactId
+          })
+        })
         fetchFollowups()
       }
     } catch (error) {
@@ -112,7 +133,7 @@ const FollowupsPage = () => {
       </p>
 
       <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', borderBottom: '1px solid #e5e7eb', paddingBottom: '16px' }}>
-        {(['today', 'week', 'upcoming'] as const).map(tab => (
+        {(['today', 'week', 'upcoming', 'completed'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -130,6 +151,7 @@ const FollowupsPage = () => {
             {tab === 'today' && '📅 Today'}
             {tab === 'week' && '📆 This Week'}
             {tab === 'upcoming' && '🗓️ Upcoming'}
+            {tab === 'completed' && '✅ Completed'}
           </button>
         ))}
       </div>
