@@ -157,15 +157,32 @@ export default function ContactDetailPage() {
     }
 
     try {
+      // Get current user for attribution
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+      const currentUser = session?.user
+
+      // Get user name
+      let userName = 'Unknown'
+      if (currentUser?.id) {
+        const { data: userData } = await supabase
+          .from('crm_users')
+          .select('name')
+          .eq('id', currentUser.id)
+          .single()
+        userName = userData?.name || currentUser.email?.split('@')[0] || 'Unknown'
+      }
+
       const res = await fetch('/api/activities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: activityForm.type,
-          title: title,
-          description: fullDescription,
+          description: fullDescription || title,
           outcome: activityForm.outcome,
-          contactId: params.id
+          contactId: params.id,
+          userId: currentUser?.id,
+          userName: userName
         })
       })
       const data = await res.json()

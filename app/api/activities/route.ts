@@ -101,10 +101,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // Build notes from title and description
-    const notes = body.title
-      ? `${body.title}: ${body.description || ''}`
-      : body.description || 'Activity'
+    // Build notes - use description as-is (no duplication with title)
+    const notes = body.description || 'Activity'
 
     // Build the insert data - only use columns that exist in interactions table
     // The interactions table has: id, contact_id, type, notes, created_at, updated_at, created_by, created_by_name, scheduled_date, completed_date
