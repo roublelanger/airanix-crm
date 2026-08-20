@@ -127,12 +127,14 @@ export async function POST(request: Request) {
     // Note: outcome, call_duration, email_opens, and meeting_outcome are stored in the notes field
     // because the interactions table doesn't have separate columns for these
 
-    console.log('Inserting activity:', insertData)
+    console.log('[ACTIVITIES POST] Inserting activity:', JSON.stringify(insertData, null, 2))
 
     const { data, error } = await supabase
       .from('interactions')
       .insert([insertData])
       .select('*')
+
+    console.log('[ACTIVITIES POST] Insert result:', { insertedData: data?.[0], error })
 
     if (error) {
       console.error('Supabase insert error:', {
