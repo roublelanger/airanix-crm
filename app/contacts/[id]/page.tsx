@@ -17,7 +17,11 @@ export default function ContactDetailPage() {
     outcome: 'pending',
     assignedTo: '',
     meetingDate: '',
-    meetingTime: ''
+    meetingTime: '',
+    scheduleFollowup: false,
+    followupDate: '',
+    followupTime: '',
+    followupPriority: 'normal'
   })
   const [followupStatus, setFollowupStatus] = useState('')
   const [showEmailModal, setShowEmailModal] = useState(false)
@@ -187,7 +191,28 @@ export default function ContactDetailPage() {
       })
       const data = await res.json()
       if (res.ok) {
-        setActivityForm({ type: 'follow-up-call', title: '', description: '', outcome: 'pending', assignedTo: '', meetingDate: '', meetingTime: '' })
+        // Check if scheduling follow-up
+        if (activityForm.scheduleFollowup && activityForm.followupDate && activityForm.followupTime) {
+          const followupRes = await fetch('/api/followups', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contactId: params.id,
+              activityId: data.activity?.id,
+              scheduledDate: activityForm.followupDate,
+              scheduledTime: activityForm.followupTime,
+              activityType: activityForm.type,
+              description: fullDescription || title,
+              priority: activityForm.followupPriority || 'normal'
+            })
+          })
+
+          if (!followupRes.ok) {
+            console.error('Failed to schedule follow-up')
+          }
+        }
+
+        setActivityForm({ type: 'follow-up-call', title: '', description: '', outcome: 'pending', assignedTo: '', meetingDate: '', meetingTime: '', scheduleFollowup: false, followupDate: '', followupTime: '', followupPriority: 'normal' })
         setShowActivityForm(false)
         fetchActivities()
         alert('Activity logged successfully!')
@@ -796,6 +821,78 @@ export default function ContactDetailPage() {
                   onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.boxShadow = 'none'; }}
                 />
               </div>
+            </fieldset>
+
+            {/* Schedule Follow-up Section */}
+            <fieldset style={{ border: 'none', padding: 0, margin: '0 0 24px 0' }}>
+              <legend style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '12px', textTransform: 'uppercase' }}>Schedule Follow-up (Optional)</legend>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={activityForm.scheduleFollowup}
+                  onChange={(e) => setActivityForm({ ...activityForm, scheduleFollowup: e.target.checked })}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: '14px', fontWeight: '500', color: '#374151' }}>Schedule follow-up for this contact</span>
+              </label>
+
+              {activityForm.scheduleFollowup && (
+                <div style={{ background: '#f0fdf4', padding: '16px', borderRadius: '8px', border: '1px solid #86efac' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>📅 Date</label>
+                      <input
+                        type="date"
+                        value={activityForm.followupDate}
+                        onChange={(e) => setActivityForm({ ...activityForm, followupDate: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>🕐 Time</label>
+                      <input
+                        type="time"
+                        value={activityForm.followupTime}
+                        onChange={(e) => setActivityForm({ ...activityForm, followupTime: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#374151' }}>🎯 Priority</label>
+                    <select
+                      value={activityForm.followupPriority}
+                      onChange={(e) => setActivityForm({ ...activityForm, followupPriority: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      <option value="low">Low Priority</option>
+                      <option value="normal">Normal Priority</option>
+                      <option value="high">High Priority</option>
+                    </select>
+                  </div>
+                </div>
+              )}
             </fieldset>
 
             {/* Action Buttons */}
