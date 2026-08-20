@@ -65,16 +65,32 @@ const FollowupsPage = () => {
       const { data: { session } } = await supabase.auth.getSession()
       const currentUser = session?.user
 
-      // Get user name
-      let userName = 'Unknown'
+      console.log('[FOLLOWUP COMPLETION] Current user:', { id: currentUser?.id, email: currentUser?.email })
+
+      // Get user name from crm_users table
+      let userName = 'Unknown User'
       if (currentUser?.id) {
-        const { data: userData } = await supabase
-          .from('crm_users')
-          .select('name')
-          .eq('id', currentUser.id)
-          .single()
-        userName = userData?.name || currentUser.email?.split('@')[0] || 'Unknown'
+        try {
+          const { data: userData, error: userError } = await supabase
+            .from('crm_users')
+            .select('name')
+            .eq('id', currentUser.id)
+            .single()
+
+          console.log('[FOLLOWUP COMPLETION] User lookup result:', { userData, error: userError })
+
+          if (userData?.name) {
+            userName = userData.name
+          } else if (currentUser.email) {
+            userName = currentUser.email.split('@')[0]
+          }
+        } catch (userLookupError) {
+          console.error('[FOLLOWUP COMPLETION] Error looking up user name:', userLookupError)
+          userName = currentUser.email?.split('@')[0] || 'Unknown User'
+        }
       }
+
+      console.log('[FOLLOWUP COMPLETION] Final userName:', userName)
 
       const res = await fetch('/api/followups', {
         method: 'PUT',
@@ -85,19 +101,34 @@ const FollowupsPage = () => {
         })
       })
       if (res.ok) {
+        console.log('[FOLLOWUP COMPLETION] Follow-up marked as completed')
+
         // Log completion as activity in contact's timeline
-        await fetch('/api/activities', {
+        const activityPayload = {
+          type: 'follow-up-completed',
+          description: `Follow-up Call completed - Scheduled for ${followup.scheduledDate} at ${followup.scheduledTime}`,
+          contactId: followup.contactId,
+          userId: currentUser?.id,
+          userName: userName
+        }
+        console.log('[FOLLOWUP COMPLETION] Creating activity with payload:', activityPayload)
+
+        const activityRes = await fetch('/api/activities', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'follow-up-completed',
-            description: `Follow-up Call completed - Scheduled for ${followup.scheduledDate} at ${followup.scheduledTime}`,
-            contactId: followup.contactId,
-            userId: currentUser?.id,
-            userName: userName
-          })
+          body: JSON.stringify(activityPayload)
         })
+
+        if (activityRes.ok) {
+          const activityData = await activityRes.json()
+          console.log('[FOLLOWUP COMPLETION] Activity created successfully:', activityData.activity?.id)
+        } else {
+          console.error('[FOLLOWUP COMPLETION] Activity creation failed:', activityRes.status, await activityRes.text())
+        }
+
         fetchFollowups()
+      } else {
+        console.error('[FOLLOWUP COMPLETION] Failed to mark follow-up as completed:', res.status)
       }
     } catch (error) {
       console.error('Error completing followup:', error)
