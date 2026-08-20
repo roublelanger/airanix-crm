@@ -915,8 +915,8 @@ export default function ContactDetailPage() {
                     )}
 
                     <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#6b7280', fontWeight: '500', marginTop: '10px' }}>
-                      <span>📅 {scheduledDate.toLocaleDateString()}</span>
-                      <span>🕐 {scheduledDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span>📅 {scheduledDate.toLocaleDateString('en-US', { timeZone: 'Asia/Kolkata' })}</span>
+                      <span>🕐 {scheduledDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}</span>
                     </div>
                   </div>
                 </div>

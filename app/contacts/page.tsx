@@ -550,7 +550,7 @@ function ContactsContent() {
         'Assigned To': contact.assigned_to || '',
         'Platform': contact.platform || '',
         'Remarks': contact.remarks || '',
-        'Date Added': contact.createdAt ? new Date(contact.createdAt).toLocaleDateString() : ''
+        'Date Added': contact.createdAt ? new Date(contact.createdAt).toLocaleDateString('en-US', { timeZone: 'Asia/Kolkata' }) : ''
       }))
 
       const worksheet = XLSX.utils.json_to_sheet(data)
