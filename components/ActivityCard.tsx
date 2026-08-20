@@ -100,28 +100,24 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
       )}
 
       {/* Footer: ISR name, initials avatar, and timestamp */}
-      <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-200 pl-7">
-        <div className="flex items-center gap-2">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #e5e7eb', paddingLeft: '28px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {/* Avatar with initials */}
-          <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-            <span className="text-xs font-semibold text-white">
+          <div style={{ width: '28px', height: '28px', background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <span style={{ fontSize: '11px', fontWeight: '600', color: 'white' }}>
               {activity.createdBy.initials}
             </span>
           </div>
           {/* ISR Name */}
-          <div>
-            <p className="text-xs font-medium text-gray-900">
-              {activity.createdBy.name}
-            </p>
-          </div>
+          <p style={{ fontSize: '12px', fontWeight: '500', color: '#111827', margin: '0' }}>
+            {activity.createdBy.name}
+          </p>
         </div>
 
         {/* Timestamp - exact date and time */}
-        <div className="text-right">
-          <p className="text-xs text-gray-500">
-            {activity.createdAtFormatted}
-          </p>
-        </div>
+        <p style={{ fontSize: '12px', color: '#6b7280', margin: '0', textAlign: 'right' }}>
+          {activity.createdAtFormatted}
+        </p>
       </div>
     </div>
   )
