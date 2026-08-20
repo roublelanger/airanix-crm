@@ -67,7 +67,7 @@ const FollowupsPage = () => {
 
       console.log('[FOLLOWUP COMPLETION] Current user:', { id: currentUser?.id, email: currentUser?.email })
 
-      // Get user name from crm_users table
+      // Get user name from crm_users table or fall back to email
       let userName = 'Unknown User'
       if (currentUser?.id) {
         try {
@@ -81,8 +81,11 @@ const FollowupsPage = () => {
 
           if (userData?.name) {
             userName = userData.name
-          } else if (currentUser.email) {
-            userName = currentUser.email.split('@')[0]
+          } else {
+            // Fallback: Use email prefix or domain
+            const emailParts = currentUser.email?.split('@') || []
+            userName = emailParts[0] || 'Unknown User'
+            console.log('[FOLLOWUP COMPLETION] User not in crm_users, falling back to email:', userName)
           }
         } catch (userLookupError) {
           console.error('[FOLLOWUP COMPLETION] Error looking up user name:', userLookupError)

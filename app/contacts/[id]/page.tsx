@@ -166,15 +166,26 @@ export default function ContactDetailPage() {
       const { data: { session } } = await supabase.auth.getSession()
       const currentUser = session?.user
 
-      // Get user name
-      let userName = 'Unknown'
+      // Get user name from crm_users table or fall back to email
+      let userName = 'Unknown User'
       if (currentUser?.id) {
-        const { data: userData } = await supabase
-          .from('crm_users')
-          .select('name')
-          .eq('id', currentUser.id)
-          .single()
-        userName = userData?.name || currentUser.email?.split('@')[0] || 'Unknown'
+        try {
+          const { data: userData } = await supabase
+            .from('crm_users')
+            .select('name')
+            .eq('id', currentUser.id)
+            .single()
+
+          if (userData?.name) {
+            userName = userData.name
+          } else {
+            // Fallback: Use email prefix
+            userName = currentUser.email?.split('@')[0] || 'Unknown User'
+          }
+        } catch (error) {
+          console.error('[ACTIVITY] Error looking up user:', error)
+          userName = currentUser.email?.split('@')[0] || 'Unknown User'
+        }
       }
 
       const res = await fetch('/api/activities', {
