@@ -96,31 +96,45 @@ export async function POST(request: Request) {
       userName: body.userName
     })
 
-    const { data, error } = await supabase
-      .from('follow_ups')
-      .insert([{
-        contact_id: body.contactId,
-        activity_id: body.activityId || null,
-        scheduled_date: body.scheduledDate,
-        scheduled_time: body.scheduledTime,
-        activity_type: body.activityType || 'call',
-        description: body.description || null,
-        priority: body.priority || 'normal',
-        status: 'pending',
-        notes: body.notes || null,
-        created_by: body.userId || null
-      }])
-      .select()
+    try {
+      const { data, error } = await supabase
+        .from('follow_ups')
+        .insert([{
+          contact_id: body.contactId,
+          activity_id: body.activityId || null,
+          scheduled_date: body.scheduledDate,
+          scheduled_time: body.scheduledTime,
+          activity_type: body.activityType || 'call',
+          description: body.description || null,
+          priority: body.priority || 'normal',
+          status: 'pending',
+          notes: body.notes || null,
+          created_by: body.userId || null
+        }])
+        .select()
 
-    if (error) {
-      console.error('[FOLLOWUPS] Insert error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      if (error) {
+        console.error('[FOLLOWUPS] Insert error:', error)
+        console.error('[FOLLOWUPS] Error details:', JSON.stringify(error, null, 2))
+        return NextResponse.json({
+          error: error.message,
+          details: error
+        }, { status: 500 })
+      }
+
+      console.log('[FOLLOWUPS] Follow-up created:', data?.[0]?.id)
+      return NextResponse.json({
+        success: true,
+        followup: data?.[0]
+      }, { status: 201 })
+    } catch (dbError: any) {
+      console.error('[FOLLOWUPS] Database error:', dbError)
+      console.error('[FOLLOWUPS] Error stack:', dbError.stack)
+      return NextResponse.json({
+        error: dbError.message || 'Unknown database error',
+        stack: dbError.stack
+      }, { status: 500 })
     }
-
-    return NextResponse.json({
-      success: true,
-      followup: data?.[0]
-    }, { status: 201 })
   } catch (error: any) {
     console.error('[FOLLOWUPS] POST error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
