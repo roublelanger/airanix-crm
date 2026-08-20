@@ -5,32 +5,29 @@ export async function GET() {
     const XLSX = require('xlsx')
 
     // Create template data with example row
+    // Headers must match the import validation function expectations
     const templateData = [
       {
-        'Name': 'John Doe',
-        'Email': 'john@example.com',
-        'Phone': '+1234567890',
-        'Company': 'Tech Corp',
-        'Designation': 'Sales Manager',
-        'Location': 'New York, USA',
-        'Industry': 'Technology',
-        'Status': 'LEAD',
-        'Assigned To': 'Your Name',
-        'Platform': 'LinkedIn',
-        'Remarks': 'Met at conference'
+        'name': 'John Doe',
+        'email': 'john@example.com',
+        'phone': '+1234567890',
+        'company': 'Tech Corp',
+        'designation': 'Sales Manager',
+        'location': 'New York, USA',
+        'industry': 'Technology',
+        'remarks': 'Met at conference',
+        'assigned_to': 'Your Name'
       },
       {
-        'Name': 'Jane Smith',
-        'Email': 'jane@example.com',
-        'Phone': '+9876543210',
-        'Company': 'Innovation Inc',
-        'Designation': 'CEO',
-        'Location': 'San Francisco, USA',
-        'Industry': 'Software',
-        'Status': 'ACTIVE',
-        'Assigned To': 'Your Name',
-        'Platform': 'Email',
-        'Remarks': 'Interested in partnership'
+        'name': 'Jane Smith',
+        'email': 'jane@example.com',
+        'phone': '+9876543210',
+        'company': 'Innovation Inc',
+        'designation': 'CEO',
+        'location': 'San Francisco, USA',
+        'industry': 'Software',
+        'remarks': 'Interested in partnership',
+        'assigned_to': 'Your Name'
       }
     ]
 
@@ -41,17 +38,15 @@ export async function GET() {
 
     // Set column widths
     worksheet['!cols'] = [
-      { wch: 20 }, // Name
-      { wch: 25 }, // Email
-      { wch: 15 }, // Phone
-      { wch: 20 }, // Company
-      { wch: 20 }, // Designation
-      { wch: 15 }, // Location
-      { wch: 15 }, // Industry
-      { wch: 12 }, // Status
-      { wch: 15 }, // Assigned To
-      { wch: 15 }, // Platform
-      { wch: 30 }  // Remarks
+      { wch: 20 }, // name
+      { wch: 25 }, // email
+      { wch: 15 }, // phone
+      { wch: 20 }, // company
+      { wch: 20 }, // designation
+      { wch: 15 }, // location
+      { wch: 15 }, // industry
+      { wch: 30 }, // remarks
+      { wch: 15 }  // assigned_to
     ]
 
     // Add instructions sheet
@@ -59,25 +54,24 @@ export async function GET() {
       ['Contact Import Template - Instructions'],
       [],
       ['Column Name', 'Required?', 'Description', 'Example'],
-      ['Name', 'YES ✓', 'Full name of contact', 'John Doe'],
-      ['Email', 'YES ✓', 'Email address (must be unique)', 'john@example.com'],
-      ['Phone', 'NO', 'Phone number', '+1234567890'],
-      ['Company', 'NO', 'Company name', 'Tech Corp'],
-      ['Designation', 'NO', 'Job title/designation', 'Sales Manager'],
-      ['Location', 'NO', 'City or location', 'New York, USA'],
-      ['Industry', 'NO', 'Industry type', 'Technology'],
-      ['Status', 'NO', 'Status (NEW/LEAD/ACTIVE/CLOSED)', 'LEAD'],
-      ['Assigned To', 'NO', 'Team member name', 'Your Name'],
-      ['Platform', 'NO', 'Source platform', 'LinkedIn'],
-      ['Remarks', 'NO', 'Additional notes', 'Met at conference'],
+      ['name', 'YES ✓', 'Full name of contact', 'John Doe'],
+      ['email', 'YES ✓', 'Email address (or NA if not available)', 'john@example.com or NA'],
+      ['phone', 'NO', 'Phone number', '+1234567890'],
+      ['company', 'NO', 'Company name', 'Tech Corp'],
+      ['designation', 'NO', 'Job title/designation', 'Sales Manager'],
+      ['location', 'NO', 'City or location', 'New York, USA'],
+      ['industry', 'NO', 'Industry type', 'Technology'],
+      ['remarks', 'NO', 'Additional notes/remarks', 'Met at conference'],
+      ['assigned_to', 'NO', 'Team member name', 'Your Name'],
       [],
       ['Important Notes:'],
-      ['• Name and Email are REQUIRED for each contact'],
-      ['• Duplicate emails will be skipped'],
-      ['• All other fields are optional'],
-      ['• Status options: NEW, LEAD, ACTIVE, CLOSED (default: NEW)'],
+      ['• Name is REQUIRED for each contact'],
+      ['• Email is required OR use NA if not available'],
+      ['• Duplicate records (same name+email) will be skipped'],
+      ['• All column headers must be lowercase (name, email, company, etc.)'],
+      ['• If email is NA or missing, it will be stored as "NA"'],
       ['• Delete the example rows before importing your data'],
-      ['• File format: .xlsx or .csv']
+      ['• Supported file formats: .xlsx, .csv']
     ]
 
     const instructionSheet = XLSX.utils.aoa_to_sheet(instructionsData)
