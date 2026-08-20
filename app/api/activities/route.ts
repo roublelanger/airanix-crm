@@ -145,9 +145,30 @@ export async function POST(request: Request) {
 
     console.log('Activity saved successfully:', data?.[0]?.id)
 
+    // Format the response the same way as GET endpoint
+    const activity = data?.[0]
+    const formattedActivity = activity ? {
+      id: activity.id,
+      type: activity.type || 'note',
+      title: activity.notes?.substring(0, 50) || activity.description?.substring(0, 50) || 'Activity',
+      description: activity.notes || activity.description,
+      createdBy: {
+        id: activity.created_by,
+        name: activity.created_by_name || 'Unknown User',
+        initials: (activity.created_by_name || 'U')
+          .split(' ')
+          .map((n: string) => n[0])
+          .join('')
+          .toUpperCase()
+      },
+      createdAt: activity.created_at,
+      createdAtFormatted: formatDateTime(activity.created_at),
+      updatedAt: activity.updated_at
+    } : null
+
     return NextResponse.json({
       success: true,
-      activity: data?.[0] || insertData
+      activity: formattedActivity || insertData
     }, { status: 201 })
   } catch (error: any) {
     console.error('POST /api/activities error:', {
