@@ -147,20 +147,35 @@ const FollowupsPage = () => {
               {new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             </h2>
             {groupedFollowups[date].map((f: FollowUp) => (
-              <div key={f.id} style={{ background: getPriorityColor(f.priority), border: `2px solid ${getPriorityBorder(f.priority)}`, borderRadius: '12px', padding: '16px', marginBottom: '12px', display: 'flex', gap: '16px', alignItems: 'center' }}>
-                <div style={{ textAlign: 'center', minWidth: '80px' }}>
-                  <div style={{ fontSize: '24px' }}>{getActivityIcon(f.activityType)}</div>
-                  <div style={{ fontSize: '14px', fontWeight: '600' }}>{f.scheduledTime}</div>
+              <div key={f.id} style={{ background: getPriorityColor(f.priority), border: `2px solid ${getPriorityBorder(f.priority)}`, borderRadius: '12px', padding: '16px', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                  <div style={{ textAlign: 'center', minWidth: '70px', flexShrink: 0 }}>
+                    <div style={{ fontSize: '28px', marginBottom: '4px' }}>{getActivityIcon(f.activityType)}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: '#111827' }}>{f.scheduledTime}</div>
+                    <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px', textTransform: 'capitalize' }}>{f.activityType}</div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <Link href={`/contacts/${f.contactId}`} style={{ textDecoration: 'none' }}>
+                      <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#2563eb', margin: '0 0 4px 0', cursor: 'pointer' }}>{f.contact.name}</h3>
+                    </Link>
+                    <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 2px 0' }}>
+                      📍 {f.contact.company} • {f.contact.phone || 'No phone'}
+                    </p>
+                    {f.description && (
+                      <p style={{ fontSize: '13px', color: '#374151', margin: '6px 0 0 0', fontStyle: 'italic' }}>
+                        "{f.description}"
+                      </p>
+                    )}
+                  </div>
+                  <button onClick={() => handleComplete(f.id)} style={{ padding: '8px 16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                    ✓ Done
+                  </button>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <Link href={`/contacts/${f.contactId}`} style={{ textDecoration: 'none' }}>
-                    <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#2563eb', margin: '0 0 4px 0' }}>{f.contact.name}</h3>
-                  </Link>
-                  <p style={{ fontSize: '13px', color: '#6b7280', margin: '0' }}>{f.contact.company}</p>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(0,0,0,0.1)', fontSize: '12px', color: '#6b7280' }}>
+                  <span>👤 Added by: Admin</span>
+                  <span>|</span>
+                  <span>⭐ {f.priority.charAt(0).toUpperCase() + f.priority.slice(1)} Priority</span>
                 </div>
-                <button onClick={() => handleComplete(f.id)} style={{ padding: '8px 16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
-                  ✓ Done
-                </button>
               </div>
             ))}
           </div>

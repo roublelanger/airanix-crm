@@ -16,7 +16,8 @@ export async function GET(request: NextRequest) {
       .from('follow_ups')
       .select(`
         *,
-        contact:contacts(id, name, email, company, phone)
+        contact:contacts(id, name, email, company, phone),
+        created_by_user:crm_users(id, name, email)
       `)
       .order('scheduled_date', { ascending: true })
       .order('scheduled_time', { ascending: true })
@@ -60,6 +61,8 @@ export async function GET(request: NextRequest) {
       status: followup.status,
       scheduledDate: followup.scheduled_date,
       scheduledTime: followup.scheduled_time,
+      createdBy: followup.created_by_user?.name || 'Unknown',
+      createdByUser: followup.created_by_user,
       createdAt: followup.created_at
     }))
 
