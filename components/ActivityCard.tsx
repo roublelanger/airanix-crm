@@ -32,9 +32,31 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
       note: '📝',
       task: '✓',
       'call-not-received': '📵',
+      'follow-up-call': '☎️',
+      'follow-up-meeting': '🔔',
+      'meeting-booked': '📅',
+      'meeting-happened': '✅',
+      'assigned': '👤',
       default: '📌'
     }
     return icons[type?.toLowerCase()] || icons.default
+  }
+
+  const getActivityLabel = (type: string) => {
+    const labels: { [key: string]: string } = {
+      'call': 'Call',
+      'email': 'Email Sent',
+      'meeting': 'Meeting',
+      'note': 'Note',
+      'task': 'Task',
+      'call-not-received': 'Call Not Received',
+      'follow-up-call': 'Follow-up Call',
+      'follow-up-meeting': 'Follow-up for Meeting',
+      'meeting-booked': 'Meeting Booked',
+      'meeting-happened': 'Meeting Happened',
+      'assigned': 'Assigned'
+    }
+    return labels[type?.toLowerCase()] || type
   }
 
   const getActivityColor = (type: string) => {
@@ -45,6 +67,11 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
       note: 'bg-gray-50 border-gray-200',
       task: 'bg-yellow-50 border-yellow-200',
       'call-not-received': 'bg-red-50 border-red-200',
+      'follow-up-call': 'bg-blue-50 border-blue-200',
+      'follow-up-meeting': 'bg-indigo-50 border-indigo-200',
+      'meeting-booked': 'bg-emerald-50 border-emerald-200',
+      'meeting-happened': 'bg-green-50 border-green-200',
+      'assigned': 'bg-orange-50 border-orange-200',
       default: 'bg-gray-50 border-gray-200'
     }
     return colors[type?.toLowerCase()] || colors.default
@@ -57,24 +84,17 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
         ${getActivityColor(activity.type)}
       `}
     >
-      {/* Header: Icon, Title, and ISR Name */}
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex items-start gap-3 flex-1">
-          <span className="text-lg mt-0.5">{getActivityIcon(activity.type)}</span>
-          <div className="flex-1">
-            <h4 className="font-semibold text-gray-900 text-sm">
-              {activity.title || 'Activity'}
-            </h4>
-            <p className="text-xs text-gray-600 mt-0.5">
-              {activity.type.charAt(0).toUpperCase() + activity.type.slice(1)}
-            </p>
-          </div>
-        </div>
+      {/* Header: Icon and Activity Type Label */}
+      <div className="flex items-start gap-3 mb-2">
+        <span className="text-lg mt-0.5">{getActivityIcon(activity.type)}</span>
+        <h4 className="font-semibold text-gray-900 text-sm">
+          {getActivityLabel(activity.type)}
+        </h4>
       </div>
 
-      {/* Description */}
-      {activity.description && (
-        <p className="text-sm text-gray-700 mb-3 pl-7">
+      {/* Description - only if present and different from title */}
+      {activity.description && activity.description !== getActivityLabel(activity.type) && (
+        <p className="text-sm text-gray-700 mb-3 pl-7 leading-relaxed">
           {activity.description}
         </p>
       )}
