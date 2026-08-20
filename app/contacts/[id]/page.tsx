@@ -191,8 +191,14 @@ export default function ContactDetailPage() {
       })
       const data = await res.json()
       if (res.ok) {
+        console.log('[ACTIVITY] Activity created:', data.activity?.id)
+        console.log('[ACTIVITY] Schedule followup:', activityForm.scheduleFollowup)
+        console.log('[ACTIVITY] Followup date:', activityForm.followupDate)
+        console.log('[ACTIVITY] Followup time:', activityForm.followupTime)
+
         // Check if scheduling follow-up
         if (activityForm.scheduleFollowup && activityForm.followupDate && activityForm.followupTime) {
+          console.log('[ACTIVITY] Creating follow-up...')
           const followupRes = await fetch('/api/followups', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -207,9 +213,17 @@ export default function ContactDetailPage() {
             })
           })
 
+          const followupData = await followupRes.json()
+          console.log('[ACTIVITY] Follow-up response:', followupData)
+
           if (!followupRes.ok) {
-            console.error('Failed to schedule follow-up')
+            console.error('[ACTIVITY] Failed to schedule follow-up:', followupData.error)
+            alert(`Follow-up created but scheduling failed: ${followupData.error}`)
+          } else {
+            console.log('[ACTIVITY] Follow-up scheduled successfully!')
           }
+        } else {
+          console.log('[ACTIVITY] Follow-up not scheduled - missing data or unchecked')
         }
 
         setActivityForm({ type: 'follow-up-call', title: '', description: '', outcome: 'pending', assignedTo: '', meetingDate: '', meetingTime: '', scheduleFollowup: false, followupDate: '', followupTime: '', followupPriority: 'normal' })
