@@ -49,9 +49,16 @@ export default function AnalyticsPage() {
       const dealsData = await dealsRes.json()
       const activitiesData = await activitiesRes.json()
 
-      setContacts(contactsData)
-      setDeals(dealsData)
-      setActivities(activitiesData)
+      // Defensively handle both raw-array and { success, data } response shapes
+      setContacts(Array.isArray(contactsData) ? contactsData : [])
+      setDeals(Array.isArray(dealsData) ? dealsData : [])
+      setActivities(
+        Array.isArray(activitiesData)
+          ? activitiesData
+          : Array.isArray(activitiesData?.data)
+          ? activitiesData.data
+          : []
+      )
     } catch (error) {
       console.error('Error fetching analytics data:', error)
     } finally {
