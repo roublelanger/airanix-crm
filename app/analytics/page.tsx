@@ -72,19 +72,28 @@ export default function AnalyticsPage() {
   const last60Days = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
   const previous30Start = new Date(last30Days.getTime() - 30 * 24 * 60 * 60 * 1000)
 
+  // Growth label: real % when we have a previous-period baseline to compare against,
+  // 'New' when everything happened this period (previous = 0 but current > 0) —
+  // showing '0%' in that case would misreport a jump from 0 as no growth.
+  const formatGrowth = (current: number, previous: number): string => {
+    if (previous > 0) return `${((current - previous) / previous * 100).toFixed(0)}%`
+    if (current > 0) return 'New'
+    return '0%'
+  }
+
   const contactsLast30 = contacts.filter(c => new Date(c.createdAt) > last30Days).length
   const contactsPrevious30 = contacts.filter(c => {
     const d = new Date(c.createdAt)
     return d > previous30Start && d <= last30Days
   }).length
-  const contactsGrowth = contactsPrevious30 > 0 ? ((contactsLast30 - contactsPrevious30) / contactsPrevious30 * 100).toFixed(0) : '0'
+  const contactsGrowth = formatGrowth(contactsLast30, contactsPrevious30)
 
   const dealsLast30 = deals.filter(d => new Date(d.createdAt) > last30Days).length
   const dealsPrevious30 = deals.filter(d => {
     const cr = new Date(d.createdAt)
     return cr > previous30Start && cr <= last30Days
   }).length
-  const dealsGrowth = dealsPrevious30 > 0 ? ((dealsLast30 - dealsPrevious30) / dealsPrevious30 * 100).toFixed(0) : '0'
+  const dealsGrowth = formatGrowth(dealsLast30, dealsPrevious30)
 
   // Generate time series data (last 30 days)
   const timeSeriesData = Array.from({ length: 30 }).map((_, i) => {
@@ -100,15 +109,18 @@ export default function AnalyticsPage() {
     }
   })
 
-  // Contact sources
-  const contactSourcesMap = contacts.reduce((acc: any, c) => {
-    const source = c.platform || c.company || 'Direct'
-    acc[source] = (acc[source] || 0) + 1
+  // Top companies by contact count.
+  // Note: there is no tracked lead-source/platform field in the contacts table,
+  // so this groups by company name (not marketing channel) — contacts with no
+  // company on file are bucketed as "No Company Listed".
+  const topCompaniesMap = contacts.reduce((acc: any, c) => {
+    const company = c.company || 'No Company Listed'
+    acc[company] = (acc[company] || 0) + 1
     return acc
   }, {})
 
-  const contactSourcesData = Object.entries(contactSourcesMap)
-    .map(([source, count]) => ({ name: source, value: count as number }))
+  const topCompaniesData = Object.entries(topCompaniesMap)
+    .map(([name, count]) => ({ name, value: count as number }))
     .sort((a, b) => (b.value as number) - (a.value as number))
     .slice(0, 6)
 
@@ -191,7 +203,7 @@ export default function AnalyticsPage() {
                 background: contactsLast30 >= contactsPrevious30 ? '#f0fdf4' : '#fef2f2',
                 borderRadius: '4px'
               }}>
-                {contactsGrowth}% vs previous
+                {contactsGrowth} vs previous
               </span>
             </div>
             <p style={{ fontSize: '13px', color: '#64748b', margin: '0' }}>
@@ -222,7 +234,7 @@ export default function AnalyticsPage() {
                 background: dealsLast30 >= dealsPrevious30 ? '#f0fdf4' : '#fef2f2',
                 borderRadius: '4px'
               }}>
-                {dealsGrowth}% vs previous
+                {dealsGrowth} vs previous
               </span>
             </div>
             <p style={{ fontSize: '13px', color: '#64748b', margin: '0' }}>
@@ -346,7 +358,7 @@ export default function AnalyticsPage() {
           gap: '24px',
           marginBottom: '40px'
         }}>
-          {/* Contact Sources */}
+          {/* Top Companies */}
           <div style={{
             background: '#ffffff',
             border: '1px solid #e2e8f0',
@@ -355,10 +367,10 @@ export default function AnalyticsPage() {
             boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
           }}>
             <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: '0 0 24px 0' }}>
-              🔗 Contact Sources
+              🏢 Top Companies by Contact Count
             </h3>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={contactSourcesData}>
+              <BarChart data={topCompaniesData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} />
                 <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
