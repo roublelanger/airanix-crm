@@ -11,15 +11,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const contactId = searchParams.get('contact_id')
 
-    if (!contactId) {
-      return NextResponse.json(
-        { error: 'contact_id is required' },
-        { status: 400 }
-      )
-    }
-
-    // Debug: Log what we're querying
-    console.log(`[ACTIVITIES] Querying interactions for contact_id: ${contactId}`)
+    console.log(`[ACTIVITIES] GET request - contact_id: ${contactId || 'none (fetch all)'}`)
 
     // Get ALL interactions and filter in JavaScript (bypass RLS issues)
     const { data: allInteractions, error } = await supabase
@@ -35,19 +27,16 @@ export async function GET(request: Request) {
       )
     }
 
-    // Log all contact_ids to debug
-    console.log(`[ACTIVITIES] All contact_ids in DB:`, allInteractions?.map((row: any) => row.contact_id))
-    console.log(`[ACTIVITIES] Looking for: "${contactId}" (type: ${typeof contactId})`)
-
-    // Filter by contact_id in JavaScript
-    const data = (allInteractions || []).filter((row: any) => {
-      const match = row.contact_id === contactId
-      console.log(`[ACTIVITIES] Comparing: "${row.contact_id}" (type: ${typeof row.contact_id}) === "${contactId}" ? ${match}`)
-      return match
-    })
+    // Filter by contact_id if provided, otherwise return all
+    let data = allInteractions || []
+    if (contactId) {
+      console.log(`[ACTIVITIES] Filtering for contact_id: ${contactId}`)
+      data = data.filter((row: any) => row.contact_id === contactId)
+      console.log(`[ACTIVITIES] Filtered ${data.length} activities for contact ${contactId}`)
+    } else {
+      console.log(`[ACTIVITIES] Returning all ${data.length} activities (no contact filter)`)
+    }
     const count = data.length
-
-    console.log(`[ACTIVITIES] Total in DB: ${allInteractions?.length || 0}, for contact ${contactId}: ${count}`)
 
 
     // Format response with ISR names and formatted timestamps
