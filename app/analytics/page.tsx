@@ -50,7 +50,21 @@ export default function AnalyticsPage() {
       const activitiesData = await activitiesRes.json()
 
       // Defensively handle both raw-array and { success, data } response shapes
-      setContacts(Array.isArray(contactsData) ? contactsData : [])
+      const rawContacts = Array.isArray(contactsData) ? contactsData : []
+
+      // The contacts table has duplicate rows (same person imported more than
+      // once by the lead-import crons). The Contacts page already dedupes by
+      // email+name before displaying its counts - apply the same rule here so
+      // Analytics agrees with it instead of counting duplicates as real contacts.
+      const seen = new Set<string>()
+      const dedupedContacts = rawContacts.filter((c) => {
+        const key = `${c.email?.toLowerCase?.() || ''}:${c.name?.toLowerCase?.() || ''}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+
+      setContacts(dedupedContacts)
       setDeals(Array.isArray(dealsData) ? dealsData : [])
       setActivities(
         Array.isArray(activitiesData)
