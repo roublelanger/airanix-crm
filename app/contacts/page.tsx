@@ -85,6 +85,10 @@ function ContactsContent() {
   const [emailSubject, setEmailSubject] = useState('')
   const [emailBody, setEmailBody] = useState('')
   const [sendingEmails, setSendingEmails] = useState(false)
+  const [bulkEmailTemplates, setBulkEmailTemplates] = useState<any[]>([])
+  const [selectedBulkTemplateId, setSelectedBulkTemplateId] = useState('')
+  const [emailSendProgress, setEmailSendProgress] = useState<{ sent: number; failed: number; total: number } | null>(null)
+  const [cancelEmailSend, setCancelEmailSend] = useState(false)
 
   // Statistics
   const [stats, setStats] = useState({ total: 0, byStatus: {} as Record<string, number> })
@@ -913,49 +917,92 @@ function ContactsContent() {
     }
   }
 
-  // Bulk email send
+  // Bulk email send - chunked client-side so a send of hundreds of contacts
+  // can't hit the serverless function's request timeout, and so the UI can
+  // show live progress instead of one long silent wait.
+  const EMAIL_BATCH_SIZE = 25
+
   async function sendBulkEmails() {
     if (!emailSubject.trim() || !emailBody.trim() || selectedContacts.size === 0) {
       showToast('error', 'Please fill in subject, body and select contacts')
       return
     }
 
+    const selectedContactsList = sortedContacts.filter(c => selectedContacts.has(c.id))
+
+    const { supabase } = await import('@/lib/supabase')
+    const { data: { session } } = await supabase.auth.getSession()
+    const currentUser = session?.user
+    let userName = 'Unknown User'
+    if (currentUser?.id) {
+      try {
+        const { data: userData } = await supabase
+          .from('crm_users')
+          .select('name')
+          .eq('id', currentUser.id)
+          .single()
+        userName = userData?.name || currentUser.email?.split('@')[0] || 'Unknown User'
+      } catch {
+        userName = currentUser.email?.split('@')[0] || 'Unknown User'
+      }
+    }
+
     setSendingEmails(true)
+    setCancelEmailSend(false)
+    setEmailSendProgress({ sent: 0, failed: 0, total: selectedContactsList.length })
+
+    let totalSent = 0
+    let totalFailed = 0
+
     try {
-      const selectedContactsList = sortedContacts.filter(c => selectedContacts.has(c.id))
+      for (let i = 0; i < selectedContactsList.length; i += EMAIL_BATCH_SIZE) {
+        if (cancelEmailSend) break
 
-      const res = await fetch('/api/contacts/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subject: emailSubject,
-          body: emailBody,
-          recipients: selectedContactsList.map(c => ({
-            id: c.id,
-            name: c.name,
-            email: c.email
-          }))
-        })
-      })
+        const batch = selectedContactsList.slice(i, i + EMAIL_BATCH_SIZE)
 
-      const data = await res.json()
+        try {
+          const res = await fetch('/api/contacts/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              subject: emailSubject,
+              body: emailBody,
+              recipients: batch.map(c => ({
+                id: c.id,
+                name: c.name,
+                email: c.email,
+                company: c.company
+              })),
+              userId: currentUser?.id,
+              userName
+            })
+          })
+          const data = await res.json()
+          totalSent += data.sent || 0
+          totalFailed += (data.failed || 0) + (res.ok ? 0 : batch.length)
+        } catch (batchError) {
+          console.error('Email batch failed:', batchError)
+          totalFailed += batch.length
+        }
 
-      if (res.ok && data.sent > 0) {
-        showToast('success', `✉️ Email sent to ${data.sent} recipient(s)`)
+        setEmailSendProgress({ sent: totalSent, failed: totalFailed, total: selectedContactsList.length })
+      }
+
+      if (totalSent > 0 && totalFailed === 0) {
+        showToast('success', `✉️ Email sent to ${totalSent} recipient(s)`)
         setShowEmailModal(false)
         setEmailSubject('')
         setEmailBody('')
+        setSelectedBulkTemplateId('')
         setSelectedContacts(new Set())
-      } else if (data.sent > 0) {
-        showToast('warning', `Sent to ${data.sent} (${data.failed} failed)`)
+      } else if (totalSent > 0) {
+        showToast('warning', `Sent to ${totalSent} (${totalFailed} failed)`)
       } else {
-        showToast('error', data.error || 'Failed to send emails. Check browser console for details.')
+        showToast('error', 'Failed to send emails. Check browser console for details.')
       }
-    } catch (error) {
-      console.error('Email send error:', error)
-      showToast('error', 'Error sending emails')
     } finally {
       setSendingEmails(false)
+      setEmailSendProgress(null)
     }
   }
 
@@ -2535,6 +2582,22 @@ function ContactsContent() {
               ✓ {selectedContacts.size} contact{selectedContacts.size !== 1 ? 's' : ''} selected
             </span>
           )}
+          {selectedContacts.size > 0 && selectedContacts.size < sortedContacts.length && (
+            <button
+              onClick={() => setSelectedContacts(new Set(sortedContacts.map(c => c.id)))}
+              style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '13px', fontWeight: '600', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+            >
+              Select all {sortedContacts.length} matching filters
+            </button>
+          )}
+          {selectedContacts.size > 0 && (
+            <button
+              onClick={() => setSelectedContacts(new Set())}
+              style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+            >
+              Clear selection
+            </button>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -2771,7 +2834,16 @@ function ContactsContent() {
 
           {/* Bulk Email Button */}
           <button
-            onClick={() => setShowEmailModal(true)}
+            onClick={async () => {
+              setShowEmailModal(true)
+              try {
+                const res = await fetch('/api/email-templates')
+                const data = await res.json()
+                setBulkEmailTemplates(Array.isArray(data) ? data : [])
+              } catch (error) {
+                console.error('Error fetching email templates:', error)
+              }
+            }}
             disabled={selectedContacts.size === 0}
             style={{
               padding: '10px 16px',
@@ -3676,6 +3748,42 @@ function ContactsContent() {
               Send email to {selectedContacts.size} contact{selectedContacts.size !== 1 ? 's' : ''}
             </p>
 
+            {/* Saved Template Picker */}
+            {bulkEmailTemplates.length > 0 && (
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: '#374151', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>
+                  📄 Use a Saved Template (optional)
+                </label>
+                <select
+                  value={selectedBulkTemplateId}
+                  onChange={(e) => {
+                    const templateId = e.target.value
+                    setSelectedBulkTemplateId(templateId)
+                    const template = bulkEmailTemplates.find(t => t.id === templateId)
+                    if (template) {
+                      setEmailSubject(template.subject)
+                      setEmailBody(template.body)
+                    }
+                  }}
+                  disabled={sendingEmails}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    backgroundColor: 'white',
+                    cursor: sendingEmails ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <option value="">— Write from scratch —</option>
+                  {bulkEmailTemplates.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {/* Subject Input */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{ fontSize: '12px', fontWeight: '600', color: '#374151', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>
@@ -3749,35 +3857,54 @@ function ContactsContent() {
               color: '#0369a1',
             }}>
               ℹ️ Email will be sent to {selectedContacts.size} recipient{selectedContacts.size !== 1 ? 's' : ''} from <strong>rouble@airanix.com</strong>
+              <br />
+              Personalize with <code>{'{{name}}'}</code>, <code>{'{{email}}'}</code>, or <code>{'{{company}}'}</code>
             </div>
+
+            {/* Send Progress */}
+            {emailSendProgress && (
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#374151', marginBottom: '6px' }}>
+                  <span>Sending... {emailSendProgress.sent + emailSendProgress.failed} of {emailSendProgress.total}</span>
+                  {emailSendProgress.failed > 0 && <span style={{ color: '#dc2626' }}>{emailSendProgress.failed} failed</span>}
+                </div>
+                <div style={{ width: '100%', height: '8px', background: '#e5e7eb', borderRadius: '999px', overflow: 'hidden' }}>
+                  <div style={{
+                    width: `${Math.round(((emailSendProgress.sent + emailSendProgress.failed) / emailSendProgress.total) * 100)}%`,
+                    height: '100%',
+                    background: '#ec4899',
+                    transition: 'width 0.3s ease'
+                  }} />
+                </div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => {
+                  if (sendingEmails) {
+                    setCancelEmailSend(true)
+                    return
+                  }
                   setShowEmailModal(false)
                   setEmailSubject('')
                   setEmailBody('')
+                  setSelectedBulkTemplateId('')
                 }}
-                disabled={sendingEmails}
                 style={{
                   padding: '10px 24px',
                   background: '#e5e7eb',
                   color: '#374151',
                   border: 'none',
                   borderRadius: '6px',
-                  cursor: sendingEmails ? 'not-allowed' : 'pointer',
+                  cursor: 'pointer',
                   fontWeight: '600',
                   fontSize: '14px',
-                  opacity: sendingEmails ? 0.5 : 1,
                 }}
-                onMouseEnter={(e) => {
-                  if (!sendingEmails) e.currentTarget.style.background = '#d1d5db'
-                }}
-                onMouseLeave={(e) => {
-                  if (!sendingEmails) e.currentTarget.style.background = '#e5e7eb'
-                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#d1d5db' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#e5e7eb' }}
               >
-                Cancel
+                {sendingEmails ? 'Stop Sending' : 'Cancel'}
               </button>
               <button
                 onClick={sendBulkEmails}
