@@ -89,8 +89,9 @@ function ContactsContent() {
   const [selectedBulkTemplateId, setSelectedBulkTemplateId] = useState('')
   const [emailSendProgress, setEmailSendProgress] = useState<{ sent: number; failed: number; total: number } | null>(null)
   const [cancelEmailSend, setCancelEmailSend] = useState(false)
-  const [emailAttachment, setEmailAttachment] = useState<{ filename: string; contentType: string; data: string; size: number } | null>(null)
+  const [emailAttachment, setEmailAttachment] = useState<{ filename: string; contentType: string; path: string; size: number } | null>(null)
   const [attachmentError, setAttachmentError] = useState('')
+  const [uploadingAttachment, setUploadingAttachment] = useState(false)
 
   // Statistics
   const [stats, setStats] = useState({ total: 0, byStatus: {} as Record<string, number> })
@@ -919,13 +920,14 @@ function ContactsContent() {
     }
   }
 
-  // Max raw attachment size. The attachment is base64-encoded (~33% larger)
-  // and resent with every batch request, and Vercel serverless functions
-  // reject request bodies over ~4.5MB outright - 3MB raw keeps every batch
-  // safely under that regardless of how many recipients are in it.
-  const MAX_ATTACHMENT_SIZE = 3 * 1024 * 1024
+  // Max raw attachment size. The file itself is uploaded directly from the
+  // browser to Supabase Storage (not through our own API), so it isn't
+  // constrained by Vercel's ~4.5MB serverless request body limit - the cap
+  // here is instead about keeping email delivery reliable, since mail
+  // providers commonly bounce or clip very large raw attachments.
+  const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024
 
-  function handleAttachmentSelect(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleAttachmentSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = '' // allow re-selecting the same file later
     if (!file) return
@@ -933,29 +935,59 @@ function ContactsContent() {
     setAttachmentError('')
 
     if (file.size > MAX_ATTACHMENT_SIZE) {
-      setAttachmentError(`"${file.name}" is ${(file.size / 1024 / 1024).toFixed(1)}MB - attachments must be under 3MB`)
+      setAttachmentError(`"${file.name}" is ${(file.size / 1024 / 1024).toFixed(1)}MB - attachments must be under 20MB`)
       return
     }
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = reader.result as string
-      const base64Data = result.split(',')[1] || ''
+    setUploadingAttachment(true)
+    try {
+      // Ask the server for a signed upload URL, then push the file bytes
+      // straight to Supabase Storage from the browser - the file never
+      // passes through our own Vercel function.
+      const prepRes = await fetch('/api/contacts/send-email/attachment-upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, contentType: file.type })
+      })
+      const prep = await prepRes.json()
+      if (!prepRes.ok) throw new Error(prep.error || 'Failed to prepare upload')
+
+      const { supabase } = await import('@/lib/supabase')
+      const { error: uploadError } = await supabase.storage
+        .from('email-attachments')
+        .uploadToSignedUrl(prep.path, prep.token, file)
+
+      if (uploadError) throw uploadError
+
       setEmailAttachment({
         filename: file.name,
         contentType: file.type || 'application/octet-stream',
-        data: base64Data,
+        path: prep.path,
         size: file.size
       })
+    } catch (error: any) {
+      console.error('Attachment upload error:', error)
+      setAttachmentError(error.message || 'Failed to upload attachment')
+    } finally {
+      setUploadingAttachment(false)
     }
-    reader.onerror = () => setAttachmentError('Failed to read file')
-    reader.readAsDataURL(file)
   }
 
-  // Bulk email send - chunked client-side so a send of hundreds of contacts
-  // can't hit the serverless function's request timeout, and so the UI can
-  // show live progress instead of one long silent wait.
-  const EMAIL_BATCH_SIZE = 25
+  async function removeEmailAttachment() {
+    if (emailAttachment) {
+      try {
+        await fetch('/api/contacts/send-email/attachment-upload', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: emailAttachment.path })
+        })
+      } catch (error) {
+        console.error('Error deleting attachment:', error)
+      }
+    }
+    setEmailAttachment(null)
+    setAttachmentError('')
+  }
 
   async function sendBulkEmails() {
     if (!emailSubject.trim() || !emailBody.trim() || selectedContacts.size === 0) {
@@ -964,6 +996,18 @@ function ContactsContent() {
     }
 
     const selectedContactsList = sortedContacts.filter(c => selectedContacts.has(c.id))
+
+    // Batch size is chunked client-side so a send of hundreds of contacts
+    // can't hit the serverless function's request timeout, and so the UI can
+    // show live progress instead of one long silent wait. 25 plain-text
+    // emails per request is safe and fast - but with an attachment, the
+    // SAME multi-MB file gets retransmitted over SMTP for every recipient
+    // in the batch, sequentially, inside one request. Testing an 8MB
+    // attachment showed a single send can take ~30s, so batching 25 of
+    // those together would need 10+ minutes in one request and guarantee
+    // a timeout. One recipient per request when an attachment is present
+    // keeps every request safely inside this route's time budget.
+    const EMAIL_BATCH_SIZE = emailAttachment ? 1 : 25
 
     const { supabase } = await import('@/lib/supabase')
     const { data: { session } } = await supabase.auth.getSession()
@@ -1009,7 +1053,7 @@ function ContactsContent() {
                 company: c.company
               })),
               attachment: emailAttachment
-                ? { filename: emailAttachment.filename, contentType: emailAttachment.contentType, data: emailAttachment.data }
+                ? { filename: emailAttachment.filename, contentType: emailAttachment.contentType, path: emailAttachment.path }
                 : null,
               userId: currentUser?.id,
               userName
@@ -1032,8 +1076,7 @@ function ContactsContent() {
         setEmailSubject('')
         setEmailBody('')
         setSelectedBulkTemplateId('')
-        setEmailAttachment(null)
-        setAttachmentError('')
+        await removeEmailAttachment()
         setSelectedContacts(new Set())
       } else if (totalSent > 0) {
         showToast('warning', `Sent to ${totalSent} (${totalFailed} failed)`)
@@ -3891,13 +3934,21 @@ function ContactsContent() {
               <label style={{ fontSize: '12px', fontWeight: '600', color: '#374151', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>
                 📎 Attachment (optional)
               </label>
-              {emailAttachment ? (
+              {uploadingAttachment ? (
+                <div style={{ padding: '10px 14px', background: '#f9fafb', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px', color: '#6b7280' }}>
+                  ⏳ Uploading...
+                </div>
+              ) : emailAttachment ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#f9fafb', border: '1px solid #d1d5db', borderRadius: '8px' }}>
                   <span style={{ fontSize: '13px', color: '#374151' }}>
-                    📄 {emailAttachment.filename} <span style={{ color: '#9ca3af' }}>({(emailAttachment.size / 1024).toFixed(0)} KB)</span>
+                    📄 {emailAttachment.filename} <span style={{ color: '#9ca3af' }}>
+                      ({emailAttachment.size >= 1024 * 1024
+                        ? `${(emailAttachment.size / 1024 / 1024).toFixed(1)} MB`
+                        : `${(emailAttachment.size / 1024).toFixed(0)} KB`})
+                    </span>
                   </span>
                   <button
-                    onClick={() => setEmailAttachment(null)}
+                    onClick={removeEmailAttachment}
                     disabled={sendingEmails}
                     style={{ background: 'none', border: 'none', color: '#dc2626', fontSize: '13px', fontWeight: '600', cursor: sendingEmails ? 'not-allowed' : 'pointer' }}
                   >
@@ -3915,8 +3966,8 @@ function ContactsContent() {
               {attachmentError && (
                 <p style={{ fontSize: '12px', color: '#dc2626', margin: '6px 0 0 0' }}>{attachmentError}</p>
               )}
-              {!attachmentError && !emailAttachment && (
-                <p style={{ fontSize: '12px', color: '#9ca3af', margin: '6px 0 0 0' }}>Max 3MB - same file is sent to every recipient</p>
+              {!attachmentError && !emailAttachment && !uploadingAttachment && (
+                <p style={{ fontSize: '12px', color: '#9ca3af', margin: '6px 0 0 0' }}>Max 20MB (PPT, PDF, image, etc.) - same file is sent to every recipient</p>
               )}
             </div>
 
@@ -3964,8 +4015,7 @@ function ContactsContent() {
                   setEmailSubject('')
                   setEmailBody('')
                   setSelectedBulkTemplateId('')
-                  setEmailAttachment(null)
-                  setAttachmentError('')
+                  removeEmailAttachment()
                 }}
                 style={{
                   padding: '10px 24px',
@@ -3984,17 +4034,17 @@ function ContactsContent() {
               </button>
               <button
                 onClick={sendBulkEmails}
-                disabled={sendingEmails || !emailSubject.trim() || !emailBody.trim()}
+                disabled={sendingEmails || uploadingAttachment || !emailSubject.trim() || !emailBody.trim()}
                 style={{
                   padding: '10px 24px',
-                  background: (sendingEmails || !emailSubject.trim() || !emailBody.trim()) ? '#d1d5db' : '#ec4899',
+                  background: (sendingEmails || uploadingAttachment || !emailSubject.trim() || !emailBody.trim()) ? '#d1d5db' : '#ec4899',
                   color: 'white',
                   border: 'none',
                   borderRadius: '6px',
-                  cursor: (sendingEmails || !emailSubject.trim() || !emailBody.trim()) ? 'not-allowed' : 'pointer',
+                  cursor: (sendingEmails || uploadingAttachment || !emailSubject.trim() || !emailBody.trim()) ? 'not-allowed' : 'pointer',
                   fontWeight: '600',
                   fontSize: '14px',
-                  opacity: (sendingEmails || !emailSubject.trim() || !emailBody.trim()) ? 0.5 : 1,
+                  opacity: (sendingEmails || uploadingAttachment || !emailSubject.trim() || !emailBody.trim()) ? 0.5 : 1,
                   transition: 'all 0.2s',
                 }}
                 onMouseEnter={(e) => {

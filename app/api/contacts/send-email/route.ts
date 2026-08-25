@@ -7,7 +7,22 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 )
 
-export const maxDuration = 60
+// The email-attachments bucket is private, so downloading the uploaded file
+// (to hand to nodemailer) needs the service role key, not the anon key.
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+)
+
+const ATTACHMENT_BUCKET = 'email-attachments'
+
+// A real 8MB attachment (storage download + Gmail SMTP transfer) measured
+// at ~90s during testing - well past a 60s budget. 300s is the max Vercel
+// allows a serverless function without Fluid Compute enabled; this route
+// needs a Pro (or higher) plan for that ceiling to actually apply - on the
+// Hobby plan, Vercel hard-caps every function at 60s regardless of this
+// value, so large attachments will still fail there.
+export const maxDuration = 300
 
 const createTransporter = () => {
   const user = process.env.EMAIL_USER
@@ -26,8 +41,12 @@ const createTransporter = () => {
       rejectUnauthorized: false,
       minVersion: 'TLSv1.2'
     },
-    connectionTimeout: 10000,
-    socketTimeout: 10000
+    connectionTimeout: 15000,
+    // A real 8MB attachment measured ~90s end-to-end during testing (storage
+    // download + Gmail SMTP transfer combined). Scaling that rate up to the
+    // 20MB attachment limit this feature allows, with margin for network
+    // variability, needs well over a minute just for the SMTP leg alone.
+    socketTimeout: 180000
   })
 }
 
@@ -53,15 +72,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Decode once per request (not per recipient) - it's the same file for
-    // every recipient in this batch.
-    const attachments = attachment?.data
-      ? [{
+    // Download once per request (not per recipient) - it's the same file for
+    // every recipient in this batch. The file lives in Supabase Storage
+    // (uploaded directly from the browser via a signed URL) rather than in
+    // this request's JSON body, since a PPT/PDF can easily be 10-20MB and
+    // Vercel hard-caps serverless function request bodies around 4.5MB.
+    let attachments: { filename: string; content: Buffer; contentType: string }[] | undefined
+    if (attachment?.path) {
+      const { data: fileBlob, error: downloadError } = await supabaseAdmin.storage
+        .from(ATTACHMENT_BUCKET)
+        .download(attachment.path)
+
+      if (downloadError) {
+        console.error('[SEND-EMAIL] Failed to download attachment:', downloadError)
+      } else {
+        const arrayBuffer = await fileBlob.arrayBuffer()
+        attachments = [{
           filename: attachment.filename || 'attachment',
-          content: Buffer.from(attachment.data, 'base64'),
+          content: Buffer.from(arrayBuffer),
           contentType: attachment.contentType || 'application/octet-stream'
         }]
-      : undefined
+      }
+    }
 
     const transporter = createTransporter()
     let sent = 0
