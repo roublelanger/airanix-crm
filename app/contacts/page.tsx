@@ -89,6 +89,8 @@ function ContactsContent() {
   const [selectedBulkTemplateId, setSelectedBulkTemplateId] = useState('')
   const [emailSendProgress, setEmailSendProgress] = useState<{ sent: number; failed: number; total: number } | null>(null)
   const [cancelEmailSend, setCancelEmailSend] = useState(false)
+  const [emailAttachment, setEmailAttachment] = useState<{ filename: string; contentType: string; data: string; size: number } | null>(null)
+  const [attachmentError, setAttachmentError] = useState('')
 
   // Statistics
   const [stats, setStats] = useState({ total: 0, byStatus: {} as Record<string, number> })
@@ -917,6 +919,39 @@ function ContactsContent() {
     }
   }
 
+  // Max raw attachment size. The attachment is base64-encoded (~33% larger)
+  // and resent with every batch request, and Vercel serverless functions
+  // reject request bodies over ~4.5MB outright - 3MB raw keeps every batch
+  // safely under that regardless of how many recipients are in it.
+  const MAX_ATTACHMENT_SIZE = 3 * 1024 * 1024
+
+  function handleAttachmentSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-selecting the same file later
+    if (!file) return
+
+    setAttachmentError('')
+
+    if (file.size > MAX_ATTACHMENT_SIZE) {
+      setAttachmentError(`"${file.name}" is ${(file.size / 1024 / 1024).toFixed(1)}MB - attachments must be under 3MB`)
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      const base64Data = result.split(',')[1] || ''
+      setEmailAttachment({
+        filename: file.name,
+        contentType: file.type || 'application/octet-stream',
+        data: base64Data,
+        size: file.size
+      })
+    }
+    reader.onerror = () => setAttachmentError('Failed to read file')
+    reader.readAsDataURL(file)
+  }
+
   // Bulk email send - chunked client-side so a send of hundreds of contacts
   // can't hit the serverless function's request timeout, and so the UI can
   // show live progress instead of one long silent wait.
@@ -973,6 +1008,9 @@ function ContactsContent() {
                 email: c.email,
                 company: c.company
               })),
+              attachment: emailAttachment
+                ? { filename: emailAttachment.filename, contentType: emailAttachment.contentType, data: emailAttachment.data }
+                : null,
               userId: currentUser?.id,
               userName
             })
@@ -994,6 +1032,8 @@ function ContactsContent() {
         setEmailSubject('')
         setEmailBody('')
         setSelectedBulkTemplateId('')
+        setEmailAttachment(null)
+        setAttachmentError('')
         setSelectedContacts(new Set())
       } else if (totalSent > 0) {
         showToast('warning', `Sent to ${totalSent} (${totalFailed} failed)`)
@@ -3846,6 +3886,40 @@ function ContactsContent() {
               />
             </div>
 
+            {/* Attachment */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#374151', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>
+                📎 Attachment (optional)
+              </label>
+              {emailAttachment ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#f9fafb', border: '1px solid #d1d5db', borderRadius: '8px' }}>
+                  <span style={{ fontSize: '13px', color: '#374151' }}>
+                    📄 {emailAttachment.filename} <span style={{ color: '#9ca3af' }}>({(emailAttachment.size / 1024).toFixed(0)} KB)</span>
+                  </span>
+                  <button
+                    onClick={() => setEmailAttachment(null)}
+                    disabled={sendingEmails}
+                    style={{ background: 'none', border: 'none', color: '#dc2626', fontSize: '13px', fontWeight: '600', cursor: sendingEmails ? 'not-allowed' : 'pointer' }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <input
+                  type="file"
+                  onChange={handleAttachmentSelect}
+                  disabled={sendingEmails}
+                  style={{ fontSize: '13px', width: '100%' }}
+                />
+              )}
+              {attachmentError && (
+                <p style={{ fontSize: '12px', color: '#dc2626', margin: '6px 0 0 0' }}>{attachmentError}</p>
+              )}
+              {!attachmentError && !emailAttachment && (
+                <p style={{ fontSize: '12px', color: '#9ca3af', margin: '6px 0 0 0' }}>Max 3MB - same file is sent to every recipient</p>
+              )}
+            </div>
+
             {/* Info Box */}
             <div style={{
               background: '#eff6ff',
@@ -3890,6 +3964,8 @@ function ContactsContent() {
                   setEmailSubject('')
                   setEmailBody('')
                   setSelectedBulkTemplateId('')
+                  setEmailAttachment(null)
+                  setAttachmentError('')
                 }}
                 style={{
                   padding: '10px 24px',

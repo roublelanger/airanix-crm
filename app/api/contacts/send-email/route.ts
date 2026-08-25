@@ -44,7 +44,7 @@ function personalize(text: string, recipient: { name: string; email: string; com
 
 export async function POST(request: NextRequest) {
   try {
-    const { subject, body, recipients, userId, userName } = await request.json()
+    const { subject, body, recipients, userId, userName, attachment } = await request.json()
 
     if (!subject || !body || !recipients || recipients.length === 0) {
       return NextResponse.json(
@@ -52,6 +52,16 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Decode once per request (not per recipient) - it's the same file for
+    // every recipient in this batch.
+    const attachments = attachment?.data
+      ? [{
+          filename: attachment.filename || 'attachment',
+          content: Buffer.from(attachment.data, 'base64'),
+          contentType: attachment.contentType || 'application/octet-stream'
+        }]
+      : undefined
 
     const transporter = createTransporter()
     let sent = 0
@@ -93,7 +103,8 @@ ${personalizedBody}
           to: recipient.email,
           subject: personalizedSubject,
           html: emailHTML,
-          text: personalizedBody
+          text: personalizedBody,
+          attachments
         })
 
         sent++
