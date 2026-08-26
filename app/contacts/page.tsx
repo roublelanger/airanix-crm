@@ -1009,31 +1009,48 @@ function ContactsContent() {
     // keeps every request safely inside this route's time budget.
     const EMAIL_BATCH_SIZE = emailAttachment ? 1 : 25
 
-    const { supabase } = await import('@/lib/supabase')
-    const { data: { session } } = await supabase.auth.getSession()
-    const currentUser = session?.user
-    let userName = 'Unknown User'
-    if (currentUser?.id) {
-      try {
-        const { data: userData } = await supabase
-          .from('crm_users')
-          .select('name')
-          .eq('id', currentUser.id)
-          .single()
-        userName = userData?.name || currentUser.email?.split('@')[0] || 'Unknown User'
-      } catch {
-        userName = currentUser.email?.split('@')[0] || 'Unknown User'
-      }
-    }
-
+    // Set sending state FIRST, before any auth/session work - so the UI
+    // reflects reality immediately, and so this state is guaranteed to be
+    // reset in the finally below no matter what fails below it.
     setSendingEmails(true)
     setCancelEmailSend(false)
     setEmailSendProgress({ sent: 0, failed: 0, total: selectedContactsList.length })
 
     let totalSent = 0
     let totalFailed = 0
+    let lastErrorMessage = ''
 
     try {
+      // User attribution for the activity log is a nice-to-have, not a
+      // requirement for sending - if the session/profile lookup is flaky
+      // (this browser was observed re-authenticating every ~25-30s in the
+      // background) that must never block the actual send. Previously this
+      // whole block sat OUTSIDE any try/catch: if getSession() itself threw,
+      // the function died silently before the fetch to send-email ever
+      // fired, which is exactly what made this fail with zero visible error
+      // and nothing in the Network tab.
+      let currentUser: { id?: string; email?: string } | undefined
+      let userName = 'Unknown User'
+      try {
+        const { supabase } = await import('@/lib/supabase')
+        const { data: { session } } = await supabase.auth.getSession()
+        currentUser = session?.user
+        if (currentUser?.id) {
+          try {
+            const { data: userData } = await supabase
+              .from('crm_users')
+              .select('name')
+              .eq('id', currentUser.id)
+              .single()
+            userName = userData?.name || currentUser.email?.split('@')[0] || 'Unknown User'
+          } catch {
+            userName = currentUser.email?.split('@')[0] || 'Unknown User'
+          }
+        }
+      } catch (authError) {
+        console.error('Could not resolve current user for attribution, sending anyway:', authError)
+      }
+
       for (let i = 0; i < selectedContactsList.length; i += EMAIL_BATCH_SIZE) {
         if (cancelEmailSend) break
 
@@ -1062,8 +1079,15 @@ function ContactsContent() {
           const data = await res.json()
           totalSent += data.sent || 0
           totalFailed += (data.failed || 0) + (res.ok ? 0 : batch.length)
-        } catch (batchError) {
+          if (!res.ok || data.error) {
+            lastErrorMessage = data.error || `Server responded with status ${res.status}`
+          }
+          if (Array.isArray(data.errors) && data.errors.length > 0) {
+            lastErrorMessage = data.errors[data.errors.length - 1]
+          }
+        } catch (batchError: any) {
           console.error('Email batch failed:', batchError)
+          lastErrorMessage = batchError?.message || 'Network request failed'
           totalFailed += batch.length
         }
 
@@ -1079,10 +1103,18 @@ function ContactsContent() {
         await removeEmailAttachment()
         setSelectedContacts(new Set())
       } else if (totalSent > 0) {
-        showToast('warning', `Sent to ${totalSent} (${totalFailed} failed)`)
+        showToast('warning', `Sent to ${totalSent} (${totalFailed} failed)${lastErrorMessage ? `: ${lastErrorMessage}` : ''}`)
       } else {
-        showToast('error', 'Failed to send emails. Check browser console for details.')
+        showToast('error', lastErrorMessage ? `Failed to send: ${lastErrorMessage}` : 'Failed to send emails - no response from server')
       }
+    } catch (unexpectedError: any) {
+      // Catches anything that could still slip past the inner try/catches
+      // above (e.g. the auth/session block, or state setup) - this is what
+      // was missing before: previously an exception here died silently with
+      // no toast, no console message the user could act on, and the fetch
+      // to send-email never even fired.
+      console.error('Unexpected error in sendBulkEmails:', unexpectedError)
+      showToast('error', `Failed to send: ${unexpectedError?.message || 'Unexpected error - see console'}`)
     } finally {
       setSendingEmails(false)
       setEmailSendProgress(null)
