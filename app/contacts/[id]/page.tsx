@@ -139,6 +139,7 @@ export default function ContactDetailPage() {
       'meeting-booked': 'Meeting Booked',
       'meeting-happened': 'Meeting Happened',
       'call-not-received': 'Call Not Received',
+      'cold-call-not-interested': 'Cold Call / Not Interested',
       'assigned': 'Contact Assigned'
     }
     const title = typeLabels[activityForm.type] || 'Activity'
@@ -724,6 +725,7 @@ export default function ContactDetailPage() {
                   { value: 'meeting-booked', label: '📅 Meeting Booked', desc: 'Meeting confirmed' },
                   { value: 'meeting-happened', label: '✅ Meeting Happened', desc: 'Meeting completed' },
                   { value: 'call-not-received', label: '📵 Call Not Received', desc: 'Call was not received' },
+                  { value: 'cold-call-not-interested', label: '❄️ Cold Call / Not Interested', desc: 'Contact is not interested' },
                   { value: 'assigned', label: '👤 Assigned', desc: 'Contact assigned' }
                 ].map(option => (
                   <div

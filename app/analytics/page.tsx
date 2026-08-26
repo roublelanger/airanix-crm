@@ -56,6 +56,7 @@ const ACTIVITY_LABELS: Record<string, string> = {
   'note': 'Note',
   'task': 'Task',
   'call-not-received': 'Call Not Received',
+  'cold-call-not-interested': 'Cold Call / Not Interested',
   'follow-up-call': 'Follow-up Call',
   'follow-up-meeting': 'Follow-up for Meeting',
   'meeting-booked': 'Meeting Booked',
