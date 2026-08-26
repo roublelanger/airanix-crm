@@ -142,6 +142,18 @@ ${personalizedBody}
         sent++
         if (recipient.id) sentContactIds.push(recipient.id)
       } catch (emailError: any) {
+        // Full error was previously only pushed into the response body's
+        // errors array and never logged server-side - made past failures
+        // impossible to diagnose from Vercel's logs. Log the complete
+        // nodemailer error (code, response, command) so a real SMTP
+        // rejection is actually visible next time.
+        console.error(`[SEND-EMAIL] Failed to send to ${recipient.email}:`, {
+          message: emailError.message,
+          code: emailError.code,
+          response: emailError.response,
+          responseCode: emailError.responseCode,
+          command: emailError.command
+        })
         errors.push(`Failed to send to ${recipient.email}: ${emailError.message}`)
       }
     }
