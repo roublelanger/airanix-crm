@@ -355,22 +355,27 @@ function ContactsContent() {
         })
         setContacts(deduplicated)
 
-        // Fetch latest activity for each contact in parallel
-        const activitiesMap: Record<string, any> = {}
-        await Promise.all(
-          deduplicated.map(async (contact) => {
-            try {
-              const actRes = await fetch(`/api/activities?contact_id=${contact.id}`)
-              const actData = await actRes.json()
-              if (actData.success && actData.data && actData.data.length > 0) {
-                activitiesMap[contact.id] = actData.data[0] // Get latest (first in list)
+        // Fetch all activities in a single request and group by contact,
+        // instead of firing one /api/activities call per contact (was 684
+        // separate requests on a full page load, each re-scanning the whole
+        // interactions table - see performance investigation).
+        try {
+          const actRes = await fetch('/api/activities')
+          const actData = await actRes.json()
+          const activitiesMap: Record<string, any> = {}
+          if (actData.success && Array.isArray(actData.data)) {
+            // Server returns activities ordered by created_at descending, so
+            // the first entry seen per contactId is that contact's latest.
+            for (const activity of actData.data) {
+              if (activity.contactId && !activitiesMap[activity.contactId]) {
+                activitiesMap[activity.contactId] = activity
               }
-            } catch (err) {
-              console.error(`Error fetching activities for contact ${contact.id}:`, err)
             }
-          })
-        )
-        setLatestActivities(activitiesMap)
+          }
+          setLatestActivities(activitiesMap)
+        } catch (err) {
+          console.error('Error fetching activities:', err)
+        }
       } else {
         console.error('API returned non-array:', data)
         setContacts([])
