@@ -1,5 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 
+// Without this, Next.js has no reason to treat this route as dynamic (it
+// calls no request-scoped API like headers()/cookies()), so it gets
+// statically rendered at build time and the response is frozen from
+// whatever the DB looked like at the last deploy - confirmed via the build
+// output marking this route "○ Static". force-dynamic makes it run the
+// Supabase query fresh on every request instead.
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+
 // Use ANON_KEY to match contacts page behavior (same RLS policies)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
