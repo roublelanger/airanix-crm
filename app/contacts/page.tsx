@@ -627,92 +627,96 @@ function ContactsContent() {
 
     try {
       const XLSX = require('xlsx')
-      let imported = 0
-      let duplicates = 0
       const rejectedRecords: any[] = []
       const existingEmails = new Set(contacts.map(c => c.email?.toLowerCase().trim()))
       const existingNames = new Set(contacts.map(c => c.name?.toLowerCase().trim()))
+      const toImport: any[] = []
+
+      // Column names in real-world exports vary in wording, casing, and
+      // stray whitespace (e.g. this exact bug: a header of "Name " with a
+      // trailing space, and "Email-ID " instead of "Email", silently
+      // rejected every single row of a 4753-row import since the old
+      // matcher only checked exact strings). Normalize both sides
+      // (trim + lowercase) so whitespace/casing can never cause this again,
+      // and match against a broader set of common real-world header names.
+      const normalize = (s: string) => s.trim().toLowerCase()
 
       for (const row of importData) {
-        // Helper function to find column value by multiple possible names
+        const normalizedRow: Record<string, any> = {}
+        for (const key of Object.keys(row)) {
+          normalizedRow[normalize(key)] = row[key]
+        }
+
         const getColumnValue = (possibleNames: string[]) => {
           for (const name of possibleNames) {
-            if (row[name]) return row[name]
+            const value = normalizedRow[normalize(name)]
+            if (value !== undefined && value !== null && String(value).trim() !== '') {
+              return String(value).trim()
+            }
           }
           return ''
         }
 
         const contactData = {
-          name: getColumnValue(['Name', 'name', 'Contact Name', 'contact name', 'CONTACT NAME']),
-          email: getColumnValue(['Email', 'email', 'EMAIL']),
-          phone: getColumnValue(['Phone', 'phone', 'PHONE', 'Mobile', 'mobile', 'MOBILE']),
-          company: getColumnValue(['Company', 'company', 'COMPANY']),
-          designation: getColumnValue(['Designation', 'designation', 'DESIGNATION', 'Title', 'title', 'TITLE', 'Job Title', 'job title', 'JOB TITLE']),
-          location: getColumnValue(['Location', 'location', 'LOCATION', 'City', 'city', 'CITY']),
-          industry: getColumnValue(['Industry', 'industry', 'INDUSTRY', 'Sector', 'sector', 'SECTOR']),
-          status: getColumnValue(['Status', 'status', 'STATUS']) || 'NEW',
-          assigned_to: getColumnValue(['Assigned To', 'assigned_to', 'ASSIGNED_TO', 'Assigned to', 'assigned to']),
-          platform: getColumnValue(['Platform', 'platform', 'PLATFORM', 'Source', 'source', 'SOURCE']),
-          remarks: getColumnValue(['Remarks', 'remarks', 'REMARKS', 'Notes', 'notes', 'NOTES', 'Comments', 'comments'])
+          name: getColumnValue(['Name', 'Contact Name', 'Full Name']),
+          email: getColumnValue(['Email', 'Email-ID', 'Email Id', 'E-mail', 'Email Address']),
+          phone: getColumnValue(['Phone', 'Mobile', 'Contact', 'Contact Number', 'Phone Number']),
+          company: getColumnValue(['Company', 'Company Name']),
+          designation: getColumnValue(['Designation', 'Title', 'Job Title']),
+          location: getColumnValue(['Location', 'City']),
+          industry: getColumnValue(['Industry', 'Sector', 'Domain']),
+          status: getColumnValue(['Status']) || 'NEW',
+          assigned_to: getColumnValue(['Assigned To', 'Assigned to']),
+          platform: getColumnValue(['Platform', 'Source', 'Current Platform']),
+          remarks: getColumnValue(['Remarks', 'Notes', 'Comments', 'Remarks post call', 'New Remarks'])
         }
 
-        // Validation: Name and Email required
-        if (!contactData.name || !contactData.email) {
-          rejectedRecords.push({
-            ...row,
-            'Reject Reason': 'Missing Name or Email'
-          })
-          duplicates++
+        // Validation: Name required. Email is no longer a hard requirement
+        // here - a missing/invalid email now gets a placeholder generated
+        // server-side (see /api/contacts/import-direct) rather than
+        // silently dropping the whole row, since real telecalling/lead
+        // sheets frequently have rows with a name and phone but no email.
+        if (!contactData.name) {
+          rejectedRecords.push({ ...row, 'Reject Reason': 'Missing Name' })
           continue
         }
 
-        // Check for duplicate email (skip for NA/missing emails)
         const emailLower = contactData.email.toLowerCase().trim()
-        if (emailLower !== 'na' && emailLower !== '' && existingEmails.has(emailLower)) {
-          rejectedRecords.push({
-            ...row,
-            'Reject Reason': 'Duplicate Email'
-          })
-          duplicates++
+        if (emailLower && emailLower !== 'na' && existingEmails.has(emailLower)) {
+          rejectedRecords.push({ ...row, 'Reject Reason': 'Duplicate Email' })
           continue
         }
 
-        // Check for duplicate name
         const nameLower = contactData.name.toLowerCase().trim()
         if (existingNames.has(nameLower)) {
-          rejectedRecords.push({
-            ...row,
-            'Reject Reason': 'Duplicate Name'
-          })
-          duplicates++
+          rejectedRecords.push({ ...row, 'Reject Reason': 'Duplicate Name' })
           continue
         }
 
-        // If not duplicate, import it
-        try {
-          const res = await fetch('/api/contacts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(contactData)
-          })
+        existingEmails.add(emailLower)
+        existingNames.add(nameLower)
+        toImport.push(contactData)
+      }
 
-          if (res.ok) {
-            imported++
-            existingEmails.add(emailLower)
-            existingNames.add(nameLower)
-          } else {
-            rejectedRecords.push({
-              ...row,
-              'Reject Reason': 'Failed to Create'
-            })
-            duplicates++
-          }
-        } catch (error) {
-          rejectedRecords.push({
-            ...row,
-            'Reject Reason': 'Error During Import'
-          })
-          duplicates++
+      // Single bulk request instead of one HTTP request per row - the old
+      // code awaited a separate fetch('/api/contacts', ...) per row in a
+      // loop, which meant a 4753-row file fired 4753 sequential requests.
+      // import-direct already batches inserts server-side in chunks of 100.
+      let imported = 0
+      let failed = 0
+      if (toImport.length > 0) {
+        const res = await fetch('/api/contacts/import-direct', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contacts: toImport })
+        })
+        const result = await res.json()
+        if (res.ok) {
+          imported = result.imported || 0
+          failed = result.failed || 0
+        } else {
+          failed = toImport.length
+          console.error('Bulk import request failed:', result.error)
         }
       }
 
@@ -721,22 +725,6 @@ function ContactsContent() {
         const worksheet = XLSX.utils.json_to_sheet(rejectedRecords)
         const workbook = XLSX.utils.book_new()
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Rejected Records')
-
-        worksheet['!cols'] = [
-          { wch: 20 }, // Name
-          { wch: 25 }, // Email
-          { wch: 15 }, // Phone
-          { wch: 20 }, // Company
-          { wch: 20 }, // Designation
-          { wch: 15 }, // Location
-          { wch: 15 }, // Industry
-          { wch: 12 }, // Status
-          { wch: 15 }, // Assigned To
-          { wch: 15 }, // Platform
-          { wch: 30 }, // Remarks
-          { wch: 25 }  // Reject Reason
-        ]
-
         const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' })
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
         const url = window.URL.createObjectURL(blob)
@@ -753,8 +741,18 @@ function ContactsContent() {
       setImportData([])
       fetchContacts()
 
-      if (duplicates > 0) {
-        showToast('success', `✓ Imported: ${imported} | ✗ Rejected: ${duplicates} (check downloaded file)`)
+      const rejectedCount = rejectedRecords.length
+      // A near-total rejection rate is exactly the failure mode that just
+      // happened silently (a header-matching mismatch) - make it loud
+      // instead of a toast that's easy to miss on a large import.
+      if (importData.length > 10 && rejectedCount / importData.length > 0.5) {
+        alert(
+          `Import mostly failed: only ${imported} of ${importData.length} rows were imported (${rejectedCount} rejected, ${failed} failed to insert).\n\n` +
+          `This usually means the spreadsheet's column headers don't match what's expected (e.g. "Name"/"Email"). ` +
+          `Check the downloaded "Rejected Contacts" file's Reject Reason column, and verify your header row.`
+        )
+      } else if (rejectedCount > 0 || failed > 0) {
+        showToast('success', `✓ Imported: ${imported} | ✗ Rejected: ${rejectedCount} | ⚠ Failed: ${failed} (check downloaded file)`)
       } else {
         showToast('success', `Successfully imported ${imported} contact(s)!`)
       }
