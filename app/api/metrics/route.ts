@@ -17,65 +17,31 @@ const supabase = createClient(
 
 export async function GET() {
   try {
-    // Fetch all contacts with status - using same SELECT_FIELDS as contacts API
-    const contactsRes = await supabase
-      .from('contacts')
-      .select('id, status, email, name')
-      .order('company', { ascending: true })
-      .order('name', { ascending: true })
+    // Plain exact-count queries instead of fetching every row to count/dedupe
+    // in JS. The old approach silently truncated at Postgres/PostgREST's
+    // default 1000-row response cap - with 4700 real contacts it undercounted
+    // by nearly 4x (reported 953). head:true means no rows are transferred at
+    // all, so there's no cap to hit, and it's far cheaper at any table size.
+    // Also drops the email+name dedup: per the same decision already made
+    // for the Contacts page, duplicates get fixed at the source (import/cron
+    // uniqueness) and cleaned up via the weekly report, not hidden by
+    // re-deduping on every read - so this now reports the real total.
+    const [totalRes, leadsRes, activeDealsRes, wonDealsRes] = await Promise.all([
+      supabase.from('contacts').select('id', { count: 'exact', head: true }),
+      supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('status', 'LEAD'),
+      supabase.from('deals').select('id', { count: 'exact', head: true }).not('status', 'in', '(CLOSED,LOST,WON)'),
+      supabase.from('deals').select('id', { count: 'exact', head: true }).eq('status', 'WON')
+    ])
 
-    let contacts = contactsRes.data || []
-
-    // IMPORTANT: Deduplicate exactly like contacts page does (email:name combination)
-    const seen = new Map<string, boolean>()
-    contacts = contacts.filter(contact => {
-      const key = `${(contact.email || '').toLowerCase()}:${(contact.name || '').toLowerCase()}`
-      if (seen.has(key)) {
-        return false
-      }
-      seen.set(key, true)
-      return true
-    })
-
-    // Fetch all deals with status
-    const dealsRes = await supabase
-      .from('deals')
-      .select('id, status')
-      .order('createdAt', { ascending: false })
-
-    const deals = dealsRes.data || []
-
-    // Calculate metrics
-    const totalContacts = contacts.length  // ALL contacts (exactly as contacts page shows)
-    const newLeads = contacts.filter(c => c.status === 'LEAD').length
-
-    // Active Deals = deals that are not completed/lost
-    const activeDeals = deals.filter(d => d.status && !['CLOSED', 'LOST', 'WON'].includes(d.status?.toUpperCase() || '')).length
-
-    // Conversions = WON deals
-    const wonDeals = deals.filter(d => d.status && d.status.toUpperCase() === 'WON').length
-
-    // Debug: Log exact counts
-    console.log('=== METRICS API DEBUG ===')
-    console.log(`Total contacts after deduplication: ${contacts.length}`)
-    console.log(`New Leads (LEAD status): ${newLeads}`)
-    console.log(`Active Deals: ${activeDeals}`)
-    console.log(`Won Deals (Conversions): ${wonDeals}`)
-
-    // Breakdown by status
-    const statusBreakdown: Record<string, number> = {}
-    contacts.forEach(c => {
-      statusBreakdown[c.status || 'UNKNOWN'] = (statusBreakdown[c.status || 'UNKNOWN'] || 0) + 1
-    })
-    console.log('Status breakdown:', statusBreakdown)
-    console.log('✓ Metrics match contacts page (deduplication applied)')
-    console.log('======================')
+    for (const [label, res] of [['contacts total', totalRes], ['leads', leadsRes], ['active deals', activeDealsRes], ['won deals', wonDealsRes]] as const) {
+      if (res.error) console.error(`[METRICS] ${label} count error:`, res.error.message)
+    }
 
     return Response.json({
-      totalContacts,
-      activeDeal: activeDeals,
-      newLeads,
-      conversions: wonDeals
+      totalContacts: totalRes.count ?? 0,
+      activeDeal: activeDealsRes.count ?? 0,
+      newLeads: leadsRes.count ?? 0,
+      conversions: wonDealsRes.count ?? 0
     })
   } catch (error) {
     console.error('Error fetching metrics:', error)
