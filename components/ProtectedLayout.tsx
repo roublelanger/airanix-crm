@@ -123,6 +123,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
             <a href="/deals" className="nav-link" style={{ color: '#1f2937', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>🎯 Leads</a>
             <a href="/activities" className="nav-link" style={{ color: '#1f2937', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>📞 Activities</a>
             <a href="/followups" className="nav-link" style={{ color: '#1f2937', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>📋 Follow-ups</a>
+            <a href="/reports/calls" className="nav-link" style={{ color: '#1f2937', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>📞 Calls by ISR</a>
             <a href="/emails" className="nav-link" style={{ color: '#1f2937', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>📧 Email Templates</a>
             <a href="/analytics" className="nav-link" style={{ color: '#1f2937', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>📊 Analytics</a>
             <a href="/settings" className="nav-link" style={{ color: '#1f2937', display: 'block', padding: '14px 16px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>⚙️ Settings</a>
