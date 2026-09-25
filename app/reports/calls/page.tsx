@@ -1,6 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
+
+interface CallRecord {
+  id: string
+  time: string
+  type: string
+  contactName: string
+  company: string
+  notes: string | null
+}
 
 interface RepRow {
   name: string
@@ -8,6 +17,19 @@ interface RepRow {
   connected: number
   notReceived: number
   notInterested: number
+  calls: CallRecord[]
+}
+
+const CALL_TYPE_LABELS: Record<string, string> = {
+  'follow-up-call': 'Connected',
+  'call-not-received': 'Not Received',
+  'cold-call-not-interested': 'Not Interested'
+}
+
+const CALL_TYPE_COLORS: Record<string, string> = {
+  'follow-up-call': '#059669',
+  'call-not-received': '#dc2626',
+  'cold-call-not-interested': '#9ca3af'
 }
 
 function todayIst(): string {
@@ -25,9 +47,11 @@ export default function CallsByRepPage() {
   const [reps, setReps] = useState<RepRow[]>([])
   const [totalCalls, setTotalCalls] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [expandedRep, setExpandedRep] = useState<string | null>(null)
 
   useEffect(() => {
     fetchReport()
+    setExpandedRep(null)
   }, [date])
 
   async function fetchReport() {
@@ -57,7 +81,7 @@ export default function CallsByRepPage() {
         📞 Calls by ISR
       </h1>
       <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 24px 0' }}>
-        How many calls each rep logged, per day
+        How many calls each rep logged, per day - click a row to see the individual calls
       </p>
 
       {/* Date navigation */}
@@ -114,6 +138,7 @@ export default function CallsByRepPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
             <thead style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
               <tr>
+                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: '#374151' }}></th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>ISR</th>
                 <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600, color: '#374151' }}>Total Calls</th>
                 <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600, color: '#059669' }}>Connected</th>
@@ -122,15 +147,58 @@ export default function CallsByRepPage() {
               </tr>
             </thead>
             <tbody>
-              {reps.map((rep) => (
-                <tr key={rep.name} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>{rep.name}</td>
-                  <td style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: '#111827' }}>{rep.total}</td>
-                  <td style={{ padding: '12px 16px', textAlign: 'center', color: '#059669' }}>{rep.connected}</td>
-                  <td style={{ padding: '12px 16px', textAlign: 'center', color: '#dc2626' }}>{rep.notReceived}</td>
-                  <td style={{ padding: '12px 16px', textAlign: 'center', color: '#9ca3af' }}>{rep.notInterested}</td>
-                </tr>
-              ))}
+              {reps.map((rep) => {
+                const isExpanded = expandedRep === rep.name
+                return (
+                  <Fragment key={rep.name}>
+                    <tr
+                      onClick={() => setExpandedRep(isExpanded ? null : rep.name)}
+                      style={{ borderBottom: '1px solid #e5e7eb', cursor: 'pointer', background: isExpanded ? '#f9fafb' : 'white' }}
+                    >
+                      <td style={{ padding: '12px 16px', color: '#9ca3af', width: '24px' }}>{isExpanded ? '▼' : '▶'}</td>
+                      <td style={{ padding: '12px 16px', fontWeight: 600, color: '#2563eb', textDecoration: 'underline' }}>{rep.name}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: '#111827' }}>{rep.total}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', color: '#059669' }}>{rep.connected}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', color: '#dc2626' }}>{rep.notReceived}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', color: '#9ca3af' }}>{rep.notInterested}</td>
+                    </tr>
+                    {isExpanded && (
+                      <tr key={`${rep.name}-detail`}>
+                        <td colSpan={6} style={{ padding: 0, background: '#f9fafb' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                            <thead>
+                              <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                                <th style={{ padding: '8px 16px 8px 48px', textAlign: 'left', fontWeight: 600, color: '#6b7280' }}>Time</th>
+                                <th style={{ padding: '8px 16px', textAlign: 'left', fontWeight: 600, color: '#6b7280' }}>Contact</th>
+                                <th style={{ padding: '8px 16px', textAlign: 'left', fontWeight: 600, color: '#6b7280' }}>Company</th>
+                                <th style={{ padding: '8px 16px', textAlign: 'left', fontWeight: 600, color: '#6b7280' }}>Outcome</th>
+                                <th style={{ padding: '8px 16px', textAlign: 'left', fontWeight: 600, color: '#6b7280' }}>Notes</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {rep.calls.map((call) => (
+                                <tr key={call.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                                  <td style={{ padding: '8px 16px 8px 48px', color: '#374151', whiteSpace: 'nowrap' }}>{call.time}</td>
+                                  <td style={{ padding: '8px 16px', color: '#111827', fontWeight: 500 }}>{call.contactName}</td>
+                                  <td style={{ padding: '8px 16px', color: '#6b7280' }}>{call.company}</td>
+                                  <td style={{ padding: '8px 16px' }}>
+                                    <span style={{ color: CALL_TYPE_COLORS[call.type] || '#6b7280', fontWeight: 600 }}>
+                                      {CALL_TYPE_LABELS[call.type] || call.type}
+                                    </span>
+                                  </td>
+                                  <td style={{ padding: '8px 16px', color: '#6b7280', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={call.notes || ''}>
+                                    {call.notes || '-'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                )
+              })}
             </tbody>
           </table>
         </div>
