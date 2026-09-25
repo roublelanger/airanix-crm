@@ -11,18 +11,35 @@ const SELECT_FIELDS = 'id,name,email,phone,company,status,location,designation,i
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
-      .from('contacts')
-      .select(SELECT_FIELDS)
-      .order('company', { ascending: true })
-      .order('name', { ascending: true })
+    // A single unbounded .select() is capped at Postgres/PostgREST's default
+    // page size (1000 rows). With 4700+ contacts after the recent bulk
+    // import, this endpoint was silently truncating - the Contacts page
+    // (search, filters, stat cards, sorting, bulk actions) has only been
+    // operating on the first 1000 rows (ordered by company/name) since then,
+    // with no error surfaced anywhere. Page through the full table instead.
+    const pageSize = 1000
+    let allData: any[] = []
+    let from = 0
+    while (true) {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select(SELECT_FIELDS)
+        .order('company', { ascending: true })
+        .order('name', { ascending: true })
+        .range(from, from + pageSize - 1)
 
-    if (error) {
-      console.error('GET error:', error)
-      throw error
+      if (error) {
+        console.error('GET error:', error)
+        throw error
+      }
+      if (!data || data.length === 0) break
+
+      allData = allData.concat(data)
+      if (data.length < pageSize) break
+      from += pageSize
     }
 
-    return NextResponse.json(data || [])
+    return NextResponse.json(allData)
   } catch (error: any) {
     console.error('GET /api/contacts error:', error.message)
     return NextResponse.json({ error: 'Failed to fetch contacts' }, { status: 500 })

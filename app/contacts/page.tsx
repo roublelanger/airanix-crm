@@ -27,6 +27,23 @@ interface Toast {
   duration?: number
 }
 
+// Single source of truth for every contact status dropdown on this page.
+// Previously each of the 4 status <select> elements (New/Edit Contact form,
+// Advanced Filters, the inline bulk-status toolbar, and the bulk-status
+// confirmation modal) hardcoded its own option list, and 3 of the 4 had
+// drifted to only 4 of the real 6 statuses (missing INACTIVE and COLD) -
+// which is exactly why those two never showed up as filterable/selectable
+// even though real contacts have them. Add a status here once and every
+// dropdown picks it up automatically.
+const CONTACT_STATUSES: { value: string; label: string }[] = [
+  { value: 'NEW', label: 'New' },
+  { value: 'LEAD', label: 'Lead' },
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'INACTIVE', label: 'Inactive' },
+  { value: 'COLD', label: 'Cold' },
+  { value: 'CLOSED', label: 'Closed' }
+]
+
 function ContactsContent() {
   const searchParams = useSearchParams()
   const [contacts, setContacts] = useState<Contact[]>([])
@@ -799,12 +816,14 @@ function ContactsContent() {
 
   // Calculate statistics
   useEffect(() => {
-    const allStatuses = ['NEW', 'LEAD', 'ACTIVE', 'CLOSED', 'INACTIVE']
     const byStatus: Record<string, number> = {}
 
-    // Initialize all statuses with 0
-    allStatuses.forEach(status => {
-      byStatus[status] = 0
+    // Initialize all statuses with 0 (was a separate hardcoded 5-status list
+    // missing COLD - now derives from the same canonical list every status
+    // dropdown on this page uses, so a stat card can't silently disagree
+    // with what's selectable elsewhere again)
+    CONTACT_STATUSES.forEach(s => {
+      byStatus[s.value] = 0
     })
 
     // Count contacts by status
@@ -1424,12 +1443,9 @@ function ContactsContent() {
           <fieldset style={{ border: 'none', padding: 0, margin: '0 0 24px 0' }}>
             <legend style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '12px', textTransform: 'uppercase' }}>Status & Remarks</legend>
             <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', width: '100%', marginBottom: '16px', fontSize: '14px' }}>
-              <option value="NEW">New</option>
-              <option value="LEAD">Lead</option>
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
-              <option value="COLD">Cold</option>
-              <option value="CLOSED">Closed</option>
+              {CONTACT_STATUSES.map(s => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
             </select>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
@@ -2338,10 +2354,9 @@ function ContactsContent() {
               style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px' }}
             >
               <option value="">All Statuses</option>
-              <option value="NEW">NEW</option>
-              <option value="LEAD">LEAD</option>
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="CLOSED">CLOSED</option>
+              {CONTACT_STATUSES.map(s => (
+                <option key={s.value} value={s.value}>{s.value}</option>
+              ))}
             </select>
           </div>
           <div>
@@ -2752,10 +2767,9 @@ function ContactsContent() {
                   minWidth: '120px'
                 }}
               >
-                <option value="NEW">NEW</option>
-                <option value="LEAD">LEAD</option>
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="CLOSED">CLOSED</option>
+                {CONTACT_STATUSES.map(s => (
+                  <option key={s.value} value={s.value}>{s.value}</option>
+                ))}
               </select>
               <button
                 onClick={() => setShowBulkStatusModal(true)}
@@ -3691,10 +3705,9 @@ function ContactsContent() {
                 cursor: 'pointer',
               }}
             >
-              <option value="NEW">NEW</option>
-              <option value="LEAD">LEAD</option>
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="CLOSED">CLOSED</option>
+              {CONTACT_STATUSES.map(s => (
+                <option key={s.value} value={s.value}>{s.value}</option>
+              ))}
             </select>
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
