@@ -3139,15 +3139,31 @@ function ContactsContent() {
                             📅 {new Date(contact.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                           </span>
                         )}
-                        {contact.remarks && (
-                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                            {contact.remarks.split(',').map((tag, idx) => (
-                              <span key={idx} style={{ fontSize: '11px', background: '#dbeafe', color: '#0369a1', padding: '3px 8px', borderRadius: '12px', fontWeight: '500' }}>
-                                🏷️ {tag.trim()}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                        {contact.remarks && (() => {
+                          // remarks is shared storage for both free-text call
+                          // notes and the tag list (see handleTagToggle) -
+                          // splitting on every comma and showing each piece
+                          // as a "tag" pill meant a plain sentence of notes
+                          // (e.g. imported call-notes text) displayed as if
+                          // it were a real tag, while the Manage Tags modal
+                          // correctly showed nothing selected since that text
+                          // isn't one of the actual availableTags. Only show
+                          // a pill for pieces that are genuinely a real tag.
+                          const realTags = contact.remarks
+                            .split(',')
+                            .map(t => t.trim())
+                            .filter(t => availableTags.includes(t))
+                          if (realTags.length === 0) return null
+                          return (
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                              {realTags.map((tag, idx) => (
+                                <span key={idx} style={{ fontSize: '11px', background: '#dbeafe', color: '#0369a1', padding: '3px 8px', borderRadius: '12px', fontWeight: '500' }}>
+                                  🏷️ {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )
+                        })()}
                         {latestActivities[contact.id] && (
                           <div style={{ marginTop: '8px', padding: '8px 10px', background: '#fef3c7', borderRadius: '6px', borderLeft: '3px solid #f59e0b' }}>
                             <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
