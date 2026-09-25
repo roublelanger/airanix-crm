@@ -257,10 +257,25 @@ function ContactsContent() {
 
   function validatePhone(phone: string): string | null {
     if (!phone) return null // optional field
-    // Basic validation: at least 7 digits, can contain +, -, (), spaces
-    const phoneRegex = /^[\d+\-() ]{7,}$/
-    if (!phoneRegex.test(phone)) return 'Phone must contain at least 7 digits'
-    if (phone.replace(/\D/g, '').length > 15) return 'Phone number too long'
+
+    // Multiple contact numbers are common in imported data (e.g. "91
+    // 9099957406 +91 8160984044", or comma-separated) - split on commas/
+    // semicolons, and on a space directly before a '+' that isn't the very
+    // first character, so each number is validated on its own instead of
+    // the old check summing all digits across every number in the field
+    // (which made two valid numbers together look like one 25-digit
+    // "phone number too long").
+    const numbers = phone
+      .split(/[,;]+/)
+      .flatMap(part => part.split(/\s+(?=\+)/))
+      .map(n => n.trim())
+      .filter(Boolean)
+
+    for (const number of numbers) {
+      const phoneRegex = /^[\d+\-() ]{7,}$/
+      if (!phoneRegex.test(number)) return `"${number}" must contain at least 7 digits`
+      if (number.replace(/\D/g, '').length > 15) return `"${number}" is too long for a single phone number`
+    }
     return null
   }
 
