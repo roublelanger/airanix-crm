@@ -3168,7 +3168,7 @@ function ContactsContent() {
                                 </div>
                               )}
                               {notePreview && (
-                                <span style={{ fontSize: '12px', color: '#6b7280', fontStyle: 'italic' }} title={notePreview}>
+                                <span style={{ fontSize: '12px', color: '#92400e', fontStyle: 'italic' }} title={notePreview}>
                                   📝 {notePreview}
                                 </span>
                               )}
