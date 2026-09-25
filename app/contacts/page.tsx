@@ -700,7 +700,9 @@ function ContactsContent() {
           status: getColumnValue(['Status']) || 'NEW',
           assigned_to: getColumnValue(['Assigned To', 'Assigned to']),
           platform: getColumnValue(['Platform', 'Source', 'Current Platform']),
-          remarks: getColumnValue(['Remarks', 'Notes', 'Comments', 'Remarks post call', 'New Remarks'])
+          remarks: getColumnValue(['Remarks', 'Notes', 'Comments', 'Remarks post call', 'New Remarks']),
+          calledBy: getColumnValue(['Tele Caller', 'Rep Name', 'Caller']),
+          callNotes: getColumnValue(['Call Remarks and Details'])
         }
 
         // Validation: Name required. Email is no longer a hard requirement

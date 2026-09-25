@@ -53,7 +53,12 @@ export async function POST(request: Request) {
           status: 'NEW',
           company_id: null,
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
+          // Not persisted onto the contacts row - carried through only to
+          // build the matching interactions record below, so an imported
+          // call shows up on the Activity Timeline with who made it.
+          calledBy: c.calledBy ? String(c.calledBy).trim() : '',
+          callNotes: c.callNotes ? String(c.callNotes).trim() : ''
         }
       })
       .filter((c: any) => c && c.name && c.email)
@@ -73,9 +78,14 @@ export async function POST(request: Request) {
       const chunk = contactsToInsert.slice(i, i + chunkSize)
       console.log(`[DIRECT-IMPORT] Inserting chunk ${Math.floor(i / chunkSize) + 1} (${chunk.length} contacts)`)
 
+      // calledBy/callNotes aren't real columns on `contacts` - strip them
+      // before inserting, but keep the full chunk (with ids) around to
+      // build the interactions rows below.
+      const contactRows = chunk.map(({ calledBy, callNotes, ...rest }: any) => rest)
+
       const { data, error } = await supabase
         .from('contacts')
-        .insert(chunk)
+        .insert(contactRows)
         .select('id')
 
       if (error) {
@@ -86,9 +96,35 @@ export async function POST(request: Request) {
           error: error.message,
           count: chunk.length
         })
-      } else {
-        imported += data?.length || 0
-        console.log(`[DIRECT-IMPORT] Chunk inserted: ${data?.length || 0} contacts`)
+        continue
+      }
+
+      imported += data?.length || 0
+      console.log(`[DIRECT-IMPORT] Chunk inserted: ${data?.length || 0} contacts`)
+
+      // For every contact that came with call info from the sheet, log it
+      // as an activity so the Activity Timeline isn't empty and shows who
+      // made the call. Uses a distinct type ('imported-call') kept out of
+      // the Calls-by-ISR report's CALL_TYPES allow-list on purpose, so
+      // historical imported calls don't inflate daily call-volume numbers.
+      const interactionRows = chunk
+        .filter((c: any) => c.remarks || c.callNotes)
+        .map((c: any) => ({
+          contact_id: c.id,
+          type: 'imported-call',
+          notes: [c.remarks, c.callNotes].filter(Boolean).join(' — '),
+          created_by_name: c.calledBy || 'Unknown',
+          created_at: c.createdAt
+        }))
+
+      if (interactionRows.length > 0) {
+        const { error: interactionError } = await supabase
+          .from('interactions')
+          .insert(interactionRows)
+
+        if (interactionError) {
+          console.error(`[DIRECT-IMPORT] Interaction insert error:`, interactionError.message)
+        }
       }
     }
 

@@ -44,6 +44,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
       'meeting-happened': '✅',
       'follow-up-completed': '✅',
       'assigned': '👤',
+      'imported-call': '📥',
       default: '📌'
     }
     return icons[type?.toLowerCase()] || icons.default
@@ -63,7 +64,8 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
       'meeting-booked': 'Meeting Booked',
       'meeting-happened': 'Meeting Happened',
       'follow-up-completed': 'Follow-up Completed',
-      'assigned': 'Assigned'
+      'assigned': 'Assigned',
+      'imported-call': 'Imported Call Record'
     }
     return labels[type?.toLowerCase()] || type
   }
@@ -83,6 +85,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
       'meeting-happened': 'bg-green-50 border-green-200',
       'follow-up-completed': 'bg-green-50 border-green-200',
       'assigned': 'bg-orange-50 border-orange-200',
+      'imported-call': 'bg-amber-50 border-amber-200',
       default: 'bg-gray-50 border-gray-200'
     }
     return colors[type?.toLowerCase()] || colors.default
