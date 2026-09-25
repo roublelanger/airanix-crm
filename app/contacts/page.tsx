@@ -3142,26 +3142,37 @@ function ContactsContent() {
                         {contact.remarks && (() => {
                           // remarks is shared storage for both free-text call
                           // notes and the tag list (see handleTagToggle) -
-                          // splitting on every comma and showing each piece
-                          // as a "tag" pill meant a plain sentence of notes
-                          // (e.g. imported call-notes text) displayed as if
-                          // it were a real tag, while the Manage Tags modal
+                          // splitting on every comma and showing every piece
+                          // with the same 🏷️ tag pill meant a plain sentence
+                          // of notes (e.g. imported call-notes text) looked
+                          // like a real tag, while the Manage Tags modal
                           // correctly showed nothing selected since that text
-                          // isn't one of the actual availableTags. Only show
-                          // a pill for pieces that are genuinely a real tag.
-                          const realTags = contact.remarks
-                            .split(',')
-                            .map(t => t.trim())
-                            .filter(t => availableTags.includes(t))
-                          if (realTags.length === 0) return null
+                          // isn't one of the actual availableTags. Split the
+                          // two apart: real tags keep the blue pill look,
+                          // anything else renders as a plain notes preview
+                          // with a different icon so the two are never
+                          // visually confused again.
+                          const fragments = contact.remarks.split(',').map(t => t.trim()).filter(Boolean)
+                          const realTags = fragments.filter(t => availableTags.includes(t))
+                          const noteFragments = fragments.filter(t => !availableTags.includes(t))
+                          const notePreview = noteFragments.join(', ')
                           return (
-                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                              {realTags.map((tag, idx) => (
-                                <span key={idx} style={{ fontSize: '11px', background: '#dbeafe', color: '#0369a1', padding: '3px 8px', borderRadius: '12px', fontWeight: '500' }}>
-                                  🏷️ {tag}
+                            <>
+                              {realTags.length > 0 && (
+                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                  {realTags.map((tag, idx) => (
+                                    <span key={idx} style={{ fontSize: '11px', background: '#dbeafe', color: '#0369a1', padding: '3px 8px', borderRadius: '12px', fontWeight: '500' }}>
+                                      🏷️ {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              {notePreview && (
+                                <span style={{ fontSize: '12px', color: '#6b7280', fontStyle: 'italic' }} title={notePreview}>
+                                  📝 {notePreview}
                                 </span>
-                              ))}
-                            </div>
+                              )}
+                            </>
                           )
                         })()}
                         {latestActivities[contact.id] && (
