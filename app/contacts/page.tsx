@@ -398,12 +398,8 @@ function ContactsContent() {
           if (actData.success && Array.isArray(actData.data)) {
             // Server returns activities ordered by created_at descending, so
             // the first entry seen per contactId is that contact's latest.
-            // Skip 'imported-call' entries here - they're the bulk-import
-            // backfill and duplicate the note preview already shown from
-            // contact.remarks a few lines above this badge. They still show
-            // up fully on the contact detail page's Activity Timeline.
             for (const activity of actData.data) {
-              if (activity.contactId && activity.type !== 'imported-call' && !activitiesMap[activity.contactId]) {
+              if (activity.contactId && !activitiesMap[activity.contactId]) {
                 activitiesMap[activity.contactId] = activity
               }
             }
@@ -3191,6 +3187,13 @@ function ContactsContent() {
                           const realTags = fragments.filter(t => availableTags.includes(t))
                           const noteFragments = fragments.filter(t => !availableTags.includes(t))
                           const notePreview = noteFragments.join(', ')
+                          // For bulk-imported contacts, the note text IS the
+                          // backfilled call's description - prefix it with
+                          // who made the call (the ISR/Tele Caller) instead
+                          // of showing a second, separate activity box below
+                          // that just repeats the same text.
+                          const importedActivity = latestActivities[contact.id]?.type === 'imported-call' ? latestActivities[contact.id] : null
+                          const isrPrefix = importedActivity ? (importedActivity.createdBy?.name || 'Unknown') : null
                           return (
                             <>
                               {realTags.length > 0 && (
@@ -3204,13 +3207,13 @@ function ContactsContent() {
                               )}
                               {notePreview && (
                                 <span style={{ fontSize: '12px', color: '#92400e', fontStyle: 'italic' }} title={notePreview}>
-                                  📝 {notePreview}
+                                  📝 {isrPrefix && <strong>{isrPrefix}: </strong>}{notePreview}
                                 </span>
                               )}
                             </>
                           )
                         })()}
-                        {latestActivities[contact.id] && (
+                        {latestActivities[contact.id] && latestActivities[contact.id].type !== 'imported-call' && (
                           <div style={{ marginTop: '8px', padding: '8px 10px', background: '#fef3c7', borderRadius: '6px', borderLeft: '3px solid #f59e0b' }}>
                             <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
                               <span style={{ fontSize: '12px', fontWeight: '600', color: '#78350f', textTransform: 'capitalize' }}>
