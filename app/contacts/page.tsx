@@ -398,8 +398,12 @@ function ContactsContent() {
           if (actData.success && Array.isArray(actData.data)) {
             // Server returns activities ordered by created_at descending, so
             // the first entry seen per contactId is that contact's latest.
+            // Skip 'imported-call' entries here - they're the bulk-import
+            // backfill and duplicate the note preview already shown from
+            // contact.remarks a few lines above this badge. They still show
+            // up fully on the contact detail page's Activity Timeline.
             for (const activity of actData.data) {
-              if (activity.contactId && !activitiesMap[activity.contactId]) {
+              if (activity.contactId && activity.type !== 'imported-call' && !activitiesMap[activity.contactId]) {
                 activitiesMap[activity.contactId] = activity
               }
             }
